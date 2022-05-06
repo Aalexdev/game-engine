@@ -3,5 +3,6 @@ editor/
 .obj
 out/
 ./*.json
-libs/
+*.lib
+*.a
 *.gch
