@@ -1,0 +1,7 @@
+editor/
+.vscode
+.obj
+out/
+./*.json
+libs/
+*.gch

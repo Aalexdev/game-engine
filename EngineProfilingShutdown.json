@@ -1,0 +1,1 @@
+{"otherData": {},"traceEvents":[{"cat":"function","dur":31,"name":"void engine::Renderer::shutdown()","ph":"X","pid":0,"tid":2850328247,"ts":1647296878482614}]}
