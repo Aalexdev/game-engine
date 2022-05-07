@@ -2,94 +2,26 @@ Scene: Name
 Textures:
   []
 Entities:
-  - Entity: 2464244392954239836
+  - Entity: 2047542677033771120
+    TagComponent:
+      tag: new Entity
+    TransformComponent:
+      translation: [0, 0]
+      scale: [1, 1]
+      rotation: 0
+    SpriteComponent:
+      color: [1, 1, 1, 1]
+  - Entity: 9820505220837645924
     TagComponent:
       tag: camera
     TransformComponent:
-      translation: [0, -5.5999999]
+      translation: [0, 0]
       scale: [1, 1]
       rotation: 0
     CameraComponent:
-      viewportAspectRatio: 1.99363053
+      viewportAspectRatio: 1.77752292
       priorityLevel: 1
       fixedAspectRatio: false
-      zoomLevel: 13.5
-  - Entity: 1798254825598029315
-    TagComponent:
-      tag: new Entity
-    TransformComponent:
-      translation: [3.31995416, 0.670871615]
-      scale: [1, 1]
-      rotation: 0
-    SpriteComponent:
-      color: [1, 1, 1, 1]
-    RigidBodyComponent:
-      Type: 1
-      FixedRotation: false
-      LinearVelocity: [0, 0]
-      AngularVelocity: 0
-      Bullet: false
-      GravityScale: 1
-    BoxColliderComponent:
-      Offset: [0, 0]
-      Size: [0.5, 0.5]
-      ScaledSize: true
-      IsSensor: false
-      Density: 1
-      Friction: 0.5
-      Restitution: 0
-      RestitutionThreshold: 0.5
-  - Entity: 3853491257209841447
-    TagComponent:
-      tag: new Entity
-    TransformComponent:
-      translation: [3.2438581, -3.31710744]
-      scale: [14.8178453, 1]
-      rotation: 0.352924526
-    SpriteComponent:
-      color: [0.962790728, 0.17016764, 0.17016764, 1]
-    RigidBodyComponent:
-      Type: 0
-      FixedRotation: false
-      LinearVelocity: [0, 0]
-      AngularVelocity: 0
-      Bullet: false
-      GravityScale: 1
-    BoxColliderComponent:
-      Offset: [0, 0]
-      Size: [0.5, 0.5]
-      ScaledSize: true
-      IsSensor: false
-      Density: 1
-      Friction: 0.5
-      Restitution: 0
-      RestitutionThreshold: 0.5
-  - Entity: 7715692346072468646
-    TagComponent:
-      tag: new Entity
-    TransformComponent:
-      translation: [-5.05938673, -4.30643511]
-      scale: [3.74481487, 0.99999994]
-      rotation: -0.626763344
-    SpriteComponent:
-      color: [1, 1, 1, 1]
-    RigidBodyComponent:
-      Type: 0
-      FixedRotation: false
-      LinearVelocity: [0, 0]
-      AngularVelocity: 0
-      Bullet: false
-      GravityScale: 1
-    BoxColliderComponent:
-      Offset: [0, 0]
-      Size: [0.5, 0.5]
-      ScaledSize: true
-      IsSensor: false
-      Density: 1
-      Friction: 0.5
-      Restitution: 0
-      RestitutionThreshold: 0.5
+      zoomLevel: 1
 SpriteQueue:
-  - Entity: 7715692346072468646
-  - Entity: 3853491257209841447
-  - Entity: 1798254825598029315
+  - Entity: 2047542677033771120

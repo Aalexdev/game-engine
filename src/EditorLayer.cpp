@@ -358,8 +358,7 @@ namespace engine{
 			glm::mat4 cameraView = camera->getCamera().getViewMatrix();
 
 			auto& entityTransform = selectedEntity.getComponent<components::Transform>();
-			glm::mat4 transformMatrix = entityTransform.getTransform();
-
+			glm::mat4 transformMatrix = entityTransform.transform;
 
 			ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(projection), guizmoOperation, ImGuizmo::MODE::LOCAL, glm::value_ptr(transformMatrix));
 

@@ -15,11 +15,13 @@ namespace engine{
 		currentHoveredPanel = SceneHierarchyPanelType::PANEL_NONE;
 
 		if (ImGui::Begin("activeScene hierarchy")){
+
+			auto it = editor->activeScene->getAbsolutParents().begin();
 			
-			editor->activeScene->getENTTRegistry().each([&](auto &entityID){
-				Entity entity(entityID, editor->activeScene.get());
-				drawEntityNode(entity);
-			});
+			while (it){
+				drawEntityNode(editor->activeScene->get(*it));
+				it++;
+			};
 
 			if (ImGui::IsWindowHovered()){
 				currentHoveredPanel = SceneHierarchyPanelType::PANEL_SCENE_HIERARCHY;
@@ -84,12 +86,10 @@ namespace engine{
 	bool SceneHierarchyPanel::KeyPressedOnHierarchyPanel(KeyPressedEvent &e){
 		
 		if (inputs->isDown(newEntityKey, e)) createNewEntity();
-		if (inputs->isDown(deleteEntityKey, e)) deleteSelectedEntity();
+		if (inputs->isDown(deleteEntityKey, e) && currentHoveredPanel == SceneHierarchyPanelType::PANEL_SCENE_HIERARCHY) deleteSelectedEntity();
 
 		return false;
 	}
-
-
 
 	// ========================================================= ImGui
 
@@ -119,7 +119,7 @@ namespace engine{
 
 			ImGui::PopStyleVar();
 
-			ImGui::SameLine(ImGui::GetContentRegionAvail().x - lineHeight * 0.5f);
+			ImGui::SameLine(ImGui::GetWindowSize().x - lineHeight * 0.5f);
 			if (ImGui::Button("+", ImVec2(lineHeight, lineHeight))){
 				ImGui::OpenPopup("componenSettings");
 			}
@@ -160,8 +160,12 @@ namespace engine{
 	void SceneHierarchyPanel::drawEntityNode(Entity entity){
 		if (!entity.hasComponent<components::Tag>()) return;
 
+		bool remove = false;
+
 		auto &tag = entity.getComponent<components::Tag>();
-		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | (selected(entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_SpanAvailWidth;
+		auto &node = entity.getComponent<components::HierarchyNode>();
+
+		ImGuiTreeNodeFlags flags = (node.childs.empty() ? 0 : ImGuiTreeNodeFlags_OpenOnArrow) | (selected(entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_SpanAvailWidth;
 
 		bool open = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<uint64_t>(static_cast<uint32_t>(entity))), flags, tag.tag.c_str());
 
@@ -169,9 +173,29 @@ namespace engine{
 			select(entity);
 		}
 
+		if (ImGui::BeginPopupContextItem()){
+			if (ImGui::MenuItem("remove", deleteEntityKey.toString().c_str())){
+				remove = true;
+			}
+
+			if (ImGui::MenuItem("addChild")){
+				editor->activeScene->createEntity(entity);
+			}
+
+			ImGui::EndPopup();
+		}
+
 		if (open){
 			
+			for (auto child : node.childs){
+				drawEntityNode(editor->activeScene->get(child));
+			}
+			
 			ImGui::TreePop();
+		}
+		
+		if (remove){
+			(entity);
 		}
 	}
 
@@ -443,4 +467,14 @@ namespace engine{
 
 		select(entity);
 	}
+
+	void SceneHierarchyPanel::deleteEntity(Entity entity){
+		if (!entity) return;
+
+		EntityRemovedEvent event(entity);
+		callback(event);
+
+		editor->activeScene->destroyEntity(entity);
+	}
+
 }

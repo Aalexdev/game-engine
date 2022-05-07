@@ -64,6 +64,7 @@ namespace engine{
 			bool selected(Entity entity) const {return entity == selectedEntity;}
 			void select(Entity entity); // selected the given entity
 			void deleteSelectedEntity();
+			void deleteEntity(Entity entity);
 			void createNewEntity();
 	};
 }
