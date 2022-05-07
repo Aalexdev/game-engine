@@ -65,6 +65,6 @@ namespace engine{
 			void select(Entity entity); // selected the given entity
 			void deleteSelectedEntity();
 			void deleteEntity(Entity entity);
-			void createNewEntity();
+			Entity createNewEntity();
 	};
 }

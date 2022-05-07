@@ -5,6 +5,7 @@
 #include "panels/ContentBrowserPanel.hpp"
 #include "panels/SceneHierarchyPanel.hpp"
 #include "panels/ToolbarPanel.hpp"
+#include "panels/ScenePanel.hpp"
 
 namespace engine{
 	Ref<Panel> Panel::create(PanelType type, const EditorEventCallbackFn &callback, const Ref<Input> &inputs, EditorLayer *editor){
@@ -21,6 +22,10 @@ namespace engine{
 			
 			case PanelType::TOOLBAR_PANEL:
 				panel = ToolbarPanel::create();
+				break;
+			
+			case PanelType::SCENE_PANEL:
+				panel = ScenePanel::create();
 				break;
 		}
 

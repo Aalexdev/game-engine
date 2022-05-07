@@ -16,19 +16,69 @@ namespace engine{
 
 		if (ImGui::Begin("activeScene hierarchy")){
 
-			auto it = editor->activeScene->getAbsolutParents().begin();
-			
-			while (it){
-				drawEntityNode(editor->activeScene->get(*it));
-				it++;
-			};
+			editor->activeScene->getENTTRegistry().each([&](auto e){
+				Entity entity = {e, editor->activeScene.get()};
 
+				if (entity.hasComponent<components::HierarchyNode>()){
+					auto &node = entity.getComponent<components::HierarchyNode>();
+					if (node.hasParent) return;
+					drawEntityNode(entity);
+				}
+			});
+			
 			if (ImGui::IsWindowHovered()){
 				currentHoveredPanel = SceneHierarchyPanelType::PANEL_SCENE_HIERARCHY;
 			}
-			
-			ImGui::End();
+
+			if (currentHoveredPanel == SceneHierarchyPanelType::PANEL_SCENE_HIERARCHY){
+				if (ImGui::IsMouseClicked(0) && !ImGui::IsItemHovered()){
+					select({});
+				}
+
+				if (ImGui::IsMouseClicked(1) && !ImGui::IsItemHovered()){
+					ImGui::OpenPopup("SceneHierarchyPopupContextVoid");
+				}
+			}
+
+			if (ImGui::BeginPopup("SceneHierarchyPopupContextVoid")){
+					
+				if (ImGui::BeginMenu("create entity")){
+					if (ImGui::MenuItem("create empty entity", newEntityKey.toString().c_str())){
+						createNewEntity();
+					}
+
+					if (ImGui::BeginMenu("renderer")){
+						if (ImGui::MenuItem("sprite")){
+							auto entity = createNewEntity();
+							auto &component = entity.addComponent<components::Sprite>();
+							ComponentAddedEvent event(entity, component);
+							callback(event);
+						}
+
+						if (ImGui::MenuItem("circle")){
+							auto entity = createNewEntity();
+							auto &component = entity.addComponent<components::CircleRenderer>();
+							ComponentAddedEvent event(entity, component);
+							callback(event);
+						}
+
+						if (ImGui::MenuItem("triangle")){
+							auto entity = createNewEntity();
+							auto &component = entity.addComponent<components::TriangleRenderer>();
+							ComponentAddedEvent event(entity, component);
+							callback(event);
+						}
+
+						ImGui::EndMenu();
+					}
+					
+					ImGui::EndMenu();
+				}
+
+				ImGui::EndPopup();
+			}
 		}
+		ImGui::End();
 
 		drawComponentsPanel();
 	}
@@ -119,7 +169,7 @@ namespace engine{
 
 			ImGui::PopStyleVar();
 
-			ImGui::SameLine(ImGui::GetWindowSize().x - lineHeight * 0.5f);
+			ImGui::SameLine(ImGui::GetContentRegionAvail().x - lineHeight);
 			if (ImGui::Button("+", ImVec2(lineHeight, lineHeight))){
 				ImGui::OpenPopup("componenSettings");
 			}
@@ -195,7 +245,7 @@ namespace engine{
 		}
 		
 		if (remove){
-			(entity);
+			deleteEntity(entity);
 		}
 	}
 
@@ -206,9 +256,8 @@ namespace engine{
 			if (ImGui::IsWindowHovered()){
 				currentHoveredPanel = SceneHierarchyPanelType::PANEL_ENTITY_COMPONENTS;
 			}
-
-			ImGui::End();
 		}
+		ImGui::End();
 	}
 
 	void SceneHierarchyPanel::drawEntityComponents(Entity entity){
@@ -457,15 +506,17 @@ namespace engine{
 		callback(event);
 
 		editor->activeScene->destroyEntity(selectedEntity);
+		selectedEntity.release();
 	}
 
-	void SceneHierarchyPanel::createNewEntity(){
+	Entity SceneHierarchyPanel::createNewEntity(){
 		Entity entity = editor->activeScene->createIDEntity();
 
 		EntityCreatedEvent event(entity);
 		callback(event);
 
 		select(entity);
+		return entity;
 	}
 
 	void SceneHierarchyPanel::deleteEntity(Entity entity){
@@ -473,6 +524,10 @@ namespace engine{
 
 		EntityRemovedEvent event(entity);
 		callback(event);
+
+		if (entity == selectedEntity){
+			selectedEntity.release();
+		}
 
 		editor->activeScene->destroyEntity(entity);
 	}

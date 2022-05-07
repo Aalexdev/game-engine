@@ -1,7 +1,10 @@
+Window:
+  WindowSize: [1550, 834]
+  WindowPos: [458241864, 408]
 Editor:
   recentProjects:
-    - projectPath: D:\dev\C++\editor\scene.yaml
     - projectPath: D:\dev\game engine\editor\scene.yaml
+    - projectPath: D:\dev\C++\editor\scene.yaml
     - projectPath: D:\dev\game engine\editor\tyreducytyt.yaml
     - projectPath: ""
   Panels:
@@ -24,6 +27,7 @@ Editor:
       StartKey: [[294]]
       PauseKey: [[295]]
       StopKey: [[299]]
+    - panel: 4
   ImGui:
     style:
       Alpha: 1

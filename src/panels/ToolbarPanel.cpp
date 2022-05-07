@@ -37,9 +37,8 @@ namespace engine{
 					break;
 				}
 			}
-
-			ImGui::End();
 		}
+		ImGui::End();
 	}
 
 	void ToolbarPanel::OnEvent(EditorEvent &e){

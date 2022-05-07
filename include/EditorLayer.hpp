@@ -10,6 +10,7 @@ namespace engine{
 		friend class Panel;
 		friend class SceneHierarchyPanel;
 		friend class EditorSerializer;
+		friend class ScenePanel;
 
 		public:
 			EditorLayer() : Layer(){}

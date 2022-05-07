@@ -11,6 +11,7 @@ namespace engine{
 		CONTENT_BROWSER_PANEL,
 		SCENE_HIERARCHY_PANEL,
 		TOOLBAR_PANEL,
+		SCENE_PANEL,
 	};
 
 	class EditorLayer;
