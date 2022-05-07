@@ -16,6 +16,25 @@ namespace engine::windows{
 
 			virtual uint32_t getWidth() const override;
 			virtual uint32_t getHeight() const override;
+			virtual uint32_t getX() const override;
+			virtual uint32_t getY() const override;
+			virtual bool isBorderless() const override;
+			virtual bool isFullscreen() const override;
+			virtual bool isGrab() const override;
+			virtual float getOpacity() const override;
+			virtual uint32_t getMinWidth() const override;
+			virtual uint32_t getMaxWidth() const override;
+			virtual uint32_t getMinHeight() const override;
+			virtual uint32_t getMaxHeight() const override;
+			
+			virtual void setSize(uint32_t width, uint32_t height) override;
+			virtual void setPos(uint32_t x, uint32_t y) override;
+			virtual void setBorderless(bool borderless) override;
+			virtual void setFullscreen(bool fullscreen) override;
+			virtual void setGrab(bool grab) override;
+			virtual void setOpacity(float opacity) override;
+			virtual void setMinSize(uint32_t width, uint32_t height) override;
+			virtual void setMaxSize(uint32_t width, uint32_t height) override;
 
 			virtual void setEventCallback(const EventCallbackFn& callback) override;
             virtual void setVSync(bool enable) override;
@@ -42,10 +61,17 @@ namespace engine::windows{
 
 			struct WindowData{
                 uint32_t width, height;
+				uint32_t x, y;
                 std::string title;
                 bool VSync;
                 EventCallbackFn EventCallback;
-			Ref<inputs::GLFWInput> inputs;
+				Ref<inputs::GLFWInput> inputs;
+
+				uint32_t widthBeforeFullscreen;
+				uint32_t heightBeforeFullscreen;
+				uint32_t xBeforeFullscreen;
+				uint32_t yBeforeFullscreen;
+
             };
 
 			WindowData data; 

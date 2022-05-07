@@ -39,6 +39,98 @@ namespace engine::windows{
 		return data.height;
 	}
 
+	uint32_t GLFWWindow::getX() const{
+		return data.x;
+	}
+
+	uint32_t GLFWWindow::getY() const{
+		return data.y;
+	}
+
+	bool GLFWWindow::isBorderless() const{
+		return false;
+	}
+
+	bool GLFWWindow::isFullscreen() const{
+		return false;
+	}
+
+	bool GLFWWindow::isGrab() const{
+		return false;
+	}
+
+	float GLFWWindow::getOpacity() const{
+		return glfwGetWindowOpacity(window);
+	}
+
+	uint32_t GLFWWindow::getMinWidth() const{
+		return 0;
+	}
+
+	uint32_t GLFWWindow::getMaxWidth() const{
+		return std::numeric_limits<uint16_t>().max();
+	}
+
+	uint32_t GLFWWindow::getMinHeight() const{
+		return 0;
+	}
+
+	uint32_t GLFWWindow::getMaxHeight() const{
+		return std::numeric_limits<uint16_t>().max();
+	}
+	
+	void GLFWWindow::setSize(uint32_t width, uint32_t height){
+		glfwSetWindowSize(window, static_cast<int>(width), static_cast<int>(height));
+	}
+
+	void GLFWWindow::setPos(uint32_t x, uint32_t y){
+		glfwSetWindowPos(window, static_cast<int>(x), static_cast<int>(y));
+	}
+	
+	void GLFWWindow::setBorderless(bool borderless){
+		glfwWindowHint(GLFW_VISIBLE, static_cast<int>(borderless));
+	}
+
+	void GLFWWindow::setFullscreen(bool fullscreen){
+		auto monitor = glfwGetWindowMonitor(window);
+
+		uint32_t ux, uy, uw, uh;
+
+		if (fullscreen){
+			data.widthBeforeFullscreen = getWidth();
+			data.heightBeforeFullscreen = getHeight();
+			data.xBeforeFullscreen = getX();
+			data.yBeforeFullscreen = getY();
+
+			int x, y, w, h;
+			glfwGetMonitorWorkarea(monitor, &x, &y, &w, &h);
+		} else {
+			uw = data.widthBeforeFullscreen;
+			uh = data.heightBeforeFullscreen;
+			ux = data.xBeforeFullscreen;
+			uy = data.yBeforeFullscreen;
+		}
+
+		setPos(ux, uy);
+		setSize(uw, uh);
+	}
+
+	void GLFWWindow::setGrab(bool grab){
+		ENGINE_CORE_WARN("unable to grab the window using the glfw API");
+	}
+
+	void GLFWWindow::setOpacity(float opacity){
+		glfwSetWindowOpacity(window, opacity);
+	}
+
+	void GLFWWindow::setMinSize(uint32_t width, uint32_t height){
+		glfwSetWindowSizeLimits(window, static_cast<int>(width), static_cast<int>(height), GLFW_DONT_CARE, GLFW_DONT_CARE);
+	}
+
+	void GLFWWindow::setMaxSize(uint32_t width, uint32_t height){
+		glfwSetWindowSizeLimits(window, GLFW_DONT_CARE, GLFW_DONT_CARE, static_cast<int>(width), static_cast<int>(height));
+	}
+
 	void GLFWWindow::setVSync(bool enable){
 		data.VSync = enable;
 		context->enableVSync(enable);
@@ -164,6 +256,12 @@ namespace engine::windows{
 				MouseScrolledEvent event(static_cast<float>(xOffset), static_cast<float>(yOffset));
 				data.EventCallback(event);
 				data.inputs->setMouseWheel(yOffset);
+			});
+
+			glfwSetWindowPosCallback(window, [](GLFWwindow* window, int x, int y){
+				WindowData& data = *reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
+				data.x = x;
+				data.y = y;
 			});
 
 			glfwSetErrorCallback(GLFWErrorCallback);

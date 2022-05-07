@@ -8,6 +8,7 @@
 namespace engine::components{
 	struct ENGINE_API HierarchyNode{
 		UUID parent;
+		bool hasParent = false;
 		std::list<UUID> childs;
 	};
 }

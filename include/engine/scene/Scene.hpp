@@ -61,8 +61,6 @@ namespace engine{
 
 			glm::vec2 &getGravity() {return gravity;}
 
-			Set<UUID> &getAbsolutParents() {return absolutParents;}
-
 			Entity get(UUID id);
 
 		private:
@@ -78,7 +76,6 @@ namespace engine{
 			// the fisrt element of the queue is rendered is first and so it's at the back of the scene
 			// it's also useful for a rendering on a separate thread
 			Set<UUID> sprites;
-			Set<UUID> absolutParents;
 
 			uint32_t viewportWidth;
 			uint32_t viewportHeight;

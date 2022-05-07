@@ -113,8 +113,6 @@ namespace engine{
 			return (*entityIDMap)[id];
 		}
 		(*entityIDMap)[id] = entity;
-		
-		absolutParents.pushBack(id);
 		return entity;
 	}
 
@@ -129,8 +127,6 @@ namespace engine{
 		entity.addComponent<components::UUID>(uuid);
 		(*entityIDMap)[uuid] = entity;
 
-		absolutParents.pushBack(uuid);
-
 		return entity;
 	}
 	
@@ -140,9 +136,10 @@ namespace engine{
 
 		entity.addComponent<components::Tag>("new entity");
 		entity.addComponent<components::Transform>();
-		auto node = entity.addComponent<components::HierarchyNode>();
+		auto &node = entity.addComponent<components::HierarchyNode>();
 
 		node.parent = parent.getComponent<components::UUID>();
+		node.hasParent = true;
 		parent.getComponent<components::HierarchyNode>().childs.push_back(id);
 
 		(*entityIDMap)[id] = entity;
@@ -155,9 +152,10 @@ namespace engine{
 
 		entity.addComponent<components::Tag>(name);
 		entity.addComponent<components::Transform>();
-		auto node = entity.addComponent<components::HierarchyNode>();
+		auto &node = entity.addComponent<components::HierarchyNode>();
 
 		node.parent = parent.getComponent<components::UUID>();
+		node.hasParent = true;
 		parent.getComponent<components::HierarchyNode>().childs.push_back(uuid);
 
 		(*entityIDMap)[id] = entity;
@@ -175,10 +173,14 @@ namespace engine{
 				destroyEntity((*entityIDMap)[child]);
 			}
 
+			if (node.hasParent){
+				auto parent = (*entityIDMap)[node.parent];
+				parent.getComponent<components::HierarchyNode>().childs.remove(id);
+			}
+
 			entityIDMap->erase(id);
 			sprites.erase(id);
 		}
-
 		
 		registry.destroy(static_cast<entt::entity>(entity));
 	}
@@ -288,15 +290,20 @@ namespace engine{
 			transform.lastTransform = transform.transform;
 
 			// if the quad dosen't have a rotation, it useless to calculate to rotation transformation
-			if (glm::epsilonEqual(transform.rotation, 0.0f, glm::epsilon<float>())){
-				transform.transform = glm::translate(glm::mat4(1.f), glm::vec3(transform.translation, 0.f)) * glm::scale(glm::mat4(1.f), glm::vec3(transform.scale, 1.f));
-			} else {
-				transform.transform = glm::translate(glm::mat4(1.f), glm::vec3(transform.translation, 0.f)) * glm::rotate(glm::mat4(1.f), transform.rotation, {0.f, 0.f, 1.f}) * glm::scale(glm::mat4(1.f), glm::vec3(transform.scale, 1.f));
-			}
 
-			if (transform.transform != transform.lastTransform){
-				for (auto &child : node.childs){
-					updatetransform((*entityIDMap)[child], transform.transform);
+			if (node.hasParent){
+				glm::mat4 parent = (*entityIDMap)[node.parent].getComponent<components::Transform>().transform;
+
+				if (glm::epsilonEqual(transform.rotation, 0.0f, glm::epsilon<float>())){
+					transform.transform = parent * glm::translate(glm::mat4(1.f), glm::vec3(transform.translation, 0.f)) * glm::scale(glm::mat4(1.f), glm::vec3(transform.scale, 1.f));
+				} else {
+					transform.transform = parent * glm::translate(glm::mat4(1.f), glm::vec3(transform.translation, 0.f)) * glm::rotate(glm::mat4(1.f), transform.rotation, {0.f, 0.f, 1.f}) * glm::scale(glm::mat4(1.f), glm::vec3(transform.scale, 1.f));
+				}	
+			} else {
+				if (glm::epsilonEqual(transform.rotation, 0.0f, glm::epsilon<float>())){
+					transform.transform = glm::translate(glm::mat4(1.f), glm::vec3(transform.translation, 0.f)) * glm::scale(glm::mat4(1.f), glm::vec3(transform.scale, 1.f));
+				} else {
+					transform.transform = glm::translate(glm::mat4(1.f), glm::vec3(transform.translation, 0.f)) * glm::rotate(glm::mat4(1.f), transform.rotation, {0.f, 0.f, 1.f}) * glm::scale(glm::mat4(1.f), glm::vec3(transform.scale, 1.f));
 				}
 			}
 		}

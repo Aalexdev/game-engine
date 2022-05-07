@@ -223,6 +223,9 @@ namespace engine{
 					back->next = nullptr;
 					_end = back;
 
+				} else {
+					_begin = nullptr;
+					_end = nullptr;
 				}
 				
 				map.erase(value);

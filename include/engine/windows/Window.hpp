@@ -59,6 +59,25 @@ namespace engine{
 
 			virtual uint32_t getWidth() const = 0;
 			virtual uint32_t getHeight() const = 0;
+			virtual uint32_t getX() const = 0;
+			virtual uint32_t getY() const = 0;
+			virtual bool isBorderless() const = 0;
+			virtual bool isFullscreen() const = 0;
+			virtual bool isGrab() const = 0;
+			virtual float getOpacity() const = 0;
+			virtual uint32_t getMinWidth() const = 0;
+			virtual uint32_t getMaxWidth() const = 0;
+			virtual uint32_t getMinHeight() const = 0;
+			virtual uint32_t getMaxHeight() const = 0;
+
+			virtual void setSize(uint32_t width, uint32_t height) = 0;
+			virtual void setPos(uint32_t x, uint32_t y) = 0;
+			virtual void setBorderless(bool borderless) = 0;
+			virtual void setFullscreen(bool fullscreen) = 0;
+			virtual void setGrab(bool grab) = 0;
+			virtual void setOpacity(float opacity) = 0;
+			virtual void setMinSize(uint32_t width, uint32_t height) = 0;
+			virtual void setMaxSize(uint32_t width, uint32_t height) = 0;
 
 			virtual void setEventCallback(const EventCallbackFn& callback) = 0;
 			virtual void setVSync(bool enable) = 0;

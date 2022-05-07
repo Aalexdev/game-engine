@@ -36,6 +36,91 @@ namespace engine::windows{
 		return data.height;
 	}
 
+	uint32_t SDL2Window::getX() const{
+		return data.x;
+	}
+
+	uint32_t SDL2Window::getY() const{
+		return data.y;
+	}
+	
+	bool SDL2Window::isBorderless() const{
+		return data.borderless;
+	}
+
+	bool SDL2Window::isFullscreen() const{
+		return data.fullscreen;
+	}
+
+	bool SDL2Window::isGrab() const{
+		return SDL_GetWindowGrab(window);
+	}
+
+	float SDL2Window::getOpacity() const{
+		float opacity;
+		int status = SDL_GetWindowOpacity(window, &opacity);
+		ENGINE_CORE_ASSERT(status == 0, "SDL_GetWindowOpacity Error : ", SDL_GetError());
+		return opacity;
+	}
+
+	uint32_t SDL2Window::getMinWidth() const{
+		int width;
+		SDL_GetWindowMinimumSize(window, &width, nullptr);
+		return static_cast<uint32_t>(width);
+	}
+
+	uint32_t SDL2Window::getMaxWidth() const{
+		int width;
+		SDL_GetWindowMaximumSize(window, &width, nullptr);
+		return static_cast<uint32_t>(width);
+	}
+
+	uint32_t SDL2Window::getMinHeight() const{
+		int height;
+		SDL_GetWindowMinimumSize(window, nullptr, &height);
+		return static_cast<uint32_t>(height);
+	}
+
+	uint32_t SDL2Window::getMaxHeight() const{
+		int height;
+		SDL_GetWindowMaximumSize(window, nullptr, &height);
+		return static_cast<uint32_t>(height);
+	}
+
+	void SDL2Window::setSize(uint32_t width, uint32_t height){
+		SDL_SetWindowSize(window, static_cast<int>(width), static_cast<int>(height));
+	}
+
+	void SDL2Window::setPos(uint32_t x, uint32_t y){
+		SDL_SetWindowPosition(window, static_cast<int>(x), static_cast<int>(y));
+	}
+	
+	void SDL2Window::setBorderless(bool borderless){
+		SDL_SetWindowBordered(window, static_cast<SDL_bool>(!borderless));
+	}
+
+	void SDL2Window::setFullscreen(bool fullscreen){
+		int status = SDL_SetWindowFullscreen(window, fullscreen ? SDL_WINDOW_FULLSCREEN : 0);
+		ENGINE_CORE_ASSERT(status == 0, "SDL_SetWindowFullscreen Error : ", SDL_GetError());
+	}
+
+	void SDL2Window::setGrab(bool grab){
+		SDL_SetWindowGrab(window, static_cast<SDL_bool>(grab));
+	}
+
+	void SDL2Window::setOpacity(float opacity){
+		int status = SDL_SetWindowOpacity(window, opacity);
+		ENGINE_CORE_ASSERT(status == 0, "SDL_SetWindowOpacity Error : ", SDL_GetError());
+	}
+
+	void SDL2Window::setMinSize(uint32_t width, uint32_t height){
+		SDL_SetWindowMinimumSize(window, static_cast<int>(width), static_cast<int>(height));
+	}
+
+	void SDL2Window::setMaxSize(uint32_t width, uint32_t height){
+		SDL_SetWindowMaximumSize(window, static_cast<int>(width), static_cast<int>(height));
+	}
+	
 	void SDL2Window::setVSync(bool enable){
 		ENGINE_PROFILE_FUNCTION();
 		data.VSync = enable;
@@ -139,8 +224,17 @@ namespace engine::windows{
 				case SDL_WINDOWEVENT_RESIZED:{
 					WindowResizedEvent event(e.window.data1, e.window.data2);
 					data.EventCallback(event);
+					data.width = e.window.data1;
+					data.height = e.window.data2;
 					break;
 				}
+
+				case SDL_WINDOWEVENT_MOVED:{
+					data.x = e.window.data1;
+					data.y = e.window.data2;
+					break;
+				}
+			
 
 				case SDL_KEYDOWN:{
 					KeyPressedEvent event(static_cast<Key>(e.key.keysym.scancode), e.key.repeat);
