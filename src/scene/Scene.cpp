@@ -13,6 +13,7 @@
 #include "engine/scene/components/BoxColliderComponent.hpp"
 #include "engine/scene/components/CircleRendererComponent.hpp"
 #include "engine/scene/components/TriangleRenderer.hpp"
+#include "engine/scene/components/HierarchyNodeComponent.hpp"
 
 #include <libs/yaml-cpp/yaml.h>
 #include <libs/glm/gtc/epsilon.hpp>
@@ -24,8 +25,6 @@ struct std::hash<engine::Entity>{
         return static_cast<uint32_t>(e);
     }
 };
-
-
 
 namespace engine{
 
@@ -44,6 +43,7 @@ namespace engine{
 		copyComponent<components::BoxCollider>(dst, src);
 		copyComponent<components::CircleRenderer>(dst, src);
 		copyComponent<components::TriangleRenderer>(dst, src);
+		copyComponent<components::HierarchyNode>(dst, src);
 	}
 	
 	static b2BodyType ToB2Type(components::RigidBody::BodyType type){
@@ -100,6 +100,7 @@ namespace engine{
 
 		entity.addComponent<components::Tag>(name);
 		entity.addComponent<components::Transform>();
+		entity.addComponent<components::HierarchyNode>();
 
 		return entity;
 	}
@@ -112,6 +113,8 @@ namespace engine{
 			return (*entityIDMap)[id];
 		}
 		(*entityIDMap)[id] = entity;
+		
+		absolutParents.pushBack(id);
 		return entity;
 	}
 
@@ -125,19 +128,59 @@ namespace engine{
 		Entity entity = createEntity(name);
 		entity.addComponent<components::UUID>(uuid);
 		(*entityIDMap)[uuid] = entity;
+
+		absolutParents.pushBack(uuid);
+
+		return entity;
+	}
+	
+	Entity Scene::createEntity(Entity parent){
+		Entity entity = {registry.create(), this};
+		auto id = entity.addComponent<components::UUID>();
+
+		entity.addComponent<components::Tag>("new entity");
+		entity.addComponent<components::Transform>();
+		auto node = entity.addComponent<components::HierarchyNode>();
+
+		node.parent = parent.getComponent<components::UUID>();
+		parent.getComponent<components::HierarchyNode>().childs.push_back(id);
+
+		(*entityIDMap)[id] = entity;
 		return entity;
 	}
 
+	Entity Scene::createEntity(Entity parent, uint64_t id, const std::string &name){
+		Entity entity = {registry.create(), this};
+		auto uuid = entity.addComponent<components::UUID>(id);
+
+		entity.addComponent<components::Tag>(name);
+		entity.addComponent<components::Transform>();
+		auto node = entity.addComponent<components::HierarchyNode>();
+
+		node.parent = parent.getComponent<components::UUID>();
+		parent.getComponent<components::HierarchyNode>().childs.push_back(uuid);
+
+		(*entityIDMap)[id] = entity;
+		return entity;
+	}
 
 	void Scene::destroyEntity(Entity entity){
-		registry.destroy(static_cast<entt::entity>(entity));
-		 // delete the sprite from the sprite queue (it will be destroyed only if the entity is registred in the queue)
 
 		if (entity.hasComponent<components::UUID>()){
 			UUID id = entity.getComponent<components::UUID>().id;
+
+			auto &node = entity.getComponent<components::HierarchyNode>();
+
+			for (auto &child : node.childs){
+				destroyEntity((*entityIDMap)[child]);
+			}
+
 			entityIDMap->erase(id);
 			sprites.erase(id);
 		}
+
+		
+		registry.destroy(static_cast<entt::entity>(entity));
 	}
 
 	void Scene::OnUpdateRuntime(Timestep dt){
@@ -169,8 +212,23 @@ namespace engine{
 			renderer->beginScene(Camera());
 		}
 
+		updatePhysics(dt);
+		updateTransform();
+		drawSprites();
+
+		renderer->endScene();
+	}
+
+	void Scene::OnUpdateEditor(const EditorCamera &camera){
+		renderer->beginScene(camera.getCamera());
+		updateTransform();
+		drawSprites();
+		renderer->endScene();
+	}
+
+	void Scene::updatePhysics(Timestep ts){
 		if (physicsWorld){
-			physicsWorld->Step(dt, velocityIteration, positionIteration);
+			physicsWorld->Step(ts, velocityIteration, positionIteration);
 
 			auto view = registry.view<components::RigidBody>();
 			for (auto e : view){
@@ -186,15 +244,6 @@ namespace engine{
 				transform.rotation = {body->GetAngle()};
 			}
 		}
-		
-		drawSprites();
-		renderer->endScene();
-	}
-
-	void Scene::OnUpdateEditor(const EditorCamera &camera){
-		renderer->beginScene(camera.getCamera());
-		drawSprites();
-		renderer->endScene();
 	}
 
 	void Scene::drawSprites(){
@@ -207,29 +256,11 @@ namespace engine{
 
 			if (entity.hasComponent<components::Sprite>()){
 				auto &sprite = entity.getComponent<components::Sprite>();
+				renderer->drawQuad(transform.transform, sprite.color, static_cast<uint32_t>(entity), sprite.texture);
 
-				// if a texture is pushed, we draw a textured quad
-				if (sprite.texture){
-					// check if the rotation of the sprite is 0, if it is, we don't have to draw a rotated quad
-					if (glm::epsilonEqual(transform.rotation, static_cast<float>(0), glm::epsilon<float>())){
-						renderer->drawQuad(glm::vec3(transform.translation, 0), transform.scale, sprite.color, static_cast<uint32_t>(entity), sprite.texture);
-					} else {
-						renderer->drawRotatedQuad(glm::vec3(transform.translation, 0), transform.scale, sprite.color, transform.rotation, static_cast<uint32_t>(entity), sprite.texture);
-					}
-
-				// if there is no texture, we draw a simple quad
-				} else {
-					// check if the rotation of the sprite is 0, if it is, we don't have to draw a rotated quad
-					if (glm::epsilonEqual(transform.rotation, static_cast<float>(0), glm::epsilon<float>())){
-						renderer->drawQuad(glm::vec3(transform.translation, 0), transform.scale, sprite.color, static_cast<uint32_t>(entity));
-					} else {
-						renderer->drawRotatedQuad(glm::vec3(transform.translation, 0), transform.scale, sprite.color, transform.rotation, static_cast<uint32_t>(entity));
-					}
-				}
 			} else if (entity.hasComponent<components::TriangleRenderer>()){
 				auto &tri = entity.getComponent<components::TriangleRenderer>();
-
-				renderer->drawTriangle(tri.p1, tri.p2, tri.p3, transform.getTransform(), tri.texture, static_cast<uint32_t>(entity));
+				renderer->drawTriangle(tri.p1, tri.p2, tri.p3, transform.transform, tri.texture, static_cast<uint32_t>(entity));
 			}
 
 			it++;
@@ -240,8 +271,45 @@ namespace engine{
 			for (auto &e : view){
 				auto [transform, circle] = view.get(e);
 				
-				renderer->drawCircle(transform.getTransform(), circle.color, static_cast<uint32_t>(e), circle.thickness, circle.fade);
+				renderer->drawCircle(transform.transform, circle.color, static_cast<uint32_t>(e), circle.thickness, circle.fade);
 			}
+		}
+	}
+
+	void Scene::updateTransform(){
+
+		auto view = registry.view<components::Transform>();
+
+		for (auto &e : view){
+			Entity entity = {e, this};
+			auto &transform = entity.getComponent<components::Transform>();
+			auto &node = entity.getComponent<components::HierarchyNode>();
+
+			transform.lastTransform = transform.transform;
+
+			// if the quad dosen't have a rotation, it useless to calculate to rotation transformation
+			if (glm::epsilonEqual(transform.rotation, 0.0f, glm::epsilon<float>())){
+				transform.transform = glm::translate(glm::mat4(1.f), glm::vec3(transform.translation, 0.f)) * glm::scale(glm::mat4(1.f), glm::vec3(transform.scale, 1.f));
+			} else {
+				transform.transform = glm::translate(glm::mat4(1.f), glm::vec3(transform.translation, 0.f)) * glm::rotate(glm::mat4(1.f), transform.rotation, {0.f, 0.f, 1.f}) * glm::scale(glm::mat4(1.f), glm::vec3(transform.scale, 1.f));
+			}
+
+			if (transform.transform != transform.lastTransform){
+				for (auto &child : node.childs){
+					updatetransform((*entityIDMap)[child], transform.transform);
+				}
+			}
+		}
+	}
+
+	void Scene::updatetransform(Entity entity, const glm::mat4 &parentTransform){
+		auto &node = entity.getComponent<components::HierarchyNode>();
+		auto &transform = entity.getComponent<components::Transform>();
+
+		transform.transform = parentTransform * transform.transform;
+		
+		for (auto &child : node.childs){
+			updatetransform((*entityIDMap)[child], transform.transform);
 		}
 	}
 
@@ -395,5 +463,10 @@ namespace engine{
 		if (physicsWorld){
 			runtimeStopped = false;
 		}
-	}	
+	}
+
+	Entity Scene::get(UUID id){
+		return (*entityIDMap)[id];
+	}
+
 }

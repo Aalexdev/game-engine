@@ -28,6 +28,8 @@ namespace engine{
 			Entity createEntity(const std::string &name = "new Entity");
 			Entity createIDEntity(const std::string &name = "new Entity");
 			Entity createIDEntity(uint64_t id, const std::string &name = "new Entity");
+			Entity createEntity(Entity parent);
+			Entity createEntity(Entity parent, uint64_t id, const std::string &name = "new Entity");
 
 			Entity duplicateEntity(Entity entity);
 			void destroyEntity(Entity entity);
@@ -59,9 +61,15 @@ namespace engine{
 
 			glm::vec2 &getGravity() {return gravity;}
 
+			Set<UUID> &getAbsolutParents() {return absolutParents;}
+
+			Entity get(UUID id);
+
 		private:
 			void drawSprites();
-			void drawEntityChilds(Entity parent, const glm::mat4 &parentTransform);
+			void updateTransform();
+			void updatetransform(Entity entity, const glm::mat4 &parentTranform);
+			void updatePhysics(Timestep ts);
 
 			entt::registry registry;
 			Ref<Renderer> renderer;
@@ -70,6 +78,7 @@ namespace engine{
 			// the fisrt element of the queue is rendered is first and so it's at the back of the scene
 			// it's also useful for a rendering on a separate thread
 			Set<UUID> sprites;
+			Set<UUID> absolutParents;
 
 			uint32_t viewportWidth;
 			uint32_t viewportHeight;

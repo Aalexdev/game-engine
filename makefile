@@ -43,7 +43,8 @@ glad:
 
 $(DLL) : $(OBJS)
 	$(CXX) -std=$(STD_VERSION) -shared $(OBJ)/*.o -I $(INCLUDE) -L $(LIB) -o $(BIN)\$(DLL).dll $(CFLAGS) $(DEFINES) $(LIBSFLAGS) -Wl,--out-implib,$(BIN)\$(DLL).lib
-	copy .\out\engine.dll .\editor\out\engine.dll
+	copy .\out\engine.dll ..\editor\out\engine.dll
+	copy .\out\engine.lib ..\editor\libs\engine.lib
 
 $(OBJ)/%.o : $(SRC)/%.cpp
 	$(CXX) -std=$(STD_VERSION) -shared -o $@ -c $< -I $(INCLUDE) -L $(LIB) $(DEFINES) $(CFLAGS)

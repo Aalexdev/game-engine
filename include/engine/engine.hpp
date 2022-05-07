@@ -31,6 +31,7 @@
 #include "scene/components/RigidBodyComponent.hpp"
 #include "scene/components/BoxColliderComponent.hpp"
 #include "scene/components/CircleRendererComponent.hpp"
+#include "scene/components/HierarchyNodeComponent.hpp"
 
 #include "filesystem/Filesystem.hpp"
 #include "debug/Instrumentor.hpp"

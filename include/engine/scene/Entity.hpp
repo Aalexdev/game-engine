@@ -14,10 +14,6 @@ namespace engine{
 			Entity(uint32_t handle, Scene *scene) : handle{static_cast<entt::entity>(handle)}, scene{scene}{}
 			Entity(const Entity &) = default;
 			Entity() = default;
-
-			~Entity(){
-				OnParentRemoved();
-			}
 			
 			template<typename T>
 			bool hasComponent(){
@@ -45,37 +41,6 @@ namespace engine{
 				return scene->registry.get<T>(handle);
 			}
 
-			void OnParentAdded(Entity parent){
-				ENGINE_CORE_ASSERT(parent == nullptr, "cannt add two parents on the same entity");
-				this->parent = new Entity(parent);
-			}
-
-			void OnParentRemoved(){
-				if (parent){
-					delete parent;
-				}
-			}
-
-			Entity addChild(Entity child){
-				childs.pushBack(child);
-				child.OnParentAdded(*this);
-				return child;
-			}
-
-			Entity addChild(){
-				return addChild(scene->createIDEntity());
-			}
-
-			bool isChild(){
-				return parent != nullptr;
-			}
-
-			bool isParent(){
-				return !childs.empty();
-			}
-
-			Set<Entity>& getChilds() {return childs;}
-
 			inline void release(){handle = entt::null;}
 			
 			operator bool() const {return (handle != entt::null && scene->getENTTRegistry().valid(handle));}
@@ -89,8 +54,6 @@ namespace engine{
 			
 		private:
 			entt::entity handle = entt::null;
-			Set<Entity> childs;
-			Entity* parent = nullptr;
 			Scene* scene = nullptr;
 	};
 
