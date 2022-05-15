@@ -18,16 +18,15 @@ namespace engine{
 		layout.attachments = {{FramebufferTextureFormat::RGBA8, FramebufferTextureFiltering::NEAREST, FramebufferTextureFiltering::NEAREST}, FramebufferTextureFormat::R32UI};
 
 		framebuffer = Framebuffer::create(layout);
-
 		renderer->setClearColor({0.2f, 0.2f, 0.2f, 1.f});
 
 		editorScene = Scene::create(renderer);
 		activeScene = editorScene;
 
+
 		camera = EditorCamera::create(input);
-		
-		createEntity("camera").addComponent<components::Camera>();
-		createEntity().addComponent<components::Sprite>();
+		createEntity("camera").addComponent<ECS::components::Camera>();
+		createEntity().addComponent<ECS::components::Sprite>();
 
 		serializer = SceneSerializer::create(editorScene, app->getTextures());
 
@@ -67,7 +66,6 @@ namespace engine{
 		} else {
 			activeScene->OnUpdateEditor(*camera.get());
 		}
-		
 
 		if (input->isKeyDown(Key::KEY_F10)){
 			ENGINE_WARN("start profil record");
@@ -269,14 +267,14 @@ namespace engine{
 	bool EditorLayer::OnRuntimePaused(RuntimePausedEvent &e){
 		runtime = false;
 		activeScene->OnRuntimePause();
-		selectedEntity.release();
+		selectedEntity = {};
 		return false;
 	}
 
 	bool EditorLayer::OnRuntimePlayed(RuntimePlayedEvent &e){
 		runtime = true;
 		activeScene->OnRuntimePlay();
-		selectedEntity.release();
+		selectedEntity = {};
 		return false;
 	}
 
@@ -284,7 +282,7 @@ namespace engine{
 		runtime = false;
 		activeScene->OnRuntimeStop();
 		activeScene = editorScene;
-		selectedEntity.release();
+		selectedEntity = {};
 
 		return false;
 	}
@@ -293,7 +291,7 @@ namespace engine{
 		runtime = true;
 		activeScene = Scene::copy(editorScene);
 		activeScene->OnRuntimeStart();
-		selectedEntity.release();
+		selectedEntity = {};
 		return false;
 	}
 
@@ -345,7 +343,7 @@ namespace engine{
 	void EditorLayer::drawGuizmo(){
 
 		// check if there is a selected entity if it has a transform component
-		if (selectedEntity && selectedEntity.hasComponent<components::Transform>()){
+		if (selectedEntity && selectedEntity.hasComponent<ECS::components::Transform>()){
 			ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
 			ImGuizmo::SetOrthographic(true);
 			ImGuizmo::SetDrawlist();
@@ -357,16 +355,15 @@ namespace engine{
 			const glm::mat4& projection = camera->getCamera().getProjectionMatrix();
 			glm::mat4 cameraView = camera->getCamera().getViewMatrix();
 
-			auto& entityTransform = selectedEntity.getComponent<components::Transform>();
-			glm::mat4 transformMatrix = entityTransform.transform;
+			auto& entityTransform = selectedEntity.getComponent<ECS::components::Transform>();
+			glm::mat4 transformMatrix = entityTransform.transformMat;
 
 			ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(projection), guizmoOperation, ImGuizmo::MODE::LOCAL, glm::value_ptr(transformMatrix));
 
 			if (ImGuizmo::IsUsing()){
-				entityTransform.translation = glm::vec3(transformMatrix[3]);
 
-				math::decomposeTransform2D(transformMatrix, entityTransform.translation, entityTransform.scale, entityTransform.rotation);
-
+				math::decomposeTransform2D(transformMatrix, entityTransform.transform.translation, entityTransform.transform.scale, entityTransform.transform.rotation);
+				entityTransform.transform.translation = glm::vec3(transformMatrix[3]);
 			}
 		}
 	}
@@ -397,7 +394,6 @@ namespace engine{
 						ImGui::CloseCurrentPopup();
 						freezeInput = false;
 					}
-
 
 					i++;
 					ImGui::PopID();
@@ -497,9 +493,9 @@ namespace engine{
 		Entity entity;
 
 		if (tag.empty()){
-			entity = editorScene->createIDEntity();
+			entity = editorScene->createEntity();
 		} else  {
-			entity = editorScene->createIDEntity(tag);
+			entity = editorScene->createEntity(tag);
 		}
 
 		// send the event
@@ -539,5 +535,30 @@ namespace engine{
 		}
 
 		recentProjects[0] = path;
+	}
+
+	glm::vec4 EditorLayer::pushIcon(const std::string &tag, uint32_t startX, uint32_t startY, uint32_t endX, uint32_t endY){
+		if (icons.find(tag) != icons.end()){
+			return getIcon(tag);
+		}
+
+		glm::vec2 start, end;
+		start.x = static_cast<float>(startX) / static_cast<float>(iconAtlas->getWidth());
+		start.y = static_cast<float>(startY) / static_cast<float>(iconAtlas->getHeight());
+		end.x = static_cast<float>(endX) / static_cast<float>(iconAtlas->getWidth());
+		end.y = static_cast<float>(endY) / static_cast<float>(iconAtlas->getHeight());
+
+		// on opengl, we invert the Y axis
+		if (Renderer::getRenderAPI() == Renderer::RenderAPI::OpenGL){
+			start.y = 1 - start.y;
+			end.y = 1 - end.y;
+		}
+
+		size_t id = iconUVs.size();
+		iconUVs.push_back({start.x, start.y, end.x, end.y});
+		iconRelativeUVs.push_back({static_cast<float>(startX), static_cast<float>(startY), static_cast<float>(endX), static_cast<float>(endY)});
+		icons[tag] = id;
+
+		return iconUVs.back();
 	}
 }

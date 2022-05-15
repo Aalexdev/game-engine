@@ -24,6 +24,12 @@ namespace YAML{
 		return out;
 	}
 
+	Emitter& operator<<(YAML::Emitter& out, const glm::vec4 &v){
+		out << YAML::Flow;
+		out << YAML::BeginSeq << v.x << v.y << v.z << v.w << YAML::EndSeq;
+		return out;
+	}
+	
 	template<>
 	struct convert<ImVec2>{
 		static Node encode(const ImVec2 &vec){
@@ -78,6 +84,28 @@ namespace YAML{
 
 			vec.x = node[0].as<uint32_t>();
 			vec.y = node[1].as<uint32_t>();
+			return true;
+		}
+	};
+
+	template<>
+	struct convert<glm::vec4>{
+		static Node encode(const glm::vec4 &vec){
+			Node node;
+			node.push_back(vec.x);
+			node.push_back(vec.y);
+			node.push_back(vec.z);
+			node.push_back(vec.w);
+			return node;
+		}
+
+		static bool decode(const Node &node, glm::vec4 &vec){
+			if (!node.IsSequence() || node.size() != 4) return false;
+
+			vec.x = node[0].as<float>();
+			vec.y = node[1].as<float>();
+			vec.z = node[2].as<float>();
+			vec.w = node[3].as<float>();
 			return true;
 		}
 	};
@@ -205,6 +233,21 @@ namespace engine{
 
 	void EditorSerializer::serializeEditor(YAML::Emitter& out){
 
+		out << YAML::Key << "IconAtlasPath" << YAML::Value << editor->iconAtlasPath.string();
+		out << YAML::Key << "Icons";
+		out << YAML::BeginSeq;
+
+		for (auto &pair : editor->icons){
+			out << YAML::BeginMap;
+
+			out << YAML::Key << "Icon" << YAML::Value << pair.first;
+			out << YAML::Key << "UVs" << YAML::Value << editor->iconRelativeUVs[pair.second];
+
+			out << YAML::EndMap;
+		}
+
+		out << YAML::EndSeq;
+
 		out << YAML::Key << "recentProjects";
 		out << YAML::BeginSeq;
 
@@ -282,12 +325,27 @@ namespace engine{
 			glm::u32vec2 size = windowNode["WindowSize"].as<glm::u32vec2>();
 			glm::u32vec2 pos = windowNode["WindowPos"].as<glm::u32vec2>();
 
-			// window.setPos(pos.x, pos.y);
+			window.setPos(pos.x, pos.y);
 			window.setSize(size.x, size.y);
 		}
 
 		YAML::Node editorNode = data["Editor"];
 		if (!editorNode) return false;
+
+		editor->iconAtlasPath = editorNode["IconAtlasPath"].as<std::string>();
+		editor->iconAtlas = Texture2D::create((Filesystem::getDataFolderPath() / editor->iconAtlasPath).string());
+
+		{
+			YAML::Node iconsNode = editorNode["Icons"];
+
+			if (iconsNode){
+				for (auto icon : iconsNode){
+					std::string iconTag = icon["Icon"].as<std::string>();
+					glm::vec4 UVs = icon["UVs"].as<glm::vec4>();
+					editor->pushIcon(iconTag, static_cast<uint32_t>(UVs.x), static_cast<uint32_t>(UVs.y), static_cast<uint32_t>(UVs.z), static_cast<uint32_t>(UVs.w));
+				}
+			}
+		}
 		
 		size_t i=0;
 		for (auto path : editorNode["recentProjects"]){
@@ -304,7 +362,6 @@ namespace engine{
 
 		// ImGui
 		YAML::Node ImGuiNode = data["ImGui"];
-
 		if (ImGuiNode) deserializeImGui(ImGuiNode);
 
 		return true;

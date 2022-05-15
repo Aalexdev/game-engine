@@ -14,7 +14,6 @@ namespace engine{
 }
 
 int main(int argc, char **argv){
-
 	engine::Window::setWindowAPI(engine::Window::WindowAPI::GLFW);
 	engine::Renderer::setRenderAPI(engine::Renderer::RenderAPI::OpenGL);
 	engine::Filesystem::init(argc, argv);

@@ -11,20 +11,40 @@ namespace engine{
 		return createRef<SceneHierarchyPanel>();
 	}
 
+	SceneHierarchyPanel::SceneHierarchyPanel(){
+		cameraIcon = "camera";
+		entityIcon = "cube";
+		// lightIcon = "light bulb";
+		downArrowIcon = "down arrow";
+		rightArrowIcon = "right arrow";
+	}
+
+
 	void SceneHierarchyPanel::OnImGuiRender(){
 		currentHoveredPanel = SceneHierarchyPanelType::PANEL_NONE;
 
 		if (ImGui::Begin("activeScene hierarchy")){
-
-			editor->activeScene->getENTTRegistry().each([&](auto e){
+			
+			ImGui::Spacing();
+			for (const auto e : editor->activeScene->getRegistry()){
 				Entity entity = {e, editor->activeScene.get()};
+				if (entity.hasParent()) continue;
+				drawEntityNode(entity);
+			}
 
-				if (entity.hasComponent<components::HierarchyNode>()){
-					auto &node = entity.getComponent<components::HierarchyNode>();
-					if (node.hasParent) return;
-					drawEntityNode(entity);
+			ImVec2 size = ImGui::GetContentRegionAvail();
+			size.x -= ImGui::GetCursorPosX() + 10;
+			size.y -= ImGui::GetCursorPosY();
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5);
+			ImGui::InvisibleButton("rest", size);
+
+			if (ImGui::BeginDragDropTarget()){
+				if (auto payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY_ENTITY")){
+					Entity entity = {*reinterpret_cast<uint32_t*>(payload->Data), editor->activeScene.get()};
+					entity.resetParent();
 				}
-			});
+				ImGui::EndDragDropTarget();
+			}
 			
 			if (ImGui::IsWindowHovered()){
 				currentHoveredPanel = SceneHierarchyPanelType::PANEL_SCENE_HIERARCHY;
@@ -50,21 +70,21 @@ namespace engine{
 					if (ImGui::BeginMenu("renderer")){
 						if (ImGui::MenuItem("sprite")){
 							auto entity = createNewEntity();
-							auto &component = entity.addComponent<components::Sprite>();
+							auto &component = entity.addComponent<ECS::components::Sprite>();
 							ComponentAddedEvent event(entity, component);
 							callback(event);
 						}
 
 						if (ImGui::MenuItem("circle")){
 							auto entity = createNewEntity();
-							auto &component = entity.addComponent<components::CircleRenderer>();
+							auto &component = entity.addComponent<ECS::components::CircleRenderer>();
 							ComponentAddedEvent event(entity, component);
 							callback(event);
 						}
 
 						if (ImGui::MenuItem("triangle")){
 							auto entity = createNewEntity();
-							auto &component = entity.addComponent<components::TriangleRenderer>();
+							auto &component = entity.addComponent<ECS::components::TriangleRenderer>();
 							ComponentAddedEvent event(entity, component);
 							callback(event);
 						}
@@ -88,11 +108,21 @@ namespace engine{
 	void SceneHierarchyPanel::serialize(YAML::Emitter &out){
 		out << YAML::Key << "NewEntityKey" << YAML::Value << newEntityKey;
 		out << YAML::Key << "DeleteEntityKey" << YAML::Value << deleteEntityKey;
+
+		out << YAML::Key << "CameraIcon" << YAML::Value << cameraIcon;
+		out << YAML::Key << "EntityIcon" << YAML::Value << entityIcon;
+		out << YAML::Key << "RightArrowIcon" << YAML::Value << rightArrowIcon;
+		out << YAML::Key << "DownArrowIcon" << YAML::Value << downArrowIcon;
 	}
 
 	void SceneHierarchyPanel::deserialize(YAML::Node data){
 		newEntityKey = data["NewEntityKey"].as<KeyInput>();
 		deleteEntityKey = data["DeleteEntityKey"].as<KeyInput>();
+
+		cameraIcon = data["CameraIcon"].as<std::string>();
+		entityIcon = data["EntityIcon"].as<std::string>();
+		rightArrowIcon = data["RightArrowIcon"].as<std::string>();
+		downArrowIcon = data["DownArrowIcon"].as<std::string>();
 	}
 
 	// ========================================================= Events
@@ -207,46 +237,163 @@ namespace engine{
 		}
 	}
 
-	void SceneHierarchyPanel::drawEntityNode(Entity entity){
-		if (!entity.hasComponent<components::Tag>()) return;
+	enum class EntityType{
+		OBJECT,
+		CAMERA,
+		LIGHT,
+	};
 
-		bool remove = false;
+	bool SceneHierarchyPanel::drawEntityTreeNode(Entity entity){
+		const ImGuiStyle& style = ImGui::GetStyle();
+		ImGuiStorage* storage = ImGui::GetStateStorage();
 
-		auto &tag = entity.getComponent<components::Tag>();
-		auto &node = entity.getComponent<components::HierarchyNode>();
+		ImGui::PushID(entity.getUUID());
+		const char* label = entity.getTag().c_str();
+		ImU32 id = ImGui::GetID(label);
+		int opened = storage->GetInt(id, 0);
+		ImVec2 pos = ImGui::GetCursorPos();
+		ImGui::BeginGroup();
 
-		ImGuiTreeNodeFlags flags = (node.childs.empty() ? 0 : ImGuiTreeNodeFlags_OpenOnArrow) | (selected(entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_SpanAvailWidth;
-
-		bool open = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<uint64_t>(static_cast<uint32_t>(entity))), flags, tag.tag.c_str());
-
-		if (ImGui::IsItemClicked()){
+		// ImGui::ButtonBehavior()
+		float width = ImGui::GetContentRegionAvail().x;
+		if (ImGui::InvisibleButton(label, ImVec2(width - 10, ImGui::GetFontSize()+style.FramePadding.y*2))){
+			int* p_opened = storage->GetIntRef(id, 0);
+			opened = *p_opened = !*p_opened;
 			select(entity);
 		}
 
+		bool removed = false;
 		if (ImGui::BeginPopupContextItem()){
-			if (ImGui::MenuItem("remove", deleteEntityKey.toString().c_str())){
-				remove = true;
-			}
 
-			if (ImGui::MenuItem("addChild")){
-				editor->activeScene->createEntity(entity);
-			}
+			if (ImGui::MenuItem("select")) select(entity);
+			if (ImGui::MenuItem("remove")) removed = true;
 
 			ImGui::EndPopup();
 		}
 
-		if (open){
-			
-			for (auto child : node.childs){
-				drawEntityNode(editor->activeScene->get(child));
+		if (ImGui::BeginDragDropTarget()){
+			if (auto payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY_ENTITY")){
+				Entity child = {*reinterpret_cast<uint32_t*>(payload->Data), editor->activeScene.get()};
+				entity.pushChild(child);
 			}
+			ImGui::EndDragDropTarget();
+		}
+
+		if (ImGui::BeginDragDropSource()){
+			uint32_t data = entity;
+			ImGui::SetDragDropPayload("SCENE_HIERARCHY_ENTITY", &data, sizeof(data));
+			ImGui::EndDragDropSource();
+		}
+
+		bool hovered = ImGui::IsItemHovered();
+		bool active = ImGui::IsItemActive();
+		if (hovered || active || entity == selectedEntity)
+			ImGui::GetWindowDrawList()->AddRectFilled(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImColor(ImGui::GetStyle().Colors[active ? ImGuiCol_HeaderActive : ImGuiCol_HeaderHovered]));
+
+
+		// Icon, text
+		// ImGui::SameLine(x);
+		// ImGui::Text(" ");
+		// ImGui::SameLine();
+		ImGui::SetCursorPos(pos);
+
+		EntityType type = EntityType::OBJECT;
+		if (entity.hasComponent<ECS::components::Camera>()){
+			type = EntityType::CAMERA;
+		}
+
+		glm::vec4 UVs;
+		switch (type){
+			case EntityType::OBJECT: UVs = editor->getIcon(entityIcon); break;
+			case EntityType::CAMERA: UVs = editor->getIcon(cameraIcon); break;
+		}
+
+		float iconSize = ImGui::GetFontSize()*1.2;
+		ImGui::Image(reinterpret_cast<ImTextureID>(editor->getIcons()->getTexture()), {iconSize, iconSize}, {UVs.x, UVs.y}, {UVs.z, UVs.w});
+		ImGui::SameLine();
+		ImGui::Text(label);
+
+		// width = ImGui::GetContentRegionMax().x;
+		ImGui::SameLine(width - iconSize * 2.2);
+		
+		if (opened){
+			UVs = editor->getIcon(downArrowIcon);
+			ImGui::Image(reinterpret_cast<ImTextureID>(editor->getIcons()->getTexture()), {iconSize*0.7f, iconSize*0.7f}, {UVs.x, UVs.y}, {UVs.z, UVs.w});
+		} else {
+			UVs = editor->getIcon(rightArrowIcon);
+			ImGui::Image(reinterpret_cast<ImTextureID>(editor->getIcons()->getTexture()), {iconSize*0.7f, iconSize*0.7f}, {UVs.x, UVs.y}, {UVs.z, UVs.w});
+		}
+
+		ImGui::EndGroup();
+		ImGui::PopID();
+
+		if (removed){
+			deleteEntity(entity);
+			return false;
+		}
+
+		if (opened)
+			ImGui::TreePush(label);
+		return opened != 0;
+	};
+
+	void SceneHierarchyPanel::drawEntityNode(Entity entity){
 			
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5);
+		if (drawEntityTreeNode(entity)){
+			for (auto child : entity){
+				drawEntityNode(child);
+			}
 			ImGui::TreePop();
 		}
 		
-		if (remove){
-			deleteEntity(entity);
-		}
+		// ImGui::PushID(entity.getUUID());
+		// bool remove = false;
+		// EntityType type = EntityType::OBJECT;
+
+	
+		
+
+		// auto &tag = entity.getTag();
+
+		// ImGuiTreeNodeFlags flags = (entity.hasChildren() ? ImGuiTreeNodeFlags_OpenOnArrow : 0) | (selected(entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_SpanAvailWidth;
+
+		
+		// bool open = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<uint64_t>(static_cast<uint32_t>(entity))), flags, tag.c_str());
+
+		// if (ImGui::IsItemClicked()){
+		// 	select(entity);
+		// }
+
+		// if (ImGui::BeginPopupContextItem()){
+		// 	if (ImGui::MenuItem("remove", deleteEntityKey.toString().c_str())){
+		// 		remove = true;
+		// 	}
+
+		// 	if (ImGui::MenuItem("addChild")){
+		// 		editor->activeScene->createChildEntity(entity);
+		// 	}
+
+		// 	ImGui::EndPopup();
+		// }
+
+		// ImGui::EndGroup();
+		// ImGui::PopID();
+
+		// if (open){
+			
+		// 	for (auto child : entity){
+		// 		drawEntityNode(child);
+		// 	}
+			
+		// 	ImGui::TreePop();
+		// }
+
+		
+		
+		// if (remove){
+		// 	deleteEntity(entity);
+		// }
 	}
 
 	void SceneHierarchyPanel::drawComponentsPanel(){
@@ -261,11 +408,10 @@ namespace engine{
 	}
 
 	void SceneHierarchyPanel::drawEntityComponents(Entity entity){
-		if (!entity.hasComponent<components::Tag>()) return;
 
-		ImGui::Text("ID : 0x%x", entity.getComponent<components::UUID>().id.get());
+		ImGui::Text("ID : 0x%x", entity.getUUID().get());
 		{
-			auto &tag = entity.getComponent<components::Tag>().tag;
+			auto &tag = entity.getTag();
 			static char buffer[255];
 
 			memset(buffer, 0, sizeof(buffer));
@@ -287,66 +433,49 @@ namespace engine{
 		}
 
 		if (ImGui::BeginPopup("SceneHierarchyAddComponentPopup")){
-			addComponent<components::Sprite>("sprite renderer", entity, callback);
-			addComponent<components::Camera>("camera", entity, callback);
-			addComponent<components::RigidBody>("rigid Body", entity, callback);
-			addComponent<components::BoxCollider>("box Collider", entity, callback);
-			addComponent<components::CircleRenderer>("circle Renderer", entity, callback);
-			addComponent<components::TriangleRenderer>("triangle Renderer", entity, callback);
+			addComponent<ECS::components::Sprite>("sprite renderer", entity, callback);
+			addComponent<ECS::components::Camera>("camera", entity, callback);
+			addComponent<ECS::components::RigidBody>("rigid Body", entity, callback);
+			addComponent<ECS::components::BoxCollider>("box Collider", entity, callback);
+			addComponent<ECS::components::CircleRenderer>("circle Renderer", entity, callback);
+			addComponent<ECS::components::TriangleRenderer>("triangle Renderer", entity, callback);
 
 			ImGui::EndPopup();
 		}
 
 		ImGui::PopItemWidth();
 
-		drawComponent<components::Transform>(this, "transform", entity, drawTransformComponent, callback);
-		drawComponent<components::Sprite>(this, "sprite renderer", entity, drawSpriteComponent, callback);drawComponent<components::CircleRenderer>(this, "circle renderer", entity, drawCircleRendererComponent, callback);
-		drawComponent<components::TriangleRenderer>(this, "triangle renderer", entity, drawTriangleRendererComponent, callback);
-		drawComponent<components::Camera>(this, "camera", entity, drawCameraComponent, callback);
-		drawComponent<components::RigidBody>(this, "rigid Body", entity, drawRigidBodyComponent, callback);
-		drawComponent<components::BoxCollider>(this, "box Bollider", entity, drawBoxColliderComponent, callback);
+		drawComponent<ECS::components::Transform>(this, "transform", entity, drawTransformComponent, callback);
+		drawComponent<ECS::components::Sprite>(this, "sprite renderer", entity, drawSpriteComponent, callback);
+		drawComponent<ECS::components::CircleRenderer>(this, "circle renderer", entity, drawCircleRendererComponent, callback);
+		drawComponent<ECS::components::TriangleRenderer>(this, "triangle renderer", entity, drawTriangleRendererComponent, callback);
+		drawComponent<ECS::components::Camera>(this, "camera", entity, drawCameraComponent, callback);
+		drawComponent<ECS::components::RigidBody>(this, "rigid Body", entity, drawRigidBodyComponent, callback);
+		drawComponent<ECS::components::BoxCollider>(this, "box Bollider", entity, drawBoxColliderComponent, callback);
 	}
 
 
 	// ==================================== components
 
 	void SceneHierarchyPanel::drawSpriteComponent(Entity entity){
-		if (!entity.hasComponent<components::Sprite>()) return;
-		auto &sprite = entity.getComponent<components::Sprite>();
+		if (!entity.hasComponent<ECS::components::Sprite>()) return;
+		auto &sprite = entity.getComponent<ECS::components::Sprite>();
 		ImGui::ColorEdit4("color", glm::value_ptr(sprite.color));
 
-		ImGui::Columns(2);
+		int batchGroup = static_cast<int>(sprite.batchGroup);
+		if (ImGui::InputInt("batch group", &batchGroup)){
+			sprite.batchGroup = static_cast<uint16_t>(batchGroup);
+		}
 
 		if (subTextureEdit(sprite.texture, editor->app->getTextures())){
 			ComponentCallEvent event(entity, sprite);
 		}
-
-		ImGui::NextColumn();
-
-		if (ImGui::ArrowButton("topOne", ImGuiDir_Up)){
-			entity.getScene()->moveSpriteForward(entity);
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("top")){
-			entity.getScene()->moveSpriteToTop(entity);
-		}
-
-		if (ImGui::ArrowButton("bottomOne", ImGuiDir_Down)){
-			entity.getScene()->moveSpriteBackward(entity);
-
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("back")){
-			entity.getScene()->moveSpriteToBack(entity);
-		}
-
-		ImGui::Columns(1);
 	}
 
 	void SceneHierarchyPanel::drawTransformComponent(Entity entity){
-		if (!entity.hasComponent<components::Transform>()) return;
-
-		auto &transform = entity.getComponent<components::Transform>();
+		if (!entity.hasComponent<ECS::components::Transform>()) return;
+		
+		auto &transform = entity.getComponent<ECS::components::Transform>().transform;
 
 		Vec2Edit("Translation", transform.translation);
 		Vec2Edit("Scale", transform.scale, {1.f, 1.f});
@@ -366,9 +495,9 @@ namespace engine{
 	}
 
 	void SceneHierarchyPanel::drawCameraComponent(Entity entity){
-		if (!entity.hasComponent<components::Camera>()) return;
+		if (!entity.hasComponent<ECS::components::Camera>()) return;
 
-		auto &camera = entity.getComponent<components::Camera>();
+		auto &camera = entity.getComponent<ECS::components::Camera>();
 
 		ImGui::Text("size : %dx%d", camera.viewportWidth, camera.viewportHeight);
 
@@ -403,24 +532,24 @@ namespace engine{
 		ImGui::DragFloat("Priority level", &camera.priorityLevel);
 	}
 
-	std::string rigidBodyTypeStr(components::RigidBody::BodyType type){
+	std::string rigidBodyTypeStr(ECS::components::RigidBody::BodyType type){
 		switch (type){
-			case components::RigidBody::BodyType::STATIC: return "Static";
-			case components::RigidBody::BodyType::DYNAMIC: return "Dynamic";
-			case components::RigidBody::BodyType::KINEMATIC: return "Kinematic";
+			case ECS::components::RigidBody::BodyType::STATIC: return "Static";
+			case ECS::components::RigidBody::BodyType::DYNAMIC: return "Dynamic";
+			case ECS::components::RigidBody::BodyType::KINEMATIC: return "Kinematic";
 		}
 		ENGINE_ASSERT(false, "unknown rigid body type");
 		return "None";
 	}
 
 	void SceneHierarchyPanel::drawRigidBodyComponent(Entity entity){
-		if (!entity.hasComponent<components::RigidBody>()) return;
-		auto &rigidBody = entity.getComponent<components::RigidBody>();
+		if (!entity.hasComponent<ECS::components::RigidBody>()) return;
+		auto &rigidBody = entity.getComponent<ECS::components::RigidBody>();
 
 		if (ImGui::BeginCombo("type", rigidBodyTypeStr(rigidBody.type).c_str())){
-			if (ImGui::MenuItem("Static")){rigidBody.type = components::RigidBody::BodyType::STATIC;}
-			if (ImGui::MenuItem("Dynamic")){rigidBody.type = components::RigidBody::BodyType::DYNAMIC;}
-			if (ImGui::MenuItem("Kinematic")){rigidBody.type = components::RigidBody::BodyType::KINEMATIC;}
+			if (ImGui::MenuItem("Static")){rigidBody.type = ECS::components::RigidBody::BodyType::STATIC;}
+			if (ImGui::MenuItem("Dynamic")){rigidBody.type = ECS::components::RigidBody::BodyType::DYNAMIC;}
+			if (ImGui::MenuItem("Kinematic")){rigidBody.type = ECS::components::RigidBody::BodyType::KINEMATIC;}
 			ImGui::EndCombo();
 		}
 
@@ -437,8 +566,8 @@ namespace engine{
 	}
 
 	void SceneHierarchyPanel::drawBoxColliderComponent(Entity entity){
-		if (!entity.hasComponent<components::BoxCollider>()) return;
-		auto &collider = entity.getComponent<components::BoxCollider>();
+		if (!entity.hasComponent<ECS::components::BoxCollider>()) return;
+		auto &collider = entity.getComponent<ECS::components::BoxCollider>();
 
 		ImVec2 region = ImGui::GetContentRegionAvail();
 		ImGui::Checkbox("scaled size", &collider.scaledSize);
@@ -456,16 +585,16 @@ namespace engine{
 	}
 
 	void SceneHierarchyPanel::drawCircleRendererComponent(Entity entity){
-		if (!entity.hasComponent<components::CircleRenderer>()) return;
-		auto &circle = entity.getComponent<components::CircleRenderer>();
+		if (!entity.hasComponent<ECS::components::CircleRenderer>()) return;
+		auto &circle = entity.getComponent<ECS::components::CircleRenderer>();
 
 		ImGui::ColorEdit4("color", glm::value_ptr(circle.color));
 		ImGui::DragFloat("thickness", &circle.thickness, 0.01f, 0.f, 1.f, "%.2f");
 		ImGui::DragFloat("fade", &circle.fade, 0.0001f, 0.f, 1.f, "%.4f");
 	}
 	void SceneHierarchyPanel::drawTriangleRendererComponent(Entity entity){
-		if (!entity.hasComponent<components::TriangleRenderer>()) return;
-		auto &tri = entity.getComponent<components::TriangleRenderer>();
+		if (!entity.hasComponent<ECS::components::TriangleRenderer>()) return;
+		auto &tri = entity.getComponent<ECS::components::TriangleRenderer>();
 
 		if (ImGui::TreeNode("point 1")){
 			ImGui::ColorEdit4("color", glm::value_ptr(tri.p1.color));
@@ -510,7 +639,7 @@ namespace engine{
 	}
 
 	Entity SceneHierarchyPanel::createNewEntity(){
-		Entity entity = editor->activeScene->createIDEntity();
+		Entity entity = editor->activeScene->createEntity();
 
 		EntityCreatedEvent event(entity);
 		callback(event);

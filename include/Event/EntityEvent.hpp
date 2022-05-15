@@ -27,7 +27,7 @@ namespace engine{
 
 			const std::string& getNewName(){
 				ENGINE_ASSERT(entity, "invalide entity");
-				return entity.getComponent<components::Tag>().tag;
+				return entity.getTag();
 			}
 
 			

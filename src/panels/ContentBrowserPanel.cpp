@@ -1,4 +1,5 @@
 #include "panels/ContentBrowserPanel.hpp"
+#include "EditorLayer.hpp"
 #include <libs/ImGui/imgui_internal.h>
 
 namespace engine{
@@ -8,8 +9,8 @@ namespace engine{
 	}
 
 	ContentBrowserPanel::ContentBrowserPanel(){
-		folderIcon = Texture2D::create((Filesystem::getDataFolderPath() / "icons/folder.png").string());
-		fileIcon = Texture2D::create((Filesystem::getDataFolderPath() / "icons/files.png").string());
+		fileIcon = "file";
+		folderIcon = "folder";
 
 		currentFolder = Filesystem::getDataFolderPath();
 		browserRoot = Filesystem::getDataFolderPath();
@@ -75,6 +76,9 @@ namespace engine{
 		out << YAML::Key << "ZoomInKey" << YAML::Value << zoomInKey;
 		out << YAML::Key << "ZoomOutKey" << YAML::Value << zoomOutKey;
 		out << YAML::Key << "GoToParentKey" << YAML::Value << goToParentKey;
+
+		out << YAML::Key << "FileIcon" << YAML::Value << fileIcon;
+		out << YAML::Key << "FolderIcon" << YAML::Value << folderIcon;
 	}
 
 	void ContentBrowserPanel::deserialize(YAML::Node data){
@@ -90,6 +94,9 @@ namespace engine{
 		zoomInKey = data["ZoomInKey"].as<KeyInput>();
 		zoomOutKey = data["ZoomOutKey"].as<KeyInput>();
 		goToParentKey = data["GoToParentKey"].as<KeyInput>();
+
+		fileIcon = data["FileIcon"].as<std::string>();
+		folderIcon = data["FolderIcon"].as<std::string>();
 	}
 
 	// ========================================================================= imgui
@@ -127,11 +134,11 @@ namespace engine{
 		for (auto &entry : std::filesystem::directory_iterator(currentFolder)){
 			ImGui::PushID(entry.path().string().c_str());
 
-			ImTextureID icon;
+			glm::vec4 UVs;
 			if (entry.is_directory()){
-				icon = reinterpret_cast<ImTextureID>(folderIcon->getTexture());
+				UVs = editor->getIcon(folderIcon);
 			} else {
-				icon = reinterpret_cast<ImTextureID>(fileIcon->getTexture());;
+				UVs = editor->getIcon(fileIcon);
 			}
 
 			ImVec2 pos = ImGui::GetCursorPos();
@@ -145,7 +152,7 @@ namespace engine{
 				bgCol = {1, 1, 1, 0.2};
 			}
 
-			if (ImGui::ImageButton(icon, {iconSize, iconSize}, {0.f, 1.f}, {1.f, 0.f}, -1, bgCol)){
+			if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(editor->getIcons()->getTexture()) , {iconSize, iconSize}, {UVs.x, UVs.y}, {UVs.z, UVs.w}, -1, bgCol)){
 				if (isSelected){
 					if (entry.is_directory()){
 						openDirectory(entry.path());
@@ -198,7 +205,6 @@ namespace engine{
 			} else {
 				ImGui::TextWrapped(entry.path().filename().string().c_str());
 			}
-
 			ImGui::PopID();
 			ImGui::NextColumn();
 		}

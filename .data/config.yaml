@@ -1,17 +1,51 @@
 Window:
-  WindowSize: [1550, 834]
-  WindowPos: [458241864, 408]
+  WindowSize: [1766, 846]
+  WindowPos: [395, 255]
 Editor:
+  IconAtlasPath: icons.png
+  Icons:
+    - Icon: bin
+      UVs: [896, 640, 1023, 767]
+    - Icon: camera
+      UVs: [0, 512, 127, 639]
+    - Icon: cube
+      UVs: [128, 512, 255, 639]
+    - Icon: down arrow
+      UVs: [640, 640, 767, 767]
+    - Icon: file
+      UVs: [512, 0, 1023, 511]
+    - Icon: folder
+      UVs: [0, 0, 511, 511]
+    - Icon: light bulb
+      UVs: [256, 512, 383, 639]
+    - Icon: magnifying glass
+      UVs: [1024, 640, 1151, 767]
+    - Icon: more 1
+      UVs: [256, 640, 383, 767]
+    - Icon: more 2
+      UVs: [384, 640, 511, 767]
+    - Icon: more 3
+      UVs: [512, 640, 639, 767]
+    - Icon: pause
+      UVs: [256, 768, 511, 1023]
+    - Icon: play
+      UVs: [0, 768, 255, 1023]
+    - Icon: right arrow
+      UVs: [768, 640, 895, 767]
+    - Icon: settings
+      UVs: [128, 640, 255, 767]
+    - Icon: stop
+      UVs: [512, 768, 767, 1023]
+    - Icon: undo arrow
+      UVs: [0, 640, 127, 767]
   recentProjects:
-    - projectPath: D:\dev\game engine\editor\scene.yaml
     - projectPath: D:\dev\C++\editor\scene.yaml
-    - projectPath: D:\dev\game engine\editor\tyreducytyt.yaml
     - projectPath: ""
   Panels:
     - panel: 1
       ViewType: 0
       Padding: 16
-      IconSize: 65
+      IconSize: 85
       RenameKey: [[291]]
       RemoveKey: [[261]]
       CreateFileKey: [[341, 345], [78]]
@@ -20,9 +54,15 @@ Editor:
       ZoomInKey: [[341, 345], [334, 61]]
       ZoomOutKey: [[341, 345], [333, 45]]
       GoToParentKey: [[256, 259]]
+      FileIcon: file
+      FolderIcon: folder
     - panel: 2
       NewEntityKey: [[78], [345, 341]]
       DeleteEntityKey: [[261, 259]]
+      CameraIcon: camera
+      EntityIcon: cube
+      RightArrowIcon: right arrow
+      DownArrowIcon: down arrow
     - panel: 3
       StartKey: [[294]]
       PauseKey: [[295]]

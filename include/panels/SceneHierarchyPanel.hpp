@@ -6,7 +6,7 @@
 namespace engine{
 	class SceneHierarchyPanel : public Panel{
 		public:
-			SceneHierarchyPanel(){}
+			SceneHierarchyPanel();
 			~SceneHierarchyPanel(){}
 		
 			virtual void OnImGuiRender() override;
@@ -37,6 +37,7 @@ namespace engine{
 
 
 			// === ImGui ===
+			bool drawEntityTreeNode(Entity entity);
 			void drawEntityNode(Entity entity);
 			void drawEntityComponents(Entity entity);
 			void drawComponentsPanel(); // draw a panel to change the values of the selected entity's components
@@ -56,6 +57,12 @@ namespace engine{
 			// key
 			KeyInput newEntityKey = {{Key::KEY_N}, {Key::KEY_RIGHT_CONTROL, Key::KEY_LEFT_CONTROL}};
 			KeyInput deleteEntityKey = {{Key::KEY_DELETE, Key::KEY_BACKSPACE}};
+
+			std::string cameraIcon;
+			std::string entityIcon;
+			// std::string lightIcon;
+			std::string downArrowIcon;
+			std::string rightArrowIcon;
 
 			SceneHierarchyPanelType currentHoveredPanel; // the panel that is currently hovered by the mouse
 

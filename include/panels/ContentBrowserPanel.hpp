@@ -80,8 +80,8 @@ namespace engine{
 			bool isMouseHover = false;
 
 			// icons
-			Ref<Texture2D> folderIcon;
-			Ref<Texture2D> fileIcon;
+			std::string folderIcon;
+			std::string fileIcon;
 
 			// UI
 			ViewType viewType = ViewType::VIEWTYPE_ICON;

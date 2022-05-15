@@ -25,6 +25,18 @@ namespace engine{
 			void serialize(YAML::Emitter &out);
 			void deserialize(YAML::Node data);
 
+			const glm::vec4& getIcon(const std::string &iconTag) const {
+				auto it = icons.find(iconTag);
+				if (it == icons.end()){
+					return glm::vec4(0, 0, 1, 1);
+				}
+				return iconUVs[it->second];
+			}
+
+			Ref<Texture2D> getIcons() {return iconAtlas;}
+
+			glm::vec4 pushIcon(const std::string &tag, uint32_t startX, uint32_t startY, uint32_t endX, uint32_t endY);
+
 		private:
 
 			// === Events ===
@@ -106,5 +118,10 @@ namespace engine{
 			KeyInput newEntityKey = {{Key::KEY_LEFT_CONTROL, Key::KEY_RIGHT_CONTROL}, {Key::KEY_N}};
 			KeyInput deleteSelectedEntityKey = {{Key::KEY_DELETE, Key::KEY_BACKSPACE}};
 
+			std::vector<glm::vec4> iconUVs;
+			std::vector<glm::vec4> iconRelativeUVs;
+			std::map<std::string, size_t> icons;
+			Ref<Texture2D> iconAtlas;
+			std::filesystem::path iconAtlasPath;
 	};
 }
