@@ -248,6 +248,8 @@ namespace engine::ECS{
 			void destroy(Entity entity){
 				ENGINE_CORE_ASSERT(entity < MAX_ENTITIES, "Entiity out of range.");
 
+				entities.erase(entity);
+
 				// reset the entity's components
 				_signatures[entity].reset();
 
@@ -418,7 +420,8 @@ namespace engine::ECS{
 			void destroy(Entity entity){
 
 				// delete the childs
-				auto &data = getComponent<components::EntityData>(entity);
+
+				auto &data = getData(entity);
 				for (auto &child : data.childs){
 					destroy(child);
 				}
@@ -426,6 +429,8 @@ namespace engine::ECS{
 				_systemManager->entityDestroyed(entity);
 				_componentManager->entityDestroyed(entity);
 				_entityManager->destroy(entity);
+
+				
 			}
 
 
