@@ -8,8 +8,13 @@
 // #include "components/NativeScriptComponent.hpp"
 #include "components/SpriteComponent.hpp"
 #include "../dataStruct/Set.hpp"
+#include "ECS.hpp"
 
-#include <libs/entt/entt.hpp>
+// systems
+#include "systems/CameraSystem.hpp"
+#include "systems/TransformSystem.hpp"
+#include "systems/SpriteSystem.hpp"
+#include "systems/RigidBodySystem.hpp"
 
 class b2World;
 
@@ -26,10 +31,9 @@ namespace engine{
 			static Ref<Scene> copy(const Ref<Scene> &scene);
 
 			Entity createEntity(const std::string &name = "new Entity");
-			Entity createIDEntity(const std::string &name = "new Entity");
-			Entity createIDEntity(uint64_t id, const std::string &name = "new Entity");
-			Entity createEntity(Entity parent);
-			Entity createEntity(Entity parent, uint64_t id, const std::string &name = "new Entity");
+			Entity createEntity(UUID uuid, const std::string &name = "new Entity");
+			Entity createChildEntity(Entity parent, const std::string &name = "new child");
+			Entity createChildEntity(Entity parent, UUID uuid, const std::string &name = "new child");
 
 			Entity duplicateEntity(Entity entity);
 			void destroyEntity(Entity entity);
@@ -49,7 +53,7 @@ namespace engine{
 
 			Entity getPrimaryCamera();
 			
-			entt::registry& getENTTRegistry() {return registry;}
+			ECS::Registry& getRegistry() {return registry;}
 
 			void OnSpriteComponentAdded(Entity entity);
 			void OnSpriteComponentRemoved(Entity entity);
@@ -60,22 +64,21 @@ namespace engine{
 			void moveSpriteBackward(Entity entity); // move the entity bo one unit to the back of the queue
 
 			glm::vec2 &getGravity() {return gravity;}
+			Ref<Renderer> getRenderer() {return renderer;}
 
 			Entity get(UUID id);
+			void* getPhysicsBody(UUID id);
+			void setPhysicBody(UUID id, void *body);
+			b2World* getPhysicsWorld();
 
 		private:
-			void drawSprites();
-			void updateTransform();
-			void updatetransform(Entity entity, const glm::mat4 &parentTranform);
-			void updatePhysics(Timestep ts);
 
-			entt::registry registry;
+			ECS::Registry registry;
 			Ref<Renderer> renderer;
 
 			// containe all the sprite with a rendering priority
 			// the fisrt element of the queue is rendered is first and so it's at the back of the scene
 			// it's also useful for a rendering on a separate thread
-			Set<UUID> sprites;
 
 			uint32_t viewportWidth;
 			uint32_t viewportHeight;
@@ -90,9 +93,12 @@ namespace engine{
 
 			int32_t velocityIteration = 6;
 			int32_t positionIteration = 2;
-			
-			// === methods ===
 
+			// systems
+			Ref<ECS::systems::Camera> cameraSystem;
+			Ref<ECS::systems::Transform> transformSystem;
+			Ref<ECS::systems::Sprite> spriteSystem;
+			Ref<ECS::systems::RigidBody> rigidBodySystem;
 
 			friend class Entity;
 			friend class SceneSerializer;

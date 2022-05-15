@@ -59,6 +59,8 @@ namespace engine{
 			void drawTriangle(const Vertex &p1, const Vertex &p2, const Vertex &p3, const glm::vec2 &translation, const glm::vec2 &scale, float angle, const Ref<Texture2D> &texture = nullptr, uint32_t entityIndex = -1);
 			void drawTriangle(const Vertex &p1, const Vertex &p2, const Vertex &p3, const glm::mat4 &transform, const Ref<Texture2D> &texture = nullptr, uint32_t entityIndex = -1);
 
+			void reloadScene();
+
 		private:
 			static RenderAPI renderAPI;
 
@@ -129,7 +131,6 @@ namespace engine{
 			Ref<Shader> circleShader;
 
 			void flush();
-			void reloadScene();
 
 			RenderCommand renderCommand;
 			Scope<QuadData> quadData;

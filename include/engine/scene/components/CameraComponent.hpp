@@ -3,7 +3,7 @@
 #include "../../core.hpp"
 #include "../SceneCamera.hpp"
 
-namespace engine::components{
+namespace engine::ECS::components{
 	struct ENGINE_API Camera{
 		uint32_t viewportWidth, viewportHeight;
 

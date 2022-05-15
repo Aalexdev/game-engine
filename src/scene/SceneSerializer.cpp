@@ -5,11 +5,9 @@
 #include "engine/scene/Entity.hpp"
 #include "engine/filesystem/Filesystem.hpp"
 
-#include "engine/scene/components/TagComponent.hpp"
 #include "engine/scene/components/TransformComponent.hpp"
 #include "engine/scene/components/CameraComponent.hpp"
 #include "engine/scene/components/SpriteComponent.hpp"
-#include "engine/scene/components/UUIDComponent.hpp"
 #include "engine/scene/components/RigidBodyComponent.hpp"
 #include "engine/scene/components/BoxColliderComponent.hpp"
 #include "engine/scene/components/CircleRendererComponent.hpp"
@@ -139,23 +137,12 @@ namespace engine{
 		return createRef<SceneSerializer>(scene, texturesLibrary);
 	}
 
-	static void serializeTagComponent(YAML::Emitter &out, Entity entity){
-		if (entity.hasComponent<components::Tag>()){
-			out << YAML::Key << "TagComponent";
-			out << YAML::BeginMap;
-
-			auto &tag = entity.getComponent<components::Tag>().tag;
-			out << YAML::Key << "tag" << YAML::Value << tag;
-			out << YAML::EndMap;
-		}
-	}
-
 	static void serializeTransformComponent(YAML::Emitter &out, Entity entity){
-		if (entity.hasComponent<components::Transform>()){
+		if (entity.hasComponent<ECS::components::Transform>()){
 			out << YAML::Key << "TransformComponent";
 			out << YAML::BeginMap;
 
-			auto &transform = entity.getComponent<components::Transform>();
+			auto &transform = entity.getComponent<ECS::components::Transform>().transform;
 			out << YAML::Key << "translation" << YAML::Value << transform.translation;
 			out << YAML::Key << "scale" << YAML::Value << transform.scale;
 			out << YAML::Key << "rotation" << YAML::Value << transform.rotation;
@@ -165,11 +152,11 @@ namespace engine{
 	}
 
 	static void serializeCameraComponent(YAML::Emitter &out, Entity entity){
-		if (entity.hasComponent<components::Camera>()){
+		if (entity.hasComponent<ECS::components::Camera>()){
 			out << YAML::Key << "CameraComponent";
 			out << YAML::BeginMap;
 
-			auto &camera = entity.getComponent<components::Camera>();
+			auto &camera = entity.getComponent<ECS::components::Camera>();
 
 			out << YAML::Key << "viewportAspectRatio" << YAML::Value << camera.camera.getAspectRatio();
 			out << YAML::Key << "priorityLevel" << YAML::Value << camera.priorityLevel;
@@ -186,11 +173,11 @@ namespace engine{
 	}
 
 	static void serializeSpriteComponent(YAML::Emitter &out, Entity entity){
-		if (entity.hasComponent<components::Sprite>()){
+		if (entity.hasComponent<ECS::components::Sprite>()){
 			out << YAML::Key << "SpriteComponent";
 			out << YAML::BeginMap;
 
-			auto &sprite = entity.getComponent<components::Sprite>();
+			auto &sprite = entity.getComponent<ECS::components::Sprite>();
 			out << YAML::Key << "color" << YAML::Value << sprite.color;
 
 			
@@ -212,11 +199,11 @@ namespace engine{
 	}
 
 	static void serializeRigidBodyComponent(YAML::Emitter &out, Entity entity){
-		if (entity.hasComponent<components::RigidBody>()){
+		if (entity.hasComponent<ECS::components::RigidBody>()){
 			out << YAML::Key << "RigidBodyComponent";
 			out << YAML::BeginMap;
 
-			auto &rigidBody = entity.getComponent<components::RigidBody>();
+			auto &rigidBody = entity.getComponent<ECS::components::RigidBody>();
 
 			out << YAML::Key << "Type" << YAML::Value << static_cast<int>(rigidBody.type);
 			out << YAML::Key << "FixedRotation" << YAML::Value << rigidBody.fixedRotation;
@@ -230,11 +217,11 @@ namespace engine{
 	}
 
 	static void serializeBoxColliderComponent(YAML::Emitter &out, Entity entity){
-		if (entity.hasComponent<components::BoxCollider>()){
+		if (entity.hasComponent<ECS::components::BoxCollider>()){
 			out << YAML::Key << "BoxColliderComponent";
 			out << YAML::BeginMap;
 
-			auto &collider = entity.getComponent<components::BoxCollider>();
+			auto &collider = entity.getComponent<ECS::components::BoxCollider>();
 
 			out << YAML::Key << "Offset" << YAML::Value << collider.offset;
 			out << YAML::Key << "Size" << YAML::Value << collider.size;
@@ -250,11 +237,11 @@ namespace engine{
 	}
 
 	static void serializeCircleRendererComponent(YAML::Emitter &out, Entity entity){
-		if (entity.hasComponent<components::CircleRenderer>()){
+		if (entity.hasComponent<ECS::components::CircleRenderer>()){
 			out << YAML::Key << "CircleRendererComponent";
 			out << YAML::BeginMap;
 
-			auto &circle = entity.getComponent<components::CircleRenderer>();
+			auto &circle = entity.getComponent<ECS::components::CircleRenderer>();
 
 			out << YAML::Key << "Color" << YAML::Value << circle.color;
 			out << YAML::Key << "Thickness" << YAML::Value << circle.thickness;
@@ -272,11 +259,11 @@ namespace engine{
 	}
 
 	static void serializeTriangleRendererComponent(YAML::Emitter &out, Entity entity){
-		if (entity.hasComponent<components::TriangleRenderer>()){
+		if (entity.hasComponent<ECS::components::TriangleRenderer>()){
 			out << YAML::Key << "TriangleRendererComponent";
 			out << YAML::BeginMap;
 
-			auto &triangle = entity.getComponent<components::TriangleRenderer>();
+			auto &triangle = entity.getComponent<ECS::components::TriangleRenderer>();
 
 			out << YAML::Key << "p1";
 			out << YAML::BeginMap;
@@ -301,12 +288,11 @@ namespace engine{
 	}
 
 	static void serializeEntity(YAML::Emitter& out, Entity entity){
-		if (!entity.hasComponent<components::UUID>()) return;
 
 		out << YAML::BeginMap;
-		out << YAML::Key << "Entity" << YAML::Value << static_cast<uint64_t>(entity.getComponent<components::UUID>());
+		out << YAML::Key << "Entity" << YAML::Value << static_cast<uint64_t>(entity.getUUID());
+		out << YAML::Key << "Tag" << YAML::Value << entity.getTag();
 
-		serializeTagComponent(out, entity);
 		serializeTransformComponent(out, entity);
 		serializeCameraComponent(out, entity);
 		serializeSpriteComponent(out, entity);
@@ -361,16 +347,10 @@ namespace engine{
 		out << YAML::Key << "Entities" << YAML::Value;
 		out << YAML::BeginSeq;
 
-		scene->registry.each([&](auto entityID){
-			Entity entity = {entityID, scene.get()};
-			if (!entity) return;
-
-			serializeEntity(out, entity);
-		});
 
 		out << YAML::EndSeq;
 
-		serailizeSpriteQueue(out, scene->sprites);
+		// serailizeSpriteQueue(out, scene->sprites);
 
 		out << YAML::EndMap;
 
@@ -397,21 +377,21 @@ namespace engine{
 		}
 	}
 
-	void SceneSerializer::deserializeSpriteQueue(YAML::Node data){
-		for (YAML::Node node : data){
-			YAML::Node entity = node["Entity"];
+	// void SceneSerializer::deserializeSpriteQueue(YAML::Node data){
+	// 	for (YAML::Node node : data){
+	// 		YAML::Node entity = node["Entity"];
 
-			if (entity){
-				UUID id = entity.as<uint64_t>();
-				scene->sprites.pushBack(id);
-			}
-		}
-	}
+	// 		if (entity){
+	// 			UUID id = entity.as<uint64_t>();
+	// 			scene->sprites.pushBack(id);
+	// 		}
+	// 	}
+	// }
 
 	static void deserializeTransformComponent(YAML::Node data, Entity entity){
 		YAML::Node node = data["TransformComponent"];
 		if (node){
-			auto &transform = entity.addComponent<components::Transform>();
+			auto &transform = entity.addComponent<ECS::components::Transform>().transform;
 			transform.translation = node["translation"].as<glm::vec2>();
 			transform.scale = node["scale"].as<glm::vec2>();
 			transform.rotation = node["rotation"].as<float>();
@@ -421,7 +401,7 @@ namespace engine{
 	static void deserializeCameraComponent(YAML::Node data, Entity entity){
 		YAML::Node node = data["CameraComponent"];
 		if (node){
-			auto &camera = entity.addComponent<components::Camera>();
+			auto &camera = entity.addComponent<ECS::components::Camera>();
 			camera.fixedViewportAspectRatio = node["fixedAspectRatio"].as<bool>();
 			camera.priorityLevel = node["priorityLevel"].as<float>();
 
@@ -441,7 +421,7 @@ namespace engine{
 	static void deserializeSpriteComponent(YAML::Node data, Entity entity, const Ref<Texture2DLibrary>& textures){
 		YAML::Node node = data["SpriteComponent"];
 		if (node){
-			auto &sprite = entity.addComponent<components::Sprite>();
+			auto &sprite = entity.addComponent<ECS::components::Sprite>();
 			sprite.color = node["color"].as<glm::vec4>();
 
 			YAML::Node texture = node["Texture"];
@@ -461,9 +441,9 @@ namespace engine{
 	static void deserializeRigidBodyComponent(YAML::Node data, Entity entity){
 		YAML::Node node = data["RigidBodyComponent"];
 		if (node){
-			auto &rigidBody = entity.addComponent<components::RigidBody>();
+			auto &rigidBody = entity.addComponent<ECS::components::RigidBody>();
 
-			rigidBody.type = static_cast<components::RigidBody::BodyType>(node["Type"].as<int>());
+			rigidBody.type = static_cast<ECS::components::RigidBody::BodyType>(node["Type"].as<int>());
 			rigidBody.fixedRotation = node["FixedRotation"].as<bool>();
 			rigidBody.linearVelocity = node["LinearVelocity"].as<glm::vec2>();
 			rigidBody.angularVelocity = node["AngularVelocity"].as<float>();
@@ -475,7 +455,7 @@ namespace engine{
 	static void deserializeBoxColliderComponent(YAML::Node data, Entity entity){
 		YAML::Node node = data["BoxColliderComponent"];
 		if (node){
-			auto &collider = entity.addComponent<components::BoxCollider>();
+			auto &collider = entity.addComponent<ECS::components::BoxCollider>();
 
 			collider.offset = node["Offset"].as<glm::vec2>();
 			collider.size = node["Size"].as<glm::vec2>();
@@ -491,7 +471,7 @@ namespace engine{
 	static void deserializeCircleRendererComponent(YAML::Node data, Entity entity){
 		YAML::Node node = data["CircleRendererComponent"];
 		if (node){
-			auto &circle = entity.addComponent<components::CircleRenderer>();
+			auto &circle = entity.addComponent<ECS::components::CircleRenderer>();
 
 			circle.color = node["Color"].as<glm::vec4>();
 			circle.thickness = node["Thickness"].as<float>();
@@ -509,7 +489,7 @@ namespace engine{
 	static void deserializeTriangleRendererComponent(YAML::Node data, Entity entity, const Ref<Texture2DLibrary>& textures){
 		YAML::Node node = data["TriangleRendererComponent"];
 		if (node){
-			auto &triangle = entity.addComponent<components::TriangleRenderer>();
+			auto &triangle = entity.addComponent<ECS::components::TriangleRenderer>();
 			deserializeTriangleRendererComponentVertex(node["p1"], triangle.p1);
 			deserializeTriangleRendererComponentVertex(node["p2"], triangle.p2);
 			deserializeTriangleRendererComponentVertex(node["p3"], triangle.p3);
@@ -553,15 +533,15 @@ namespace engine{
 				if (tagComponent)
 					name = tagComponent["tag"].as<std::string>();
 
-				Entity ent = scene->createIDEntity(uuid, name);
+				// Entity ent = scene->createIDEntity(uuid, name);
 				
-				deserializeTransformComponent(entity, ent);
-				deserializeCameraComponent(entity, ent);
-				deserializeSpriteComponent(entity, ent, texturesLibrary);
-				deserializeRigidBodyComponent(entity, ent);
-				deserializeBoxColliderComponent(entity, ent);
-				deserializeCircleRendererComponent(entity, ent);
-				deserializeTriangleRendererComponent(entity, ent, texturesLibrary);
+				// deserializeTransformComponent(entity, ent);
+				// deserializeCameraComponent(entity, ent);
+				// deserializeSpriteComponent(entity, ent, texturesLibrary);
+				// deserializeRigidBodyComponent(entity, ent);
+				// deserializeBoxColliderComponent(entity, ent);
+				// deserializeCircleRendererComponent(entity, ent);
+				// deserializeTriangleRendererComponent(entity, ent, texturesLibrary);
 			}
 		}
 

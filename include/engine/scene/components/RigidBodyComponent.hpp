@@ -2,7 +2,7 @@
 
 #include "../../core.hpp"
 
-namespace engine::components{
+namespace engine::ECS::components{
 	struct ENGINE_API RigidBody{
 		using BodyPtr = void*;
 

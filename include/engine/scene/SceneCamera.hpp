@@ -16,10 +16,10 @@ namespace engine{
 
 			inline void setViewportSize(uint32_t width, uint32_t height){setAspectRatio(static_cast<float>(width) / static_cast<float>(height));}
 
-			inline void setPosition(const glm::vec2 &position) {camera.setPosition(position); updateView();}
+			inline void setPosition(const glm::vec2 &position) {camera.setPosition(position);}
 			inline const glm::vec2& getPosition() const {return camera.getPosition();}
 
-			inline void setRotation(float rotation) {camera.setRotation(rotation); updateView();}
+			inline void setRotation(float rotation) {camera.setRotation(rotation);}
 			inline float getRotation() const {return camera.getRotation();}
 
 			inline const Camera& getCamera() const {return camera;}
@@ -27,9 +27,10 @@ namespace engine{
 			inline const glm::mat4 &getViewMatrix() const {return camera.getViewMatrix();}
 			inline const glm::mat4 &getProjectionMatrix() const {return camera.getProjectionMatrix();}
 			inline const glm::mat4 &getViewProjectionMatrix() const {return camera.getViewProjection();}
+
+			void updateView();
 		
 		private:
-			void updateView();
 			void updateProjection();
 
 			Camera camera;

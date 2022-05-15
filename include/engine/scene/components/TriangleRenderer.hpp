@@ -3,7 +3,7 @@
 #include "../../core.hpp"
 #include "../../renderer/Renderer.hpp"
 
-namespace engine::components{
+namespace engine::ECS::components{
 	struct ENGINE_API TriangleRenderer{
 		Renderer::Vertex p1;
 		Renderer::Vertex p2;

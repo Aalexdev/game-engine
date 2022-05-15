@@ -25,7 +25,6 @@ namespace engine{
 	}
 
 	SubTexture2D::SubTexture2D(const Ref<Texture2D> &texture) : texture{texture}{
-
 		updateStart(0, 0);
 		updateSize(texture->getWidth(), texture->getHeight());
 	}
