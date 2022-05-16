@@ -51,16 +51,12 @@ namespace engine{
 			}
 
 			if (currentHoveredPanel == SceneHierarchyPanelType::PANEL_SCENE_HIERARCHY){
-				if (ImGui::IsMouseClicked(0) && !ImGui::IsItemHovered()){
+				if (ImGui::IsMouseClicked(0) && ImGui::IsItemHovered()){
 					select({});
-				}
-
-				if (ImGui::IsMouseClicked(1) && !ImGui::IsItemHovered()){
-					ImGui::OpenPopup("SceneHierarchyPopupContextVoid");
 				}
 			}
 
-			if (ImGui::BeginPopup("SceneHierarchyPopupContextVoid")){
+			if (ImGui::BeginPopupContextItem("SceneHierarchyPopupContextVoid")){
 					
 				if (ImGui::BeginMenu("create entity")){
 					if (ImGui::MenuItem("create empty entity", newEntityKey.toString().c_str())){
@@ -102,8 +98,6 @@ namespace engine{
 
 		drawComponentsPanel();
 	}
-
-	
 
 	void SceneHierarchyPanel::serialize(YAML::Emitter &out){
 		out << YAML::Key << "NewEntityKey" << YAML::Value << newEntityKey;
@@ -660,5 +654,4 @@ namespace engine{
 
 		editor->activeScene->destroyEntity(entity);
 	}
-
 }

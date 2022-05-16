@@ -23,7 +23,6 @@ namespace engine{
 		editorScene = Scene::create(renderer);
 		activeScene = editorScene;
 
-
 		camera = EditorCamera::create(input);
 		createEntity("camera").addComponent<ECS::components::Camera>();
 		createEntity().addComponent<ECS::components::Sprite>();
@@ -41,6 +40,10 @@ namespace engine{
 	}
 
 	void EditorLayer::OnUpdate(Timestep timestep){
+		if (selectedEntity && selectedEntity.hasComponent<ECS::components::RigidBody>()){
+			selectedEntity.getComponent<ECS::components::RigidBody>().renderCollisions = true;
+		}
+
 		delta = timestep;
 		camera->OnUpdate(timestep);
 
@@ -57,9 +60,6 @@ namespace engine{
 
 		framebuffer->bind();
 		renderer->clear();
-
-		// uint32_t entityAttachemntClearValue = 0;
-		// framebuffer->clear(1, &entityAttachemntClearValue);
 
 		if (runtime){
 			activeScene->OnUpdateRuntime(timestep);
@@ -247,6 +247,10 @@ namespace engine{
 
 
 	bool EditorLayer::OnEntitySelected(EntitySelectedEvent &e){
+		if (selectedEntity && selectedEntity.hasComponent<ECS::components::RigidBody>()){
+			selectedEntity.getComponent<ECS::components::RigidBody>().renderCollisions = false;
+		}
+		
 		selectedEntity = e.getEntity();
 		return false;
 	}
@@ -294,7 +298,6 @@ namespace engine{
 		selectedEntity = {};
 		return false;
 	}
-
 
 	//  ======================================================================== ImGui
 
