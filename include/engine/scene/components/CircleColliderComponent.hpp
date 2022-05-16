@@ -1,17 +1,16 @@
 #pragma once
 
 #include "../../core.hpp"
-#include <libs/glm/glm.hpp>
 
 namespace engine::ECS::components{
-	struct ENGINE_API BoxCollider{
+	struct ENGINE_API CircleCollider{
 		using FixturePtr = void*;
 
-		glm::vec2 offset = glm::vec2(0.f);
-		glm::vec2 size = glm::vec2(0.5f);
+		glm::vec2 position = glm::vec2(0.f);
+		float radius = 1;
 		bool scaledSize = true;
 		bool isSensor = false;
-
+		
 		// TODO : move into physics material
 		float density = 1.f;
 		float friction = 0.5f;
@@ -20,7 +19,8 @@ namespace engine::ECS::components{
 
 		FixturePtr runtimeFixture;
 
-		BoxCollider() = default;
-		BoxCollider(const BoxCollider &) = default;
+		CircleCollider() = default;
+		CircleCollider(const CircleCollider &) = default;
+		~CircleCollider() = default;
 	};
 }

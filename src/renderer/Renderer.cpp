@@ -430,7 +430,7 @@ namespace engine{
 		return quadData->textureSlotIndex-1;
 	}
 
-	void Renderer::drawCircle(const glm::mat4 &transform, glm::vec4 &color, uint32_t entityIndex, float thickness, float fade){
+	void Renderer::drawCircle(const glm::mat4 &transform, const glm::vec4 &color, uint32_t entityIndex, float thickness, float fade){
 		
 		ENGINE_PROFILE_FUNCTION();
 

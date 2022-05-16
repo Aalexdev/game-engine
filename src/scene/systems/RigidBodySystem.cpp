@@ -5,6 +5,7 @@
 #include "engine/scene/components/RigidBodyComponent.hpp"
 #include "engine/scene/components/TransformComponent.hpp"
 #include "engine/scene/components/BoxColliderComponent.hpp"
+#include "engine/scene/components/CircleColliderComponent.hpp"
 
 #include <libs/box2d/box2d.h>
 
@@ -89,6 +90,31 @@ namespace engine::ECS::systems{
 
 				body->CreateFixture(&fixtureDef);
 			}
+
+			if (entity.hasComponent<components::CircleCollider>()){
+				auto &scale = transform.transform.scale;
+				auto &circleCollider = entity.getComponent<components::CircleCollider>();
+
+				b2CircleShape shape;
+				if (circleCollider.scaledSize){
+					glm::vec2 p = circleCollider.position * scale;
+					shape.m_p = {p.x, p.y};
+				} else {
+					shape.m_p = {circleCollider.position.x, circleCollider.position.y};
+				}
+				shape.m_radius = circleCollider.radius;
+
+				
+				b2FixtureDef fixtureDef;
+				fixtureDef.isSensor = circleCollider.isSensor;
+				fixtureDef.density = circleCollider.density;
+				fixtureDef.friction = circleCollider.friction;
+				fixtureDef.restitution = circleCollider.restitution;
+				fixtureDef.restitutionThreshold = circleCollider.restitutionThreshold;
+				fixtureDef.shape = &shape;
+				
+				body->CreateFixture(&fixtureDef);
+			}
 		}
 	}
 
@@ -100,6 +126,11 @@ namespace engine::ECS::systems{
 
 		if (entity.hasComponent<components::BoxCollider>()){
 			renderer->drawSquare(transform.transformMat, {0.8, 0.1, 0.2, 1.0}, static_cast<uint32_t>(entity));
+		}
+
+		if (entity.hasComponent<components::CircleCollider>()){
+			auto &circle = entity.getComponent<components::CircleCollider>();
+			renderer->drawCircle(transform.transformMat, {0.8, 0.1, 0.2, 1.0}, static_cast<uint32_t>(entity), 0.1);
 		}
 	}
 

@@ -12,6 +12,7 @@
 #include "engine/scene/components/BoxColliderComponent.hpp"
 #include "engine/scene/components/CircleRendererComponent.hpp"
 #include "engine/scene/components/TriangleRenderer.hpp"
+#include "engine/scene/components/CircleColliderComponent.hpp"
 
 #include <libs/yaml-cpp/yaml.h>
 #include <libs/glm/gtc/epsilon.hpp>
@@ -47,6 +48,7 @@ namespace engine{
 		copyComponent<ECS::components::CircleRenderer>(dst, src);
 		copyComponent<ECS::components::TriangleRenderer>(dst, src);
 		copyComponent<ECS::components::EntityData>(dst, src);
+		copyComponent<ECS::components::CircleCollider>(dst, src);
 	}
 	
 	Ref<Scene> Scene::copy(const Ref<Scene> &scene){
@@ -81,6 +83,7 @@ namespace engine{
 		registry.registerComponent<ECS::components::RigidBody>();
 		registry.registerComponent<ECS::components::Transform>();
 		registry.registerComponent<ECS::components::TriangleRenderer>();
+		registry.registerComponent<ECS::components::CircleCollider>();
 
 		batchRenderer = createScope<BatchRenderer>(this);
 
