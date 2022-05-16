@@ -6,6 +6,7 @@
 
 namespace engine{
 	class Scene;
+	class Entity;
 }
 
 namespace engine::ECS::systems{
@@ -18,6 +19,9 @@ namespace engine::ECS::systems{
 
 			void update(Timestep ts, uint32_t velocityIteration, uint32_t positionIteration);
 			void start();
+
+			void renderCollisions(engine::Entity entity); // render the collisions of the given entity
+			void renderCollisions(); // render all collisions
 		
 		private:
 			Scene *scene;

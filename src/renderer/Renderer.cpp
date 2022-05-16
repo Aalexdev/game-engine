@@ -26,6 +26,7 @@ namespace engine{
 	void Renderer::loadShaders(){
 		loadCircleShader();
 		loadQuadShader();
+		loadLineShader();
 	}
 
 	void Renderer::loadQuadShader(){
@@ -127,6 +128,24 @@ namespace engine{
 		circleShader = Shader::create((Filesystem::getDataFolderPath() / "shaders/circleShader.glsl").string());
 	}
 
+	void Renderer::loadLineShader(){
+		lineData = createScope<LineData>(10000);
+
+		lineData->lineVertexArray = VertexArray::create();
+		lineData->lineVertexBuffer = VertexBuffer::create(sizeof(LineData) * lineData->maxVertices);
+
+		BufferLayout lineBufferLayout = {
+			{DataType::Float3, "position"},
+			{DataType::Float4, "color"},
+			{DataType::UInt, "entityIndex"}
+		};
+
+		lineData->lineVertexBuffer->setLayout(lineBufferLayout);
+		lineData->lineVertexArray->addVertexBuffer(lineData->lineVertexBuffer);
+
+		lineData->lineVertexBufferBase = new LineVertex[lineData->maxVertices];
+		lineShader = Shader::create((Filesystem::getDataFolderPath() / "shaders/lineShader.glsl").string());
+	}
 
 	void Renderer::shutdown(){
 		ENGINE_PROFILE_FUNCTION();
@@ -146,6 +165,9 @@ namespace engine{
 		
 		circleShader->bind();
 		circleShader->setMat4(camera.getViewProjection(), "u_viewProjectionMatrix");
+		
+		lineShader->bind();
+		lineShader->setMat4(camera.getViewProjection(), "u_viewProjectionMatrix");
 
 		reloadScene();
 	}
@@ -164,6 +186,9 @@ namespace engine{
 
 		circleData->circleVertexBufferPtr = circleData->circleVertexBufferBase;
 		circleData->circleIndexCount = 0;
+
+		lineData->lineVertexBufferPtr = lineData->lineVertexBufferBase;
+		lineData->lineCount = 0;
 
 		quadData->textureSlotIndex = 1;
 	}
@@ -190,6 +215,14 @@ namespace engine{
 
 			circleShader->bind();
 			renderCommand.drawIndexed(circleData->circleVertexArray, circleData->circleIndexCount);
+		}
+
+		if (lineData->lineCount > 0){
+			uint32_t size = reinterpret_cast<uint8_t*>(lineData->lineVertexBufferPtr) - reinterpret_cast<uint8_t*>(lineData->lineVertexBufferBase);
+			lineData->lineVertexBuffer->setData(lineData->lineVertexBufferBase, size);
+
+			lineShader->bind();
+			renderCommand.drawLines(lineData->lineVertexArray, lineData->lineCount);
 		}
 	}
 
@@ -496,7 +529,7 @@ namespace engine{
 			entityIndex++;
 		}
 
-		if (quadData->quadIndexCount + 6 > quadData->maxIndices){
+		if (quadData->quadIndexCount + 3 > quadData->maxIndices){
 			endScene();
 			reloadScene();
 		}
@@ -547,4 +580,48 @@ namespace engine{
 	void Renderer::drawQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4 &color, uint32_t entityIndex){
 		drawQuad(position, size, color, 1.f, 0, {0.f, 0.f}, {1.f, 1.f}, entityIndex);
 	}
+
+	void Renderer::drawLine(const glm::vec2 &start, const glm::vec2 &end, uint32_t entityIndex, glm::vec4 color){
+		ENGINE_PROFILE_FUNCTION();
+
+		if (entityIndex == static_cast<uint32_t>(-1)){
+			entityIndex = 0;
+		} else {
+			entityIndex++;
+		}
+
+		if (lineData->lineCount + 2 > lineData->maxVertices){
+			endScene();
+			reloadScene();
+		}
+
+		lineData->lineVertexBufferPtr->position = glm::vec3(start, 0);
+		lineData->lineVertexBufferPtr->color = color;
+		lineData->lineVertexBufferPtr->entityIndex = entityIndex;
+		lineData->lineVertexBufferPtr++;
+		
+		lineData->lineVertexBufferPtr->position = glm::vec3(end, 0);
+		lineData->lineVertexBufferPtr->color = color;
+		lineData->lineVertexBufferPtr->entityIndex = entityIndex;
+		lineData->lineVertexBufferPtr++;
+
+		lineData->lineCount += 2;
+	}
+
+	void Renderer::setLineThickness(float thickness){
+		renderCommand.setLineThickness(thickness);
+	}
+
+	void Renderer::drawSquare(const glm::mat4 &transform, const glm::vec4 &color, uint32_t entityIndex){
+		glm::vec2 p0 = transform * quadVertexPositions[0];
+		glm::vec2 p1 = transform * quadVertexPositions[1];
+		glm::vec2 p2 = transform * quadVertexPositions[2];
+		glm::vec2 p3 = transform * quadVertexPositions[3];
+
+		drawLine(p0, p1, entityIndex, color);
+		drawLine(p1, p2, entityIndex, color);
+		drawLine(p2, p3, entityIndex, color);
+		drawLine(p3, p0, entityIndex, color);
+	}
+
 }

@@ -11,6 +11,7 @@ namespace engine::ECS::components{
 		float thickness = 1.f;
 		float fade = 0.005f;
 
+		uint16_t batchGroup = 0;
 
 		CircleRenderer(const CircleRenderer &) = default;
 		CircleRenderer() = default;

@@ -36,6 +36,14 @@ namespace engine{
 				rendererAPI->drawIndexed(vertexArray, indexCount);
 			}
 
+			inline void drawLines(const Ref<VertexArray> &vertexArray, uint32_t indexCount = 0){
+				rendererAPI->drawLines(vertexArray, indexCount);
+			}
+
+			inline void setLineThickness(float thickness){
+				rendererAPI->setLineThickness(thickness);
+			}
+
 			inline const Ref<RendererAPI>& getRendererAPI() const {return rendererAPI;}
 
 		private:

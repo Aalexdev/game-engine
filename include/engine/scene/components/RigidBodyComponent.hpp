@@ -19,6 +19,7 @@ namespace engine::ECS::components{
 		bool bullet = false;
 		float gravityScale = 1.f;
 
+		bool renderCollisions = false;
 		BodyPtr runtimeBody = nullptr;
 
 		RigidBody() = default;

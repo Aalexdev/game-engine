@@ -3,6 +3,7 @@
 #include "engine/debug/Log.hpp"
 #include "engine/scene/Scene.hpp"
 #include "engine/scene/Entity.hpp"
+#include "engine/scene/BatchRenderer.hpp"
 
 #include "engine/scene/components/TransformComponent.hpp"
 #include "engine/scene/components/SpriteComponent.hpp"
@@ -81,9 +82,10 @@ namespace engine{
 		registry.registerComponent<ECS::components::Transform>();
 		registry.registerComponent<ECS::components::TriangleRenderer>();
 
+		batchRenderer = createScope<BatchRenderer>(this);
+
 		cameraSystem = registry.RegisterSystem<ECS::systems::Camera>(this);
 		transformSystem = registry.RegisterSystem<ECS::systems::Transform>(this);
-		spriteSystem = registry.RegisterSystem<ECS::systems::Sprite>(this);
 		rigidBodySystem = registry.RegisterSystem<ECS::systems::RigidBody>(this);
 	}
 
@@ -180,15 +182,16 @@ namespace engine{
 
 		rigidBodySystem->update(dt, velocityIteration, positionIteration);
 		transformSystem->update();
-		spriteSystem->update();
-
+		batchRenderer->render();
+		rigidBodySystem->renderCollisions();
 		renderer->endScene();
 	}
 
 	void Scene::OnUpdateEditor(const EditorCamera &camera){
 		renderer->beginScene(camera.getCamera());
 		transformSystem->update();
-		spriteSystem->update();
+		batchRenderer->render();
+		rigidBodySystem->renderCollisions();
 		renderer->endScene();
 	}
 

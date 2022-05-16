@@ -16,6 +16,8 @@ namespace engine{
 
 			// if the index count is 0, it will automaticaly set to the vertexArray's indexCount
 			virtual void drawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0) = 0;
+			virtual void drawLines(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0) = 0;
+			virtual void setLineThickness(float thickness) = 0;
 			virtual void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
 
 			static Ref<RendererAPI> create();

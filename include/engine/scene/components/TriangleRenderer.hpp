@@ -9,6 +9,8 @@ namespace engine::ECS::components{
 		Renderer::Vertex p2;
 		Renderer::Vertex p3;
 
+		uint16_t batchGroup = 0;
+		
 		Ref<Texture2D> texture;
 
 		TriangleRenderer(const TriangleRenderer &) = default;

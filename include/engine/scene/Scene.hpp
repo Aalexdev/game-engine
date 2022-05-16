@@ -13,7 +13,6 @@
 // systems
 #include "systems/CameraSystem.hpp"
 #include "systems/TransformSystem.hpp"
-#include "systems/SpriteSystem.hpp"
 #include "systems/RigidBodySystem.hpp"
 
 class b2World;
@@ -21,6 +20,7 @@ class b2World;
 namespace engine{
 	class Entity;
 	class SpriteQueue;
+	class BatchRenderer;
 
 	class ENGINE_API Scene{
 		public:
@@ -97,8 +97,9 @@ namespace engine{
 			// systems
 			Ref<ECS::systems::Camera> cameraSystem;
 			Ref<ECS::systems::Transform> transformSystem;
-			Ref<ECS::systems::Sprite> spriteSystem;
 			Ref<ECS::systems::RigidBody> rigidBodySystem;
+
+			Scope<BatchRenderer> batchRenderer;
 
 			friend class Entity;
 			friend class SceneSerializer;

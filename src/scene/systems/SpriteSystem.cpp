@@ -14,64 +14,18 @@ namespace engine::ECS::systems{
 		registry.setSystemSignature<Sprite>(signature);
 	}
 
-	// void Sprite::OnEntityPushed(Entity entity){
-	// 	sprites.pushBack(scene->getRegistry().getComponent<components::EntityData>(entity).uuid);
-	// }
-
-	// void Sprite::OnEntityRemoved(Entity entity){
-	// 	sprites.erase(scene->getRegistry().getComponent<components::EntityData>(entity).uuid);
-	// }
-
-	void Sprite::update(){
-		auto renderer = scene->getRenderer();
-		std::map<uint16_t, std::vector<engine::Entity>> sprites;
+	std::unordered_map<uint16_t, std::list<engine::Entity>> Sprite::sort(std::set<uint16_t> &ids){
+		std::unordered_map<uint16_t, std::list<engine::Entity>> map{};
 
 		for (const auto &e : entities){
 			engine::Entity entity = {e, scene};
 			auto &sprite = entity.getComponent<components::Sprite>();
-			sprites[sprite.batchGroup].push_back(entity);
+			uint16_t id = sprite.batchGroup;
+
+			ids.insert(id);
+			map[id].push_back(entity);
 		}
 
-		for (auto &pair : sprites){
-			auto &vec = pair.second;
-			for (auto &entity : vec){
-				auto &transform = entity.getComponent<components::Transform>();
-				auto &sprite = entity.getComponent<components::Sprite>();
-				renderer->drawQuad(transform.transformMat, sprite.color, static_cast<Entity>(entity), sprite.texture);
-			}
-			renderer->endScene();
-			renderer->reloadScene();
-		}
-
-		// renderer->reloadScene();
-		// auto it = spriteGroups.begin();
-
-		// while (it){
-		// 	engine::Entity entity = {scene->get(*it), scene};
-		// 	auto &transform = entity.getComponent<components::Transform>();
-		// 	auto &sprite = entity.getComponent<components::Sprite>();
-
-		// 	renderer->drawQuad(transform.transformMat, sprite.color, static_cast<uint32_t>(entity), sprite.texture);
-
-		// 	it++;
-		// }
-
-
+		return map;
 	}
-	
-	// void Sprite::moveBack(UUID uuid){
-	// 	spriteGroups.swapBackward(uuid);
-	// }
-
-	// void Sprite::moveFront(UUID uuid){
-	// 	spriteGroups.swapForward(uuid);
-	// }
-
-	// void Sprite::moveToBack(UUID uuid){
-	// 	spriteGroups.pushFront(uuid);
-	// }
-
-	// void Sprite::moveToFront(UUID uuid){
-	// 	spriteGroups.pushBack(uuid);
-	// }
 }

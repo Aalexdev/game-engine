@@ -59,6 +59,11 @@ namespace engine{
 			void drawTriangle(const Vertex &p1, const Vertex &p2, const Vertex &p3, const glm::vec2 &translation, const glm::vec2 &scale, float angle, const Ref<Texture2D> &texture = nullptr, uint32_t entityIndex = -1);
 			void drawTriangle(const Vertex &p1, const Vertex &p2, const Vertex &p3, const glm::mat4 &transform, const Ref<Texture2D> &texture = nullptr, uint32_t entityIndex = -1);
 
+			void drawLine(const glm::vec2 &start, const glm::vec2 &end, uint32_t entityIndex, glm::vec4 color);
+			void drawSquare(const glm::mat4 &transform, const glm::vec4 &color, uint32_t entityIndex);
+
+			void setLineThickness(float thickness);
+
 			void reloadScene();
 
 		private:
@@ -81,6 +86,12 @@ namespace engine{
 				float thickness;
 				float fade;
 
+				uint32_t entityIndex;
+			};
+
+			struct LineVertex{
+				glm::vec3 position;
+				glm::vec4 color;
 				uint32_t entityIndex;
 			};
 
@@ -124,17 +135,35 @@ namespace engine{
 					maxIndices = maxCircle * 6;
 				}
 			};
+
+			struct LineData{
+				uint32_t maxLines = 10000;
+				uint32_t maxVertices;
+
+				Ref<VertexArray> lineVertexArray;
+				Ref<VertexBuffer> lineVertexBuffer;
+
+				uint32_t lineCount;
+				LineVertex* lineVertexBufferBase = nullptr;
+				LineVertex* lineVertexBufferPtr = nullptr;
+
+				LineData(uint32_t maxLines = 10000) : maxLines{maxLines}{
+					maxVertices = maxLines * 2;
+				}
+			};
 			
 			glm::vec4 quadVertexPositions[4];
 
 			Ref<Shader> quadShader;
 			Ref<Shader> circleShader;
+			Ref<Shader> lineShader;
 
 			void flush();
 
 			RenderCommand renderCommand;
 			Scope<QuadData> quadData;
 			Scope<CircleData> circleData;
+			Scope<LineData> lineData;
 
 			uint16_t texturePushed(const Ref<Texture2D> &texture);
 			uint16_t pushTexture(const Ref<Texture2D> &texture);
@@ -146,6 +175,7 @@ namespace engine{
 			void loadShaders();
 			void loadQuadShader();
 			void loadCircleShader();
+			void loadLineShader();
 
 	};
 }

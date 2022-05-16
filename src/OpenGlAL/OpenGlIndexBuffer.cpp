@@ -1,4 +1,5 @@
 #include "engine/pch.hpp"
+#include "engine/debug/Log.hpp"
 #include "engine/OpenGlAL/OpenGlIndexBuffer.hpp"
 #include "engine/debug/Instrumentor.hpp"
 

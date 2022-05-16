@@ -91,4 +91,21 @@ namespace engine::ECS::systems{
 			}
 		}
 	}
+
+	void RigidBody::renderCollisions(engine::Entity entity){
+		auto renderer = scene->getRenderer();
+		auto &transform = entity.getComponent<components::Transform>();
+
+		renderer->setLineThickness(5);
+
+		if (entity.hasComponent<components::BoxCollider>()){
+			renderer->drawSquare(transform.transformMat, {0.8, 0.1, 0.2, 1.0}, static_cast<uint32_t>(entity));
+		}
+	}
+
+	void RigidBody::renderCollisions(){
+		for (const auto &e : entities){
+			if (scene->getRegistry().getComponent<components::RigidBody>(e).renderCollisions) renderCollisions({e, scene});
+		}
+	}
 }
