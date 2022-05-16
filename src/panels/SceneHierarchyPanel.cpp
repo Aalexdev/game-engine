@@ -63,6 +63,35 @@ namespace engine{
 						createNewEntity();
 					}
 
+					if (ImGui::BeginMenu("colliders")){
+						if (ImGui::MenuItem("box")){
+							auto entity = createNewEntity();
+							{
+								auto &component = entity.addComponent<ECS::components::RigidBody>();
+								ComponentAddedEvent event(entity, component);
+								callback(event);
+							}
+
+							auto &component = entity.addComponent<ECS::components::BoxCollider>();
+							ComponentAddedEvent event(entity, component);
+							callback(event);
+						}
+
+						if (ImGui::MenuItem("circle")){
+							auto entity = createNewEntity();
+							{
+								auto &component = entity.addComponent<ECS::components::RigidBody>();
+								ComponentAddedEvent event(entity, component);
+								callback(event);
+							}
+
+							auto &component = entity.addComponent<ECS::components::CircleCollider>();
+							ComponentAddedEvent event(entity, component);
+							callback(event);
+						}
+						ImGui::EndMenu();
+					}
+
 					if (ImGui::BeginMenu("renderer")){
 						if (ImGui::MenuItem("sprite")){
 							auto entity = createNewEntity();
@@ -431,6 +460,7 @@ namespace engine{
 			addComponent<ECS::components::Camera>("camera", entity, callback);
 			addComponent<ECS::components::RigidBody>("rigid Body", entity, callback);
 			addComponent<ECS::components::BoxCollider>("box Collider", entity, callback);
+			addComponent<ECS::components::CircleCollider>("circle collider", entity, callback);
 			addComponent<ECS::components::CircleRenderer>("circle Renderer", entity, callback);
 			addComponent<ECS::components::TriangleRenderer>("triangle Renderer", entity, callback);
 
@@ -446,6 +476,8 @@ namespace engine{
 		drawComponent<ECS::components::Camera>(this, "camera", entity, drawCameraComponent, callback);
 		drawComponent<ECS::components::RigidBody>(this, "rigid Body", entity, drawRigidBodyComponent, callback);
 		drawComponent<ECS::components::BoxCollider>(this, "box Bollider", entity, drawBoxColliderComponent, callback);
+		drawComponent<ECS::components::CircleCollider>(this, "circle collider", entity, drawCircleColliderComponent, callback);
+
 	}
 
 
@@ -614,6 +646,25 @@ namespace engine{
 			ImGui::TreePop();
 		}
 	}
+
+	void SceneHierarchyPanel::drawCircleColliderComponent(Entity entity){
+		if (!entity.hasComponent<ECS::components::CircleCollider>()) return;
+		auto &collider = entity.getComponent<ECS::components::CircleCollider>();
+		
+		ImVec2 region = ImGui::GetContentRegionAvail();
+		ImGui::Checkbox("scaled size", &collider.scaledSize);
+		ImGui::SameLine(region.x / 2);
+		ImGui::Checkbox("is sensor", &collider.isSensor);
+
+		Vec2Edit("offset", collider.position);
+		ImGui::DragFloat("radius", &collider.radius);
+		ImGui::InputFloat("density", &collider.density);
+		ImGui::InputFloat("friction", &collider.friction);
+		ImGui::InputFloat("restitution", &collider.restitution);
+		ImGui::InputFloat("restitution threshold", &collider.restitutionThreshold);
+
+	}
+
 
 	// ========================================================= Methods
 

@@ -50,6 +50,7 @@ namespace engine{
 			void drawBoxColliderComponent(Entity entity);
 			void drawCircleRendererComponent(Entity entity);
 			void drawTriangleRendererComponent(Entity entity);
+			void drawCircleColliderComponent(Entity entity);
 
 			// === Members ===
 			Entity selectedEntity; // the entity that is currently selected
