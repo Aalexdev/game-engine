@@ -20,7 +20,7 @@ namespace engine{
 		framebuffer = Framebuffer::create(layout);
 		renderer->setClearColor({0.2f, 0.2f, 0.2f, 1.f});
 
-		editorScene = Scene::create(renderer);
+		editorScene = Scene::create(renderer, app->getPhysicMaterials());
 		activeScene = editorScene;
 
 		camera = EditorCamera::create(input);
@@ -131,6 +131,7 @@ namespace engine{
 		drawViewport();
 		panels.OnImGuiRender();
 
+
 		ImGui::PopStyleVar();
 		ImGui::End();
 
@@ -174,7 +175,7 @@ namespace engine{
 			int mouseX = static_cast<int>(mx);
 			int mouseY = static_cast<int>(my);
 
-			mouseOnViewport = (mouseX >= 0 && mouseY >= 0 && mouseX < static_cast<int>(viewportWidth) && mouseY < static_cast<int>(viewportHeight));
+			// mouseOnViewport = (mouseX >= 0 && mouseY >= 0 && mouseX < static_cast<int>(viewportWidth) && mouseY < static_cast<int>(viewportHeight));
 		}
 
 		return false;
@@ -218,16 +219,19 @@ namespace engine{
 
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent &e){
 		
+		
 		if (input->isDown(saveProjectAsKey, e)) saveAs();
 		else if (input->isDown(saveProjectKey, e)) save();
 		if (input->isDown(openProjectKey, e)) open();
 		if (input->isDown(exitKey, e)) app->close();
 
-		if (input->isDown(rotateGizmoKey, e)) guizmoRotate();
-		if (input->isDown(scaleGizmoKey, e)) guizmoScale();
-		if (input->isDown(translateGizmoKey, e)) guizmoTranslate();
-		if (input->isDown(newEntityKey, e)) createEntity();
-		if (input->isDown(deleteSelectedEntityKey, e)) deleteSelectedEntity();
+		if (mouseOnViewport){
+			if (input->isDown(rotateGizmoKey, e)) guizmoRotate();
+			if (input->isDown(scaleGizmoKey, e)) guizmoScale();
+			if (input->isDown(translateGizmoKey, e)) guizmoTranslate();
+			if (input->isDown(newEntityKey, e)) createEntity();
+			if (input->isDown(deleteSelectedEntityKey, e)) deleteSelectedEntity();
+		}
 
 		if (e.getKeyCode() == Key::KEY_F10){
 			ENGINE_WARN("PROFILE NEXT 5 FRAMES");
@@ -321,6 +325,7 @@ namespace engine{
 
 	void EditorLayer::drawViewport(){
 		ImGui::Begin("Viewport", nullptr);
+		mouseOnViewport = ImGui::IsWindowFocused();
 		ImVec2 viewportOffset = ImGui::GetCursorPos();
 		ImVec2 size = ImGui::GetContentRegionAvail();
 
@@ -488,8 +493,6 @@ namespace engine{
 	void EditorLayer::open(){
 		ImGuiFileDialog::Instance()->OpenDialog("openFile", "Choose File", ".yaml", ".");
 	}
-
-	
 
 	Entity EditorLayer::createEntity(const std::string &tag){
 		// create the actual entity

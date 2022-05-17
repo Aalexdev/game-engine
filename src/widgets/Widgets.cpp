@@ -478,4 +478,82 @@ namespace engine{
 		}
 		return false;
 	}
+
+	bool physicMaterialEdit(const char *str_id, std::string &material, const Ref<PhysicMaterialLibrary> &library){
+		ImGui::PushID(str_id);
+		
+		const char* materialName = material.empty() ? "default" : material.c_str();
+		float width = ImGui::GetContentRegionAvail().x;
+
+		if (ImGui::Button(materialName, {width, 0})){
+			ImGui::OpenPopup("MATERIAL_EDIT_POPUP");
+		}
+
+		ImGui::SetNextWindowContentSize({600, 375});
+		if (ImGui::BeginPopup("MATERIAL_EDIT_POPUP")){
+			auto contentSize = ImGui::GetContentRegionAvail();
+			
+			{
+				float x = ImGui::GetCursorPosX();
+				float textWidth = ImGui::CalcTextSize(materialName).x;
+
+				ImGui::SetCursorPosX((contentSize.x / 2) - (textWidth / 2));
+				ImGui::Text(materialName);
+
+				ImGui::SetCursorPosX(x);
+			}
+
+			ImGui::Spacing();
+
+			ImGui::Columns(2, nullptr, false);
+			ImGui::SetColumnWidth(0, contentSize.x / 2);
+
+			Ref<PhysicMaterial> materialRef = library->get(material);
+			ImGui::InputFloat("density", &materialRef->density);
+			ImGui::InputFloat("firction", &materialRef->friction);
+			ImGui::InputFloat("resititution", &materialRef->restitution);
+			ImGui::InputFloat("restitution threshold", &materialRef->restitutionThreshold);
+
+			ImGui::NextColumn();
+			ImGui::SetColumnWidth(1, contentSize.x / 2);
+
+			
+			static char buffer[255]{};
+			if (ImGui::Button("new", {contentSize.x / 10, 0})){
+				if (strlen(buffer) > 0){
+					PhysicMaterial newMaterial;
+					newMaterial.name = buffer;
+					library->push(newMaterial);
+					memset(buffer, 0, sizeof(buffer));
+				}
+			}
+			auto id = ImGui::GetItemID();
+
+			ImGui::SameLine();
+			if (ImGui::InputText("##materialName", buffer, sizeof(buffer), ImGuiInputTextFlags_EnterReturnsTrue)){
+				ImGui::ActivateItem(id);	
+			}
+
+			if (ImGui::Button("remove", {contentSize.x / 2, 0})){
+				library->pop(material);
+				material = "default";
+			}
+
+			if (ImGui::BeginListBox("materials", {contentSize.x / 2, contentSize.y})){
+
+				for (auto &pair : library->get()){
+					if (ImGui::Button(pair.first.c_str(), {contentSize.x / 2, 0})){
+						material = pair.first;
+					}
+				}
+
+				ImGui::EndListBox();
+			}
+			
+			ImGui::Columns(1);
+			ImGui::EndPopup();
+		}
+
+		ImGui::PopID();
+	}
 }

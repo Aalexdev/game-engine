@@ -182,7 +182,6 @@ namespace engine{
 	
 	bool SceneHierarchyPanel::KeyPressedOnComponentPanel(KeyPressedEvent &e){
 		
-
 		return false;
 	}
 
@@ -602,11 +601,7 @@ namespace engine{
 
 		Vec2Edit("offset", collider.offset);
 		Vec2Edit("size", collider.size, {0.5, 0.5});
-
-		ImGui::InputFloat("density", &collider.density);
-		ImGui::InputFloat("friction", &collider.friction);
-		ImGui::InputFloat("restitution", &collider.restitution);
-		ImGui::InputFloat("restitution threshold", &collider.restitutionThreshold);
+		physicMaterialEdit("materials", collider.material, editor->activeScene->getPhysicMaterials());
 
 	}
 
@@ -658,13 +653,8 @@ namespace engine{
 
 		Vec2Edit("offset", collider.position);
 		ImGui::DragFloat("radius", &collider.radius);
-		ImGui::InputFloat("density", &collider.density);
-		ImGui::InputFloat("friction", &collider.friction);
-		ImGui::InputFloat("restitution", &collider.restitution);
-		ImGui::InputFloat("restitution threshold", &collider.restitutionThreshold);
-
+		physicMaterialEdit("materials", collider.material, editor->activeScene->getPhysicMaterials());
 	}
-
 
 	// ========================================================= Methods
 

@@ -46,4 +46,6 @@ namespace engine{
 	 * @return true when the vector has changed
 	 */
 	bool Vec3Edit(const std::string &label, glm::vec3& values, const glm::vec3& resetValue = {0.f, 0.f, 0.f}, float columnWidth = 100.f);
+
+	bool physicMaterialEdit(const char *str_id, std::string &material, const Ref<PhysicMaterialLibrary> &library);
 }
