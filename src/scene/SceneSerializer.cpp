@@ -12,6 +12,7 @@
 #include "engine/scene/components/BoxColliderComponent.hpp"
 #include "engine/scene/components/CircleRendererComponent.hpp"
 #include "engine/scene/components/TriangleRenderer.hpp"
+#include "engine/scene/components/CircleColliderComponent.hpp"
 
 // libs
 #include <libs/yaml-cpp/yaml.h>
@@ -227,10 +228,7 @@ namespace engine{
 			out << YAML::Key << "Size" << YAML::Value << collider.size;
 			out << YAML::Key << "ScaledSize" << YAML::Value << collider.scaledSize;
 			out << YAML::Key << "IsSensor" << YAML::Value << collider.isSensor;
-			out << YAML::Key << "Density" << YAML::Value << collider.density;
-			out << YAML::Key << "Friction" << YAML::Value << collider.friction;
-			out << YAML::Key << "Restitution" << YAML::Value << collider.restitution;
-			out << YAML::Key << "RestitutionThreshold" << YAML::Value << collider.restitutionThreshold;
+			out << YAML::Key << "MaterialUD" << YAML::Value << collider.material;
 
 			out << YAML::EndMap;
 		}
@@ -287,6 +285,23 @@ namespace engine{
 		}
 	}
 
+	static void serializeCircleColliderComponent(YAML::Emitter &out, Entity entity){
+		if (entity.hasComponent<ECS::components::CircleCollider>()){
+			out << YAML::Key << "CircleColliderComponent";
+			out << YAML::BeginMap;
+
+			auto &collider = entity.getComponent<ECS::components::CircleCollider>();
+
+			out << YAML::Key << "Position" << YAML::Value << collider.position;
+			out << YAML::Key << "Collider" << YAML::Value << collider.radius;
+			out << YAML::Key << "ScaledSize" << YAML::Value << collider.scaledSize;
+			out << YAML::Key << "IsSensor" << YAML::Value << collider.isSensor;
+			out << YAML::Key << "MaterialUD" << YAML::Value << collider.material;
+
+			out << YAML::EndMap;
+		}
+	}
+
 	static void serializeEntity(YAML::Emitter& out, Entity entity){
 
 		out << YAML::BeginMap;
@@ -328,7 +343,24 @@ namespace engine{
 			out << YAML::Key << "Texture" << YAML::Value << t->getUUID().get();
 			out << YAML::Key << "Name" << YAML::Value << t->getName();
 			out << YAML::Key << "Path" << YAML::Value << t->getPath().string();
+			out << YAML::EndMap;
+		}
 
+		out << YAML::EndSeq;
+	}
+
+	static void serializePhysicMaterials(YAML::Emitter &out, Ref<PhysicMaterialLibrary> &library){
+		out << YAML::Key << "PhysicMaterials" << YAML::Value;
+		out << YAML::BeginSeq;
+
+		for (auto &pair : library->get()){
+			auto &material = pair.second;
+			out << YAML::BeginMap;
+			out << YAML::Key << "PhysicalMaterial" << YAML::Value << pair.first;
+			out << YAML::Key << "Density" << YAML::Value << material->density;
+			out << YAML::Key << "Friction" << YAML::Value << material->friction;
+			out << YAML::Key << "Resitution" << YAML::Value << material->restitution;
+			out << YAML::Key << "ResitutionThreshold" << YAML::Value << material->restitutionThreshold;
 			out << YAML::EndMap;
 		}
 
@@ -377,16 +409,21 @@ namespace engine{
 		}
 	}
 
-	// void SceneSerializer::deserializeSpriteQueue(YAML::Node data){
-	// 	for (YAML::Node node : data){
-	// 		YAML::Node entity = node["Entity"];
+	static void derializePhysicMaterial(YAML::Node data, Ref<PhysicMaterialLibrary> library){
+		for (YAML::Node node : data){
+			YAML::Node materialNode = node["PhysicMaterial"];
+			if (!materialNode) continue;
 
-	// 		if (entity){
-	// 			UUID id = entity.as<uint64_t>();
-	// 			scene->sprites.pushBack(id);
-	// 		}
-	// 	}
-	// }
+			PhysicMaterial material;
+			material.name = materialNode.as<std::string>();
+			material.density = node["Density"].as<float>();
+			material.friction = node["Friction"].as<float>();
+			material.restitution = node["Restitution"].as<float>();
+			material.restitutionThreshold = node["RestitutionThreshold"].as<float>();
+
+			library->push(material);
+		}
+	}
 
 	static void deserializeTransformComponent(YAML::Node data, Entity entity){
 		YAML::Node node = data["TransformComponent"];
@@ -461,10 +498,7 @@ namespace engine{
 			collider.size = node["Size"].as<glm::vec2>();
 			collider.scaledSize = node["ScaledSize"].as<bool>();
 			collider.isSensor = node["IsSensor"].as<bool>();
-			collider.density = node["Density"].as<float>();
-			collider.friction = node["Friction"].as<float>();
-			collider.restitution = node["Restitution"].as<float>();
-			collider.restitutionThreshold = node["RestitutionThreshold"].as<float>();
+			collider.material = node["Material"].as<std::string>();
 		}
 	}
 	
@@ -501,6 +535,20 @@ namespace engine{
 		}
 	}
 
+	static void deserializeCircleColliderComponent(YAML::Node data, Entity entity){
+		YAML::Node node = data["CircleColliderComponent"];
+
+		if (node){
+			auto &collider = entity.addComponent<ECS::components::CircleCollider>();
+			
+			collider.position = node["Position"].as<glm::vec2>();
+			collider.radius = node["Radius"].as<float>();
+			collider.scaledSize = node["ScaledSize"].as<bool>();
+			collider.isSensor = node["IsSensor"].as<bool>();
+			collider.material = node["Material"].as<std::string>();
+		}
+	}
+	
 	bool SceneSerializer::deserializeText(const std::string &filepath){
 		ENGINE_PROFILE_FUNCTION();
 
@@ -523,6 +571,11 @@ namespace engine{
 			deseralizeTextures(textures, *texturesLibrary.get());
 		}
 
+		auto physicMaterials = data["PhysicMaterials"];
+		if (physicMaterials){
+			derializePhysicMaterial(data, scene->physicMaterials);
+		}
+
 		auto entities = data["Entities"];
 		if (entities){
 			for (auto entity : entities){
@@ -533,15 +586,16 @@ namespace engine{
 				if (tagComponent)
 					name = tagComponent["tag"].as<std::string>();
 
-				// Entity ent = scene->createIDEntity(uuid, name);
+				Entity ent = scene->createEntity(uuid, name);
 				
-				// deserializeTransformComponent(entity, ent);
-				// deserializeCameraComponent(entity, ent);
-				// deserializeSpriteComponent(entity, ent, texturesLibrary);
-				// deserializeRigidBodyComponent(entity, ent);
-				// deserializeBoxColliderComponent(entity, ent);
-				// deserializeCircleRendererComponent(entity, ent);
-				// deserializeTriangleRendererComponent(entity, ent, texturesLibrary);
+				deserializeTransformComponent(entity, ent);
+				deserializeCameraComponent(entity, ent);
+				deserializeSpriteComponent(entity, ent, texturesLibrary);
+				deserializeRigidBodyComponent(entity, ent);
+				deserializeBoxColliderComponent(entity, ent);
+				deserializeCircleRendererComponent(entity, ent);
+				deserializeTriangleRendererComponent(entity, ent, texturesLibrary);
+				deserializeCircleColliderComponent(entity, ent);
 			}
 		}
 

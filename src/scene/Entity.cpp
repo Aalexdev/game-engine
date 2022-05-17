@@ -9,20 +9,9 @@ namespace engine{
 	}
 
 	void Entity::pushChild(Entity child){
-		auto &data = child.data();
-		if (data.parent){
-			Entity parent{data.parent, scene};
-			auto parentData = parent.data();
-			if (parentData.childs.size() > 0){
-				auto it = std::find(parentData.childs.begin(), parentData.childs.end(), static_cast<ECS::Entity>(child));
-				if (it != parentData.childs.end()){
-					parentData.childs.erase(it);
-				}
-			}
-		}
-
-		data.parent = *this;
-		this->data().childs.push_back(static_cast<ECS::Entity>(child));
+		child.resetParent();
+		child.data().parent = *this;
+		data().childs.push_back(static_cast<ECS::Entity>(child));
 	}
 
 	void Entity::resetParent(){

@@ -2,6 +2,8 @@
 #include "engine/scene/Scene.hpp"
 #include "engine/scene/Entity.hpp"
 #include "engine/scene/systems/RigidBodySystem.hpp"
+#include "engine/scene/PhysicMaterial.hpp"
+#include "engine/scene/PhysicMaterialLibrary.hpp"
 #include "engine/scene/components/RigidBodyComponent.hpp"
 #include "engine/scene/components/TransformComponent.hpp"
 #include "engine/scene/components/BoxColliderComponent.hpp"
@@ -73,6 +75,8 @@ namespace engine::ECS::systems{
 				auto &scale = transform.transform.scale;
 				auto &boxCollider = entity.getComponent<components::BoxCollider>();
 
+				Ref<PhysicMaterial> material = scene->getPhysicMaterials()->get(boxCollider.material);
+
 				b2PolygonShape shape;
 				if (boxCollider.scaledSize){
 					shape.SetAsBox(boxCollider.size.x * scale.x, boxCollider.size.y * scale.y, {boxCollider.offset.x * scale.x, boxCollider.offset.y * scale.y}, glm::radians(transform.transform.rotation));
@@ -82,10 +86,10 @@ namespace engine::ECS::systems{
 
 				b2FixtureDef fixtureDef;
 				fixtureDef.isSensor = boxCollider.isSensor;
-				fixtureDef.density = boxCollider.density;
-				fixtureDef.friction = boxCollider.friction;
-				fixtureDef.restitution = boxCollider.restitution;
-				fixtureDef.restitutionThreshold = boxCollider.restitutionThreshold;
+				fixtureDef.density = material->density;
+				fixtureDef.friction = material->friction;
+				fixtureDef.restitution = material->restitution;
+				fixtureDef.restitutionThreshold = material->restitutionThreshold;
 				fixtureDef.shape = &shape;
 
 				body->CreateFixture(&fixtureDef);
@@ -94,6 +98,8 @@ namespace engine::ECS::systems{
 			if (entity.hasComponent<components::CircleCollider>()){
 				auto &scale = transform.transform.scale;
 				auto &circleCollider = entity.getComponent<components::CircleCollider>();
+				
+				Ref<PhysicMaterial> material = scene->getPhysicMaterials()->get(circleCollider.material);
 
 				b2CircleShape shape;
 				if (circleCollider.scaledSize){
@@ -107,10 +113,10 @@ namespace engine::ECS::systems{
 				
 				b2FixtureDef fixtureDef;
 				fixtureDef.isSensor = circleCollider.isSensor;
-				fixtureDef.density = circleCollider.density;
-				fixtureDef.friction = circleCollider.friction;
-				fixtureDef.restitution = circleCollider.restitution;
-				fixtureDef.restitutionThreshold = circleCollider.restitutionThreshold;
+				fixtureDef.density = material->density;
+				fixtureDef.friction = material->friction;
+				fixtureDef.restitution = material->restitution;
+				fixtureDef.restitutionThreshold = material->restitutionThreshold;
 				fixtureDef.shape = &shape;
 				
 				body->CreateFixture(&fixtureDef);

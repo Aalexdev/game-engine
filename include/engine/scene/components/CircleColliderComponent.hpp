@@ -7,17 +7,13 @@ namespace engine::ECS::components{
 		using FixturePtr = void*;
 
 		glm::vec2 position = glm::vec2(0.f);
-		float radius = 1;
-		bool scaledSize = true;
+		float radius = 0.5;
+		bool scaledSize = true; // the scale is based on the minimal value between the scale width and scale height
 		bool isSensor = false;
-		
-		// TODO : move into physics material
-		float density = 1.f;
-		float friction = 0.5f;
-		float restitution = 0.f;
-		float restitutionThreshold = 0.5f;
-
 		FixturePtr runtimeFixture;
+		
+		std::string material;
+
 
 		CircleCollider() = default;
 		CircleCollider(const CircleCollider &) = default;

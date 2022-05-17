@@ -21,6 +21,7 @@
 #include "scene/Scene.hpp"
 #include "scene/Entity.hpp"
 #include "scene/SceneSerializer.hpp"
+#include "scene/PhysicMaterialLibrary.hpp"
 
 #include "scene/components/SpriteComponent.hpp"
 #include "scene/components/CameraComponent.hpp"

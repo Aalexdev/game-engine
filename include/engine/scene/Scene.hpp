@@ -5,10 +5,10 @@
 #include "../renderer/Renderer.hpp"
 #include "../renderer/EditorCamera.hpp"
 
-// #include "components/NativeScriptComponent.hpp"
 #include "components/SpriteComponent.hpp"
 #include "../dataStruct/Set.hpp"
 #include "ECS.hpp"
+#include "PhysicMaterialLibrary.hpp"
 
 // systems
 #include "systems/CameraSystem.hpp"
@@ -24,10 +24,10 @@ namespace engine{
 
 	class ENGINE_API Scene{
 		public:
-			Scene(const Ref<Renderer> &renderer);
+			Scene(const Ref<Renderer> &renderer, const Ref<PhysicMaterialLibrary> &physicMaterials);
 			~Scene();
 		
-			static Ref<Scene> create(const Ref<Renderer> &renderer) {return createRef<Scene>(renderer);}
+			static Ref<Scene> create(const Ref<Renderer> &renderer, const Ref<PhysicMaterialLibrary> &physicMaterials) {return createRef<Scene>(renderer, physicMaterials);}
 			static Ref<Scene> copy(const Ref<Scene> &scene);
 
 			Entity createEntity(const std::string &name = "new Entity");
@@ -71,14 +71,13 @@ namespace engine{
 			void setPhysicBody(UUID id, void *body);
 			b2World* getPhysicsWorld();
 
+			Ref<PhysicMaterialLibrary> getPhysicMaterials();
+
 		private:
 
 			ECS::Registry registry;
 			Ref<Renderer> renderer;
-
-			// containe all the sprite with a rendering priority
-			// the fisrt element of the queue is rendered is first and so it's at the back of the scene
-			// it's also useful for a rendering on a separate thread
+			Ref<PhysicMaterialLibrary> physicMaterials;
 
 			uint32_t viewportWidth;
 			uint32_t viewportHeight;

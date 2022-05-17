@@ -7,6 +7,7 @@
 #include "renderer/Renderer.hpp"
 #include "renderer/ShaderLibrary.hpp"
 #include "renderer/Texture2DLibrary.hpp"
+#include "scene/PhysicMaterialLibrary.hpp"
 
 #include "Events/Event.hpp"
 #include "Events/Input.hpp"
@@ -45,13 +46,14 @@ namespace engine{
 			inline void close() {running = false;}
 
 			Ref<Texture2DLibrary> getTextures() {return textures;}
+			Ref<PhysicMaterialLibrary> getPhysicMaterials() {return physicMaterials;}
 		
 		protected:
 			ShaderLibrary shaders;
 			Ref<Texture2DLibrary> textures;
+			Ref<PhysicMaterialLibrary> physicMaterials;
 			Ref<Renderer> renderer;
 			Ref<Input> input;
-
 		
 		private:
 			void OnEvent(Event &e);

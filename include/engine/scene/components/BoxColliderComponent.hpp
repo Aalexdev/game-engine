@@ -11,14 +11,9 @@ namespace engine::ECS::components{
 		glm::vec2 size = glm::vec2(0.5f);
 		bool scaledSize = true;
 		bool isSensor = false;
-
-		// TODO : move into physics material
-		float density = 1.f;
-		float friction = 0.5f;
-		float restitution = 0.f;
-		float restitutionThreshold = 0.5f;
-
 		FixturePtr runtimeFixture;
+
+		std::string material;
 
 		BoxCollider() = default;
 		BoxCollider(const BoxCollider &) = default;

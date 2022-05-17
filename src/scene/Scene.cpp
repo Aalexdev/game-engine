@@ -52,7 +52,7 @@ namespace engine{
 	}
 	
 	Ref<Scene> Scene::copy(const Ref<Scene> &scene){
-		Ref<Scene> newScene = Scene::create(scene->renderer);
+		Ref<Scene> newScene = Scene::create(scene->renderer, scene->physicMaterials);
 
 		newScene->gravity = scene->gravity;
 		newScene->positionIteration = scene->positionIteration;
@@ -73,7 +73,7 @@ namespace engine{
 		return newScene;
 	}
 
-	Scene::Scene(const Ref<Renderer> &renderer) : renderer{renderer}{
+	Scene::Scene(const Ref<Renderer> &renderer, const Ref<PhysicMaterialLibrary> &physicMaterials) : renderer{renderer}, physicMaterials{physicMaterials}{
 		entityIDMap = new std::unordered_map<UUID, Entity>();
 
 		registry.registerComponent<ECS::components::Sprite>();
@@ -259,5 +259,9 @@ namespace engine{
 
 	void Scene::setPhysicBody(UUID id, void *body){
 		physicsBodies[id] = body;
+	}
+
+	Ref<PhysicMaterialLibrary> Scene::getPhysicMaterials(){
+		return physicMaterials;
 	}
 }

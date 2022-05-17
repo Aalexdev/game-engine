@@ -19,6 +19,7 @@ namespace engine{
 		renderer->init();
 
 		textures = createRef<Texture2DLibrary>();
+		physicMaterials = PhysicMaterialLibrary::create();
 
 		imGuiLayer = ImGuiLayer::create();
 		pushLayer(imGuiLayer);
