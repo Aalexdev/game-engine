@@ -455,14 +455,7 @@ namespace engine{
 		}
 
 		if (ImGui::BeginPopup("SceneHierarchyAddComponentPopup")){
-			addComponent<ECS::components::Sprite>("sprite renderer", entity, callback);
-			addComponent<ECS::components::Camera>("camera", entity, callback);
-			addComponent<ECS::components::RigidBody>("rigid Body", entity, callback);
-			addComponent<ECS::components::BoxCollider>("box Collider", entity, callback);
-			addComponent<ECS::components::CircleCollider>("circle collider", entity, callback);
-			addComponent<ECS::components::CircleRenderer>("circle Renderer", entity, callback);
-			addComponent<ECS::components::TriangleRenderer>("triangle Renderer", entity, callback);
-
+			drawAddComponentMenu(entity);
 			ImGui::EndPopup();
 		}
 
@@ -476,9 +469,33 @@ namespace engine{
 		drawComponent<ECS::components::RigidBody>(this, "rigid Body", entity, drawRigidBodyComponent, callback);
 		drawComponent<ECS::components::BoxCollider>(this, "box Bollider", entity, drawBoxColliderComponent, callback);
 		drawComponent<ECS::components::CircleCollider>(this, "circle collider", entity, drawCircleColliderComponent, callback);
+		drawComponent<ECS::components::DistanceJoint>(this, "distance joint", entity, drawDistanceJointComponent, callback);
 
 	}
 
+	void SceneHierarchyPanel::drawAddComponentMenu(Entity entity){
+		addComponent<ECS::components::Camera>("camera", entity, callback);
+		addComponent<ECS::components::RigidBody>("rigid Body", entity, callback);
+
+		
+		if (ImGui::BeginMenu("collider")){
+			addComponent<ECS::components::BoxCollider>("box Collider", entity, callback);
+			addComponent<ECS::components::CircleCollider>("circle collider", entity, callback);
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("renderer")){
+			addComponent<ECS::components::Sprite>("sprite renderer", entity, callback);
+			addComponent<ECS::components::CircleRenderer>("circle Renderer", entity, callback);
+			addComponent<ECS::components::TriangleRenderer>("triangle Renderer", entity, callback);
+			ImGui::EndMenu();
+		}
+		
+		if (ImGui::BeginMenu("joint")){
+			addComponent<ECS::components::DistanceJoint>("distance joint", entity, callback);
+			ImGui::EndMenu();
+		}
+	}
 
 	// ==================================== components
 
@@ -654,6 +671,121 @@ namespace engine{
 		Vec2Edit("offset", collider.position);
 		ImGui::DragFloat("radius", &collider.radius);
 		physicMaterialEdit("materials", collider.material, editor->activeScene->getPhysicMaterials());
+	}
+
+	void SceneHierarchyPanel::drawDistanceJointComponent(Entity entity){
+		const ImGuiStyle& style = ImGui::GetStyle();
+		ImGuiStorage* storage = ImGui::GetStateStorage();
+
+		if (!entity.hasComponent<ECS::components::DistanceJoint>()) return;
+		auto &jointComponent = entity.getComponent<ECS::components::DistanceJoint>();
+
+		if (ImGui::Button("add joint")){
+			Joint joint;
+			jointComponent.joints.push_back(joint);
+		}
+
+		if (ImGui::BeginDragDropTarget()){
+			if (auto payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY_ENTITY")){
+				Entity entity = {*reinterpret_cast<uint32_t*>(payload->Data), editor->activeScene.get()};
+				if (entity){
+					Joint joint;
+					joint.entityB = entity.getUUID();
+					jointComponent.joints.push_back(joint);
+				} else {
+					ENGINE_WARN("invalid entity");
+				}
+			}
+			ImGui::EndDragDropTarget();
+		}
+	
+		auto &joints = jointComponent.joints;
+		auto it = joints.begin();
+		int i=0;
+		float width = ImGui::GetContentRegionAvail().x;
+
+		while (it != joints.end()){
+			Entity joinedEntity = editor->activeScene->get(it->entityB);
+
+			ImGui::PushID(it->entityB);
+			ImU32 id = ImGui::GetID(reinterpret_cast<void*>(it->entityB.get() + i));
+			int opened = storage->GetInt(id, 0);
+			ImVec2 pos = ImGui::GetCursorPos();
+			std::string jointName;
+			
+			if (it->entityB != UUID::INVALID_UUID){
+				jointName = std::to_string(i) + " : " + joinedEntity.getTag();
+			} else {
+				jointName = std::to_string(i) + " : None";
+			}
+			
+			if (ImGui::InvisibleButton("0", ImVec2(width - 10, ImGui::GetFontSize()+style.FramePadding.y*2))){
+				int* p_opened = storage->GetIntRef(id, 0);
+				opened = *p_opened = !*p_opened;
+			}
+
+			if (ImGui::BeginPopupContextItem(jointName.c_str())){
+				if (opened){
+					if (ImGui::MenuItem("close")){
+						int* p_opened = storage->GetIntRef(id, 0);
+						opened = *p_opened = !*p_opened;
+					}
+				} else {
+					if (ImGui::MenuItem("open")){
+						int* p_opened = storage->GetIntRef(id, 0);
+						opened = *p_opened = !*p_opened;
+					}
+				}
+
+				if (ImGui::MenuItem("remove")){
+					joints.erase(it);
+					ImGui::EndPopup();
+					ImGui::PopID();
+					continue;
+				}
+
+				if (ImGui::MenuItem("select entity")){
+					if (joinedEntity){
+						select(joinedEntity);
+					}
+				}
+
+				ImGui::EndPopup();
+			}
+
+			if (ImGui::BeginDragDropTarget()){
+				if (auto payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY_ENTITY")){
+					Entity entity = {*reinterpret_cast<uint32_t*>(payload->Data), editor->activeScene.get()};
+					it->entityB = entity.getUUID();
+				}	
+				ImGui::EndDragDropTarget();
+			}
+
+			bool hovered = ImGui::IsItemHovered();
+			bool active = ImGui::IsItemActive();
+			if (hovered || active){
+				ImGui::GetWindowDrawList()->AddRectFilled(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImColor(ImGui::GetStyle().Colors[active ? ImGuiCol_HeaderActive : ImGuiCol_HeaderHovered]));
+			}
+
+			float iconSize = ImGui::GetFontSize()*1.2;
+			glm::vec4 UVs;
+
+			ImGui::SetCursorPos(pos);
+			if (opened){
+				UVs = editor->getIcon(downArrowIcon);
+				ImGui::Image(reinterpret_cast<ImTextureID>(editor->getIcons()->getTexture()), {iconSize*0.7f, iconSize*0.7f}, {UVs.x, UVs.y}, {UVs.z, UVs.w});
+			} else {
+				UVs = editor->getIcon(rightArrowIcon);
+				ImGui::Image(reinterpret_cast<ImTextureID>(editor->getIcons()->getTexture()), {iconSize*0.7f, iconSize*0.7f}, {UVs.x, UVs.y}, {UVs.z, UVs.w});
+			}
+
+			ImGui::SameLine();
+			ImGui::Text(jointName.c_str());
+
+			it++;
+			i++;
+			ImGui::PopID();
+		}
 	}
 
 	// ========================================================= Methods

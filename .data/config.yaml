@@ -1,6 +1,6 @@
 Window:
-  WindowSize: [1192, 846]
-  WindowPos: [519, 149]
+  WindowSize: [1678, 846]
+  WindowPos: [598, 229]
 Editor:
   IconAtlasPath: icons.png
   Icons:
@@ -40,6 +40,7 @@ Editor:
       UVs: [0, 640, 127, 767]
   recentProjects:
     - projectPath: D:\dev\C++\editor\scene.yaml
+    - projectPath: D:\dev\C++\editor\test.yaml
     - projectPath: ""
   Panels:
     - panel: 1

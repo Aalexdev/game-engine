@@ -219,7 +219,6 @@ namespace engine{
 
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent &e){
 		
-		
 		if (input->isDown(saveProjectAsKey, e)) saveAs();
 		else if (input->isDown(saveProjectKey, e)) save();
 		if (input->isDown(openProjectKey, e)) open();

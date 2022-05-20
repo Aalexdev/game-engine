@@ -41,6 +41,7 @@ namespace engine{
 			void drawEntityNode(Entity entity);
 			void drawEntityComponents(Entity entity);
 			void drawComponentsPanel(); // draw a panel to change the values of the selected entity's components
+			void drawAddComponentMenu(Entity entity);
 
 			// components
 			void drawSpriteComponent(Entity entity);
@@ -51,6 +52,7 @@ namespace engine{
 			void drawCircleRendererComponent(Entity entity);
 			void drawTriangleRendererComponent(Entity entity);
 			void drawCircleColliderComponent(Entity entity);
+			void drawDistanceJointComponent(Entity entity);
 
 			// === Members ===
 			Entity selectedEntity; // the entity that is currently selected
