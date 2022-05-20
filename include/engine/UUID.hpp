@@ -8,6 +8,8 @@ namespace engine{
 			UUID() : uuid{generateUUID()} {}
 			UUID(uint64_t id) : uuid{id} {}
 
+			static constexpr uint64_t INVALID_UUID = 0;
+
 			uint64_t get() const {return uuid;}
 
 			operator uint64_t() const {return uuid;}

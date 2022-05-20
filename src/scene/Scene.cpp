@@ -13,6 +13,7 @@
 #include "engine/scene/components/CircleRendererComponent.hpp"
 #include "engine/scene/components/TriangleRenderer.hpp"
 #include "engine/scene/components/CircleColliderComponent.hpp"
+#include "engine/scene/components/DistanceJointComponent.hpp"
 
 #include <libs/yaml-cpp/yaml.h>
 #include <libs/glm/gtc/epsilon.hpp>
@@ -40,6 +41,7 @@ namespace engine{
 	}
 
 	static void copyComponents(Entity dst, Entity src){
+		copyComponent<ECS::components::EntityData>(dst, src);
 		copyComponent<ECS::components::Transform>(dst, src);
 		copyComponent<ECS::components::Camera>(dst, src);
 		copyComponent<ECS::components::RigidBody>(dst, src);
@@ -47,8 +49,8 @@ namespace engine{
 		copyComponent<ECS::components::BoxCollider>(dst, src);
 		copyComponent<ECS::components::CircleRenderer>(dst, src);
 		copyComponent<ECS::components::TriangleRenderer>(dst, src);
-		copyComponent<ECS::components::EntityData>(dst, src);
 		copyComponent<ECS::components::CircleCollider>(dst, src);
+		copyComponent<ECS::components::DistanceJoint>(dst, src);
 	}
 	
 	Ref<Scene> Scene::copy(const Ref<Scene> &scene){
@@ -65,7 +67,7 @@ namespace engine{
 
 		for (const auto &e : scene->registry){
 			Entity srcEntity = {e, scene.get()};
-			Entity dstEntity = newScene->createEntity();
+			Entity dstEntity = newScene->createEntity(srcEntity.getUUID(), srcEntity.getTag());
 
 			copyComponents(dstEntity, srcEntity);
 		}
@@ -84,6 +86,7 @@ namespace engine{
 		registry.registerComponent<ECS::components::Transform>();
 		registry.registerComponent<ECS::components::TriangleRenderer>();
 		registry.registerComponent<ECS::components::CircleCollider>();
+		registry.registerComponent<ECS::components::DistanceJoint>();
 
 		batchRenderer = createScope<BatchRenderer>(this);
 
@@ -244,7 +247,9 @@ namespace engine{
 	}
 
 	Entity Scene::get(UUID id){
-		return (*entityIDMap)[id];
+		auto it = entityIDMap->find(id);
+		if (it == entityIDMap->end()) return {ECS::null, this};
+		return it->second;
 	}
 	
 	void* Scene::getPhysicsBody(UUID id){

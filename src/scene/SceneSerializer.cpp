@@ -13,6 +13,7 @@
 #include "engine/scene/components/CircleRendererComponent.hpp"
 #include "engine/scene/components/TriangleRenderer.hpp"
 #include "engine/scene/components/CircleColliderComponent.hpp"
+#include "engine/scene/components/DistanceJointComponent.hpp"
 
 // libs
 #include <libs/yaml-cpp/yaml.h>
@@ -302,6 +303,31 @@ namespace engine{
 		}
 	}
 
+	static void serializeJoint(YAML::Emitter &out, Joint &joint){
+		out << YAML::Key << "Joint";
+		out << YAML::BeginMap;
+		
+		out << YAML::Key << "Entity" << YAML::Value << joint.entityB;
+		out << YAML::Key << "AnchorAOffset" << YAML::Value << joint.anchorOffsetA;
+		out << YAML::Key << "AnchorBOffset" << YAML::Value << joint.anchorOffsetB;
+
+		out << YAML::EndMap;
+	}
+
+	static void serializeDistanceJointComponent(YAML::Emitter &out, Entity entity){
+		if (entity.hasComponent<ECS::components::DistanceJoint>()){
+			auto &component = entity.getComponent<ECS::components::DistanceJoint>();
+
+			out << YAML::Key << "DistanceJointComponent";
+			out << YAML::BeginSeq;
+			for (auto &joint : component.joints){
+				serializeJoint(out, joint);
+			}
+
+			out << YAML::EndSeq;
+		}
+	}
+
 	static void serializeEntity(YAML::Emitter& out, Entity entity){
 
 		out << YAML::BeginMap;
@@ -315,6 +341,8 @@ namespace engine{
 		serializeBoxColliderComponent(out, entity);
 		serializeCircleRendererComponent(out, entity);
 		serializeTriangleRendererComponent(out, entity);
+		serializeCircleColliderComponent(out, entity);
+		serializeDistanceJointComponent(out, entity);
 
 		out << YAML::EndMap;
 	}
@@ -548,6 +576,25 @@ namespace engine{
 			collider.material = node["Material"].as<std::string>();
 		}
 	}
+
+	static void deserializeJoint(YAML::Node node, Joint &joint){
+		joint.entityB = node["Entity"].as<uint64_t>();
+		joint.anchorOffsetA = node["AnchorAOffset"].as<glm::vec2>();
+		joint.anchorOffsetB = node["AnchorBOffset"].as<glm::vec2>();
+	}
+
+	static void deserializeDistanceJointComponent(YAML::Node data, Entity entity){
+		YAML::Node node = data["DistanceJointComponent"];
+		if (node){
+			auto &component = entity.addComponent<ECS::components::DistanceJoint>();
+
+			for (auto jointNode : node){
+				Joint joint;
+				deserializeJoint(jointNode, joint);
+				component.joints.push_back(joint);
+			}
+		}
+	}
 	
 	bool SceneSerializer::deserializeText(const std::string &filepath){
 		ENGINE_PROFILE_FUNCTION();
@@ -596,6 +643,7 @@ namespace engine{
 				deserializeCircleRendererComponent(entity, ent);
 				deserializeTriangleRendererComponent(entity, ent, texturesLibrary);
 				deserializeCircleColliderComponent(entity, ent);
+				deserializeDistanceJointComponent(entity, ent);
 			}
 		}
 

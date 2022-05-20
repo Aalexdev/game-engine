@@ -8,6 +8,7 @@
 #include "engine/scene/components/TransformComponent.hpp"
 #include "engine/scene/components/BoxColliderComponent.hpp"
 #include "engine/scene/components/CircleColliderComponent.hpp"
+#include "engine/scene/components/DistanceJointComponent.hpp"
 
 #include <libs/box2d/box2d.h>
 
@@ -122,13 +123,18 @@ namespace engine::ECS::systems{
 				body->CreateFixture(&fixtureDef);
 			}
 		}
+
+		for (auto &e : entities){
+			engine::Entity entity = {e, scene};
+			connectJoints(entity);
+		}
 	}
 
 	void RigidBody::renderCollisions(engine::Entity entity){
 		auto renderer = scene->getRenderer();
 		auto &transform = entity.getComponent<components::Transform>();
 
-		renderer->setLineThickness(5);
+		renderer->setLineThickness(3);
 
 		if (entity.hasComponent<components::BoxCollider>()){
 			renderer->drawSquare(transform.transformMat, {0.8, 0.1, 0.2, 1.0}, static_cast<uint32_t>(entity));
@@ -136,13 +142,43 @@ namespace engine::ECS::systems{
 
 		if (entity.hasComponent<components::CircleCollider>()){
 			auto &circle = entity.getComponent<components::CircleCollider>();
-			renderer->drawCircle(transform.transformMat, {0.8, 0.1, 0.2, 1.0}, static_cast<uint32_t>(entity), 0.1);
+			renderer->drawCircle(transform.transformMat, {0.8, 0.1, 0.2, 1.0}, static_cast<uint32_t>(entity), 0.01);
 		}
 	}
 
 	void RigidBody::renderCollisions(){
 		for (const auto &e : entities){
 			if (scene->getRegistry().getComponent<components::RigidBody>(e).renderCollisions) renderCollisions({e, scene});
+		}
+	}
+
+	void RigidBody::connectJoints(engine::Entity entity){
+		auto physicsWorld = scene->getPhysicsWorld();
+
+		if (entity.hasComponent<components::DistanceJoint>()){
+			auto &jointComponent = entity.getComponent<components::DistanceJoint>();
+			auto &transform = entity.getComponent<components::Transform>();
+
+			for (auto &joint : jointComponent.joints){
+				b2DistanceJointDef def;
+				if (joint.entityB == UUID::INVALID_UUID) continue;
+				engine::Entity entityb = scene->get(joint.entityB);
+				if (!entityb.hasComponent<components::RigidBody>()) continue;
+
+				auto bodyA = reinterpret_cast<b2Body*>(scene->getPhysicsBody(entity.getUUID()));
+				auto bodyB = reinterpret_cast<b2Body*>(scene->getPhysicsBody(joint.entityB));
+
+				auto entityB = scene->get(joint.entityB);
+				auto &entityBTransform = entityB.getComponent<components::Transform>().transformMat;
+
+				glm::vec2 a = transform.transformMat * glm::vec4(joint.anchorOffsetA, 0.f, 1.f);
+				glm::vec2 b = entityBTransform * glm::vec4(joint.anchorOffsetB, 0.f, 1.f);
+
+				def.Initialize(bodyA, bodyB, {a.x, a.y}, {b.x, b.y});
+				// def.collideConnected = true;
+
+				joint.runtimeJoint = reinterpret_cast<void*>(physicsWorld->CreateJoint(&def));
+			}
 		}
 	}
 }

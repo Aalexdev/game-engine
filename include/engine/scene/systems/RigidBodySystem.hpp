@@ -24,6 +24,8 @@ namespace engine::ECS::systems{
 			void renderCollisions(); // render all collisions
 		
 		private:
+			void connectJoints(engine::Entity entity);
+
 			Scene *scene;
 	};
 }

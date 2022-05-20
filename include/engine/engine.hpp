@@ -31,6 +31,7 @@
 #include "scene/components/BoxColliderComponent.hpp"
 #include "scene/components/CircleRendererComponent.hpp"
 #include "scene/components/CircleColliderComponent.hpp"
+#include "scene/components/DistanceJointComponent.hpp"
 
 #include "filesystem/Filesystem.hpp"
 #include "debug/Instrumentor.hpp"

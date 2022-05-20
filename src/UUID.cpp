@@ -10,6 +10,8 @@ namespace engine{
 	static std::uniform_int_distribution<uint64_t> uniformDistribution;
 
 	uint64_t UUID::generateUUID(){
-		return uniformDistribution(engine);
+		uint64_t id = uniformDistribution(engine);
+		if (id == INVALID_UUID) return generateUUID();
+		return id;
 	}
 }
