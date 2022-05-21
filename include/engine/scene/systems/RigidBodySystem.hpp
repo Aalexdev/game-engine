@@ -21,6 +21,7 @@ namespace engine::ECS::systems{
 			void start();
 
 			void renderCollisions(engine::Entity entity); // render the collisions of the given entity
+			void renderJoints(engine::Entity entity); // render the joints connected to the entity
 			void renderCollisions(); // render all collisions
 		
 		private:
