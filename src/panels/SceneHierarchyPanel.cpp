@@ -368,54 +368,6 @@ namespace engine{
 			}
 			ImGui::TreePop();
 		}
-		
-		// ImGui::PushID(entity.getUUID());
-		// bool remove = false;
-		// EntityType type = EntityType::OBJECT;
-
-	
-		
-
-		// auto &tag = entity.getTag();
-
-		// ImGuiTreeNodeFlags flags = (entity.hasChildren() ? ImGuiTreeNodeFlags_OpenOnArrow : 0) | (selected(entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_SpanAvailWidth;
-
-		
-		// bool open = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<uint64_t>(static_cast<uint32_t>(entity))), flags, tag.c_str());
-
-		// if (ImGui::IsItemClicked()){
-		// 	select(entity);
-		// }
-
-		// if (ImGui::BeginPopupContextItem()){
-		// 	if (ImGui::MenuItem("remove", deleteEntityKey.toString().c_str())){
-		// 		remove = true;
-		// 	}
-
-		// 	if (ImGui::MenuItem("addChild")){
-		// 		editor->activeScene->createChildEntity(entity);
-		// 	}
-
-		// 	ImGui::EndPopup();
-		// }
-
-		// ImGui::EndGroup();
-		// ImGui::PopID();
-
-		// if (open){
-			
-		// 	for (auto child : entity){
-		// 		drawEntityNode(child);
-		// 	}
-			
-		// 	ImGui::TreePop();
-		// }
-
-		
-		
-		// if (remove){
-		// 	deleteEntity(entity);
-		// }
 	}
 
 	void SceneHierarchyPanel::drawComponentsPanel(){
@@ -470,6 +422,7 @@ namespace engine{
 		drawComponent<ECS::components::BoxCollider>(this, "box Bollider", entity, drawBoxColliderComponent, callback);
 		drawComponent<ECS::components::CircleCollider>(this, "circle collider", entity, drawCircleColliderComponent, callback);
 		drawComponent<ECS::components::DistanceJoint>(this, "distance joint", entity, drawDistanceJointComponent, callback);
+		drawComponent<ECS::components::SpringJoint>(this, "spring joint", entity, drawSpringJointComponent, callback);
 
 	}
 
@@ -493,6 +446,7 @@ namespace engine{
 		
 		if (ImGui::BeginMenu("joint")){
 			addComponent<ECS::components::DistanceJoint>("distance joint", entity, callback);
+			addComponent<ECS::components::SpringJoint>("spring joint", entity, callback);
 			ImGui::EndMenu();
 		}
 	}
@@ -619,7 +573,6 @@ namespace engine{
 		Vec2Edit("offset", collider.offset);
 		Vec2Edit("size", collider.size, {0.5, 0.5});
 		physicMaterialEdit("materials", collider.material, editor->activeScene->getPhysicMaterials());
-
 	}
 
 	void SceneHierarchyPanel::drawCircleRendererComponent(Entity entity){
@@ -781,6 +734,142 @@ namespace engine{
 
 			ImGui::SameLine();
 			ImGui::Text(jointName.c_str());
+
+			if (opened){
+				ImGui::TreePush();
+
+				Vec2Edit("start", it->anchorOffsetA);
+				Vec2Edit("end", it->anchorOffsetB);
+
+				ImGui::TreePop();
+			}
+
+			it++;
+			i++;
+			ImGui::PopID();
+		}
+	}
+
+	void SceneHierarchyPanel::drawSpringJointComponent(Entity entity){
+		const ImGuiStyle& style = ImGui::GetStyle();
+		ImGuiStorage* storage = ImGui::GetStateStorage();
+
+		if (!entity.hasComponent<ECS::components::SpringJoint>()) return;
+		auto &jointComponent = entity.getComponent<ECS::components::SpringJoint>();
+
+		if (ImGui::Button("add joint")){
+			ECS::components::SpringJoint::Joint joint;
+			jointComponent.joints.push_back(joint);
+		}
+
+		if (ImGui::BeginDragDropTarget()){
+			if (auto payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY_ENTITY")){
+				Entity entity = {*reinterpret_cast<uint32_t*>(payload->Data), editor->activeScene.get()};
+				if (entity){
+					ECS::components::SpringJoint::Joint joint;
+					joint.joinedEntity = entity.getUUID();
+					jointComponent.joints.push_back(joint);
+				} else {
+					ENGINE_WARN("invalid entity");
+				}
+			}
+			ImGui::EndDragDropTarget();
+		}
+	
+		auto &joints = jointComponent.joints;
+		auto it = joints.begin();
+		int i=0;
+		float width = ImGui::GetContentRegionAvail().x;
+
+		while (it != joints.end()){
+			Entity joinedEntity = editor->activeScene->get(it->joinedEntity);
+
+			ImGui::PushID(it->joinedEntity);
+			ImU32 id = ImGui::GetID(reinterpret_cast<void*>(it->joinedEntity.get() + i));
+			int opened = storage->GetInt(id, 0);
+			ImVec2 pos = ImGui::GetCursorPos();
+			std::string jointName;
+			
+			if (it->joinedEntity != UUID::INVALID_UUID){
+				jointName = std::to_string(i) + " : " + joinedEntity.getTag();
+			} else {
+				jointName = std::to_string(i) + " : None";
+			}
+			
+			if (ImGui::InvisibleButton("0", ImVec2(width - 10, ImGui::GetFontSize()+style.FramePadding.y*2))){
+				int* p_opened = storage->GetIntRef(id, 0);
+				opened = *p_opened = !*p_opened;
+			}
+
+			if (ImGui::BeginPopupContextItem(jointName.c_str())){
+				if (opened){
+					if (ImGui::MenuItem("close")){
+						int* p_opened = storage->GetIntRef(id, 0);
+						opened = *p_opened = !*p_opened;
+					}
+				} else {
+					if (ImGui::MenuItem("open")){
+						int* p_opened = storage->GetIntRef(id, 0);
+						opened = *p_opened = !*p_opened;
+					}
+				}
+
+				if (ImGui::MenuItem("remove")){
+					joints.erase(it);
+					ImGui::EndPopup();
+					ImGui::PopID();
+					continue;
+				}
+
+				if (ImGui::MenuItem("select entity")){
+					if (joinedEntity){
+						select(joinedEntity);
+					}
+				}
+
+				ImGui::EndPopup();
+			}
+
+			if (ImGui::BeginDragDropTarget()){
+				if (auto payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY_ENTITY")){
+					Entity entity = {*reinterpret_cast<uint32_t*>(payload->Data), editor->activeScene.get()};
+					it->joinedEntity = entity.getUUID();
+				}	
+				ImGui::EndDragDropTarget();
+			}
+
+			bool hovered = ImGui::IsItemHovered();
+			bool active = ImGui::IsItemActive();
+			if (hovered || active){
+				ImGui::GetWindowDrawList()->AddRectFilled(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImColor(ImGui::GetStyle().Colors[active ? ImGuiCol_HeaderActive : ImGuiCol_HeaderHovered]));
+			}
+
+			float iconSize = ImGui::GetFontSize()*1.2;
+			glm::vec4 UVs;
+
+			ImGui::SetCursorPos(pos);
+			if (opened){
+				UVs = editor->getIcon(downArrowIcon);
+				ImGui::Image(reinterpret_cast<ImTextureID>(editor->getIcons()->getTexture()), {iconSize*0.7f, iconSize*0.7f}, {UVs.x, UVs.y}, {UVs.z, UVs.w});
+			} else {
+				UVs = editor->getIcon(rightArrowIcon);
+				ImGui::Image(reinterpret_cast<ImTextureID>(editor->getIcons()->getTexture()), {iconSize*0.7f, iconSize*0.7f}, {UVs.x, UVs.y}, {UVs.z, UVs.w});
+			}
+
+			ImGui::SameLine();
+			ImGui::Text(jointName.c_str());
+
+			if (opened){
+				ImGui::TreePush();
+
+				Vec2Edit("start", it->anchorA);
+				Vec2Edit("end", it->anchorB);
+
+				ImGui::DragFloat("frequency", &it->frequencyHertz, 0.1, 0);
+				ImGui::DragFloat("damping ratio", &it->dampingRatio, 0.05);
+
+				ImGui::TreePop();
+			}
 
 			it++;
 			i++;
