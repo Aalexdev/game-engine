@@ -14,6 +14,8 @@
 #include "engine/scene/components/TriangleRenderer.hpp"
 #include "engine/scene/components/CircleColliderComponent.hpp"
 #include "engine/scene/components/DistanceJointComponent.hpp"
+#include "engine/scene/components/SpringJointComponent.hpp"
+#include "engine/scene/components/RevoluteJoint.hpp"
 
 // libs
 #include <libs/yaml-cpp/yaml.h>
@@ -328,6 +330,53 @@ namespace engine{
 		}
 	}
 
+	static void serializeSpringJointComponent(YAML::Emitter &out, Entity entity){
+		if (entity.hasComponent<ECS::components::SpringJoint>()){
+			auto &component = entity.getComponent<ECS::components::SpringJoint>();
+
+			out << YAML::Key << "SpringJointComponent";
+			out << YAML::BeginSeq;
+
+			for (auto &joint : component.joints){
+				out << YAML::BeginMap;
+				out << YAML::Key << "Joint" << YAML::Value << joint.joinedEntity;
+				out << YAML::Key << "AnchorA" << YAML::Value << joint.anchorA;
+				out << YAML::Key << "AnchorB" << YAML::Value << joint.anchorB;
+				out << YAML::Key << "DampingRatio" << YAML::Value <<joint.dampingRatio;
+				out << YAML::Key << "Frequency" << YAML::Value <<joint.frequencyHertz;
+				out << YAML::EndMap;
+			}
+
+			out << YAML::EndSeq;
+		}
+	}
+
+	static void serializeRevoluteJointComponent(YAML::Emitter &out, Entity entity){
+		if (entity.hasComponent<ECS::components::RevoluteJoint>()){
+			auto &component = entity.getComponent<ECS::components::RevoluteJoint>();
+
+			out << YAML::Key << "RevoluteJointComponent";
+			out << YAML::BeginSeq;
+
+			for (auto &joint : component.joints){
+				out << YAML::BeginMap;
+
+				out << YAML::Key << "Joint" << YAML::Value << joint.joinedEntity;
+				out << YAML::Key << "Anchor" << YAML::Value << joint.anchor;
+				out << YAML::Key << "Limits" << YAML::Value << joint.limits;
+				out << YAML::Key << "MinAngle" << YAML::Value << joint.minAngle;
+				out << YAML::Key << "MaxAngle" << YAML::Value << joint.maxAngle;
+				out << YAML::Key << "Motor" << YAML::Value << joint.motor;
+				out << YAML::Key << "MaxTorque" << YAML::Value << joint.maxTorque;
+				out << YAML::Key << "Speed" << YAML::Value << joint.speed;
+
+				out << YAML::EndMap;
+			}
+
+			out << YAML::EndSeq;
+		}
+	}
+
 	static void serializeEntity(YAML::Emitter& out, Entity entity){
 
 		out << YAML::BeginMap;
@@ -343,6 +392,8 @@ namespace engine{
 		serializeTriangleRendererComponent(out, entity);
 		serializeCircleColliderComponent(out, entity);
 		serializeDistanceJointComponent(out, entity);
+		serializeSpringJointComponent(out, entity);
+		serializeRevoluteJointComponent(out, entity);
 
 		out << YAML::EndMap;
 	}
@@ -407,11 +458,13 @@ namespace engine{
 		out << YAML::Key << "Entities" << YAML::Value;
 		out << YAML::BeginSeq;
 
+		for (auto &e : scene->getRegistry()){
+			Entity entity = {e, scene.get()};
+			serializeEntity(out, entity);
+		}
+
 
 		out << YAML::EndSeq;
-
-		// serailizeSpriteQueue(out, scene->sprites);
-
 		out << YAML::EndMap;
 
 		std::ofstream file(filepath);
@@ -595,6 +648,44 @@ namespace engine{
 			}
 		}
 	}
+
+	static void deserializeSpringJointComponent(YAML::Node data, Entity entity){
+		YAML::Node node = data["SpringJointComponent"];
+		if (node){
+			auto &component = entity.addComponent<ECS::components::SpringJoint>();
+
+			for (auto jointNode : node){
+				ECS::components::SpringJoint::Joint joint;
+				joint.joinedEntity = jointNode["Joint"].as<uint64_t>();
+				joint.anchorA = jointNode["AnchorA"].as<glm::vec2>();
+				joint.anchorB = jointNode["AnchorB"].as<glm::vec2>();
+				joint.dampingRatio = jointNode["DampingRatio"].as<float>();
+				joint.frequencyHertz = jointNode["Frequency"].as<float>();
+
+				component.joints.push_back(joint);
+			}
+		}
+	}
+
+	static void deserializeRevoluteJointComponent(YAML::Node data, Entity entity){
+		YAML::Node node = data["RevoluteJointComponent"];
+		if (node){
+			auto &component = entity.addComponent<ECS::components::RevoluteJoint>();
+
+			for (auto jointNode : node){
+				ECS::components::RevoluteJoint::Joint joint;
+				joint.joinedEntity = jointNode["Joint"].as<uint64_t>();
+				joint.limits = jointNode["Limits"].as<bool>();
+				joint.minAngle = jointNode["MinAngle"].as<float>();
+				joint.maxAngle = jointNode["MaxAngle"].as<float>();
+				joint.motor = jointNode["Motor"].as<bool>();
+				joint.maxTorque = jointNode["MaxTorque"].as<float>();
+				joint.speed = jointNode["Speed"].as<float>();
+
+				component.joints.push_back(joint);
+			}
+		}
+	}
 	
 	bool SceneSerializer::deserializeText(const std::string &filepath){
 		ENGINE_PROFILE_FUNCTION();
@@ -644,6 +735,8 @@ namespace engine{
 				deserializeTriangleRendererComponent(entity, ent, texturesLibrary);
 				deserializeCircleColliderComponent(entity, ent);
 				deserializeDistanceJointComponent(entity, ent);
+				deserializeSpringJointComponent(entity, ent);
+				deserializeRevoluteJointComponent(entity, ent);
 			}
 		}
 
