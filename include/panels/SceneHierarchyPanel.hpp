@@ -54,6 +54,7 @@ namespace engine{
 			void drawCircleColliderComponent(Entity entity);
 			void drawDistanceJointComponent(Entity entity);
 			void drawSpringJointComponent(Entity entity);
+			void drawRevoluteJointComponent(Entity entity);
 
 			// === Members ===
 			Entity selectedEntity; // the entity that is currently selected
