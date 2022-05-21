@@ -624,4 +624,9 @@ namespace engine{
 		drawLine(p3, p0, entityIndex, color);
 	}
 
+	void Renderer::drawCircle(const glm::vec2 &center, float radius, const glm::vec4 &color, uint32_t entityIndex, float thickness, float fade){
+		glm::mat4 transform = glm::translate(glm::mat4(1.f), glm::vec3(center, 0.f)) * glm::scale(glm::mat4(1.f), glm::vec3(radius*2, radius*2, 1.f));
+		drawCircle(transform, color, entityIndex, thickness, fade);
+	}
+
 }

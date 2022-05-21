@@ -54,6 +54,7 @@ namespace engine{
 			void drawQuad(const glm::mat4 &transform, const glm::vec4 &color, uint32_t entityIndex, const Ref<SubTexture2D> &texture);
 
 			void drawCircle(const glm::mat4 &transform, const glm::vec4 &color, uint32_t entityIndex, float thickness = 1.f, float fade = 0.005);
+			void drawCircle(const glm::vec2 &center, float radius, const glm::vec4 &color, uint32_t entityIndex, float thickness = 1.f, float fade = 0.005f);
 
 			void drawTriangle(const Vertex &p1, const Vertex &p2, const Vertex &p3, const Ref<Texture2D> &texture = nullptr, uint32_t entityIndex = -1);
 			void drawTriangle(const Vertex &p1, const Vertex &p2, const Vertex &p3, const glm::vec2 &translation, const glm::vec2 &scale, float angle, const Ref<Texture2D> &texture = nullptr, uint32_t entityIndex = -1);

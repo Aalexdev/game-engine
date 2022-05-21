@@ -15,6 +15,7 @@
 #include "engine/scene/components/CircleColliderComponent.hpp"
 #include "engine/scene/components/DistanceJointComponent.hpp"
 #include "engine/scene/components/SpringJointComponent.hpp"
+#include "engine/scene/components/RevoluteJoint.hpp"
 
 #include <libs/yaml-cpp/yaml.h>
 #include <libs/glm/gtc/epsilon.hpp>
@@ -53,6 +54,7 @@ namespace engine{
 		copyComponent<ECS::components::CircleCollider>(dst, src);
 		copyComponent<ECS::components::DistanceJoint>(dst, src);
 		copyComponent<ECS::components::SpringJoint>(dst, src);
+		copyComponent<ECS::components::RevoluteJoint>(dst, src);
 	}
 	
 	Ref<Scene> Scene::copy(const Ref<Scene> &scene){
@@ -90,6 +92,7 @@ namespace engine{
 		registry.registerComponent<ECS::components::CircleCollider>();
 		registry.registerComponent<ECS::components::DistanceJoint>();
 		registry.registerComponent<ECS::components::SpringJoint>();
+		registry.registerComponent<ECS::components::RevoluteJoint>();
 
 		batchRenderer = createScope<BatchRenderer>(this);
 

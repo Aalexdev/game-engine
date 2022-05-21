@@ -4,12 +4,14 @@
 #include "engine/scene/systems/RigidBodySystem.hpp"
 #include "engine/scene/PhysicMaterial.hpp"
 #include "engine/scene/PhysicMaterialLibrary.hpp"
+
 #include "engine/scene/components/RigidBodyComponent.hpp"
 #include "engine/scene/components/TransformComponent.hpp"
 #include "engine/scene/components/BoxColliderComponent.hpp"
 #include "engine/scene/components/CircleColliderComponent.hpp"
 #include "engine/scene/components/DistanceJointComponent.hpp"
 #include "engine/scene/components/SpringJointComponent.hpp"
+#include "engine/scene/components/RevoluteJoint.hpp"
 
 #include <libs/box2d/box2d.h>
 
@@ -146,9 +148,10 @@ namespace engine::ECS::systems{
 	}
 
 	void RigidBody::renderJoints(engine::Entity entity){
-		if (entity.hasComponent<components::DistanceJoint>()){
 			auto renderer = scene->getRenderer();
 			auto &transformMat = entity.getComponent<components::Transform>().transformMat;
+
+		if (entity.hasComponent<components::DistanceJoint>()){
 			auto &joints = entity.getComponent<components::DistanceJoint>().joints;
 
 			for (auto &j : joints){
@@ -163,8 +166,6 @@ namespace engine::ECS::systems{
 		}
 
 		if (entity.hasComponent<components::SpringJoint>()){
-			auto renderer = scene->getRenderer();
-			auto &transformMat = entity.getComponent<components::Transform>().transformMat;
 			auto &joints = entity.getComponent<components::SpringJoint>().joints;
 
 			for (auto &j : joints){
@@ -175,6 +176,16 @@ namespace engine::ECS::systems{
 				glm::vec2 end = glm::vec2(joinedEntity.getComponent<components::Transform>().transformMat * glm::vec4(j.anchorB, 0.f, 1.f));
 
 				renderer->drawLine(start, end, static_cast<uint32_t>(entity), {0.5, 0.5, 0.2, 1.0});
+			}
+		}
+
+		if (entity.hasComponent<components::RevoluteJoint>()){
+			auto &joints = entity.getComponent<components::RevoluteJoint>().joints;
+
+			for (auto &j : joints){
+				glm::vec2 pos = glm::vec2(transformMat * glm::vec4(j.anchor, 0.f, 1.f));
+
+				renderer->drawCircle(pos, 0.1f, glm::vec4(1.f, 0.f, 0.f, 1.f), static_cast<uint32_t>(entity));
 			}
 		}
 	}
@@ -196,7 +207,6 @@ namespace engine::ECS::systems{
 
 		if (entity.hasComponent<components::DistanceJoint>()){
 			auto &jointComponent = entity.getComponent<components::DistanceJoint>();
-			auto &transform = entity.getComponent<components::Transform>();
 
 			for (auto &joint : jointComponent.joints){
 				b2DistanceJointDef def;
@@ -222,7 +232,6 @@ namespace engine::ECS::systems{
 
 		if (entity.hasComponent<components::SpringJoint>()){
 			auto &jointComponent = entity.getComponent<components::SpringJoint>();
-			auto &transforml = entity.getComponent<components::Transform>();
 
 			for (auto &joint : jointComponent.joints){
 				b2DistanceJointDef def;
@@ -249,6 +258,34 @@ namespace engine::ECS::systems{
 
 				joint.runtimeJoint = reinterpret_cast<void*>(physicsWorld->CreateJoint(&def));
 			}
+		}
+
+		if (entity.hasComponent<components::RevoluteJoint>()){
+			auto &jointComponent = entity.getComponent<components::RevoluteJoint>();
+
+			for (auto &joint : jointComponent.joints){
+				b2RevoluteJointDef def;
+				if (joint.joinedEntity == UUID::INVALID_UUID) continue;
+
+				engine::Entity joinedEntity = scene->get(joint.joinedEntity);
+				if (!joinedEntity) continue;
+
+				auto bodyA = reinterpret_cast<b2Body*>(scene->getPhysicsBody(entity.getUUID()));
+				auto bodyB = reinterpret_cast<b2Body*>(scene->getPhysicsBody(joinedEntity.getUUID()));
+
+				glm::vec2 anchor = {bodyA->GetPosition().x + joint.anchor.x, bodyA->GetPosition().y + joint.anchor.y};
+
+				def.Initialize(bodyA, bodyB, {anchor.x, anchor.y});
+				def.enableMotor = joint.motor;
+				def.motorSpeed = joint.speed;
+				def.maxMotorTorque = joint.maxTorque;
+				def.enableLimit = joint.limits;
+				def.lowerAngle = glm::radians(joint.minAngle);
+				def.upperAngle = glm::radians(joint.maxAngle);
+			
+				joint.runtimeJoint = reinterpret_cast<void*>(physicsWorld->CreateJoint(&def));
+			}
+			
 		}
 	}
 }
