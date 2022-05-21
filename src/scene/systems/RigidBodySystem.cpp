@@ -12,6 +12,7 @@
 #include "engine/scene/components/DistanceJointComponent.hpp"
 #include "engine/scene/components/SpringJointComponent.hpp"
 #include "engine/scene/components/RevoluteJoint.hpp"
+#include "engine/scene/components/PrismaticJoint.hpp"
 
 #include <libs/box2d/box2d.h>
 
@@ -179,6 +180,19 @@ namespace engine::ECS::systems{
 			}
 		}
 
+		if (entity.hasComponent<components::PrismaticJoint>()){
+			auto &joints = entity.getComponent<components::PrismaticJoint>().joints;
+
+			for (auto &j : joints){
+				engine::Entity joinedEntity = scene->get(j.joinedEntity);
+				if (!joinedEntity) continue;
+				glm::vec2 start = entity.getComponent<components::Transform>().transform.translation;
+				glm::vec2 end = joinedEntity.getComponent<components::Transform>().transform.translation;
+
+				renderer->drawLine(start, end, static_cast<uint32_t>(entity), {0.5, 0.5, 0.2, 1.0});
+			}
+		}
+
 		if (entity.hasComponent<components::RevoluteJoint>()){
 			auto &joints = entity.getComponent<components::RevoluteJoint>().joints;
 
@@ -285,7 +299,31 @@ namespace engine::ECS::systems{
 			
 				joint.runtimeJoint = reinterpret_cast<void*>(physicsWorld->CreateJoint(&def));
 			}
-			
+		}
+
+		if (entity.hasComponent<components::PrismaticJoint>()){
+			auto &jointComponent = entity.getComponent<components::PrismaticJoint>();
+
+			for (auto &joint : jointComponent.joints){
+				b2PrismaticJointDef def;
+				if (joint.joinedEntity == UUID::INVALID_UUID) continue;
+
+				engine::Entity joinedEntity = scene->get(joint.joinedEntity);
+				if (!joinedEntity) continue;
+
+				auto bodyA = reinterpret_cast<b2Body*>(scene->getPhysicsBody(entity.getUUID()));
+				auto bodyB = reinterpret_cast<b2Body*>(scene->getPhysicsBody(joinedEntity.getUUID()));
+
+				def.Initialize(bodyA, bodyB, bodyA->GetWorldCenter(), {joint.translation.x, joint.translation.y});
+				def.enableLimit = joint.limits;
+				def.lowerTranslation = joint.minTranslation;
+				def.upperTranslation = joint.maxTranslation;
+				def.enableMotor = joint.motor;
+				def.maxMotorForce = joint.maxForce;
+				def.motorSpeed = joint.speed;
+
+				joint.runtimeJoint = reinterpret_cast<void*>(physicsWorld->CreateJoint(&def));
+			}
 		}
 	}
 }

@@ -16,6 +16,7 @@
 #include "engine/scene/components/DistanceJointComponent.hpp"
 #include "engine/scene/components/SpringJointComponent.hpp"
 #include "engine/scene/components/RevoluteJoint.hpp"
+#include "engine/scene/components/PrismaticJoint.hpp"
 
 // libs
 #include <libs/yaml-cpp/yaml.h>
@@ -305,17 +306,6 @@ namespace engine{
 		}
 	}
 
-	static void serializeJoint(YAML::Emitter &out, Joint &joint){
-		out << YAML::Key << "Joint";
-		out << YAML::BeginMap;
-		
-		out << YAML::Key << "Entity" << YAML::Value << joint.entityB;
-		out << YAML::Key << "AnchorAOffset" << YAML::Value << joint.anchorOffsetA;
-		out << YAML::Key << "AnchorBOffset" << YAML::Value << joint.anchorOffsetB;
-
-		out << YAML::EndMap;
-	}
-
 	static void serializeDistanceJointComponent(YAML::Emitter &out, Entity entity){
 		if (entity.hasComponent<ECS::components::DistanceJoint>()){
 			auto &component = entity.getComponent<ECS::components::DistanceJoint>();
@@ -323,7 +313,11 @@ namespace engine{
 			out << YAML::Key << "DistanceJointComponent";
 			out << YAML::BeginSeq;
 			for (auto &joint : component.joints){
-				serializeJoint(out, joint);
+				out << YAML::BeginMap;
+				out << YAML::Key << "Joint" << YAML::Value << joint.entityB;
+				out << YAML::Key << "AnchorAOffset" << YAML::Value << joint.anchorOffsetA;
+				out << YAML::Key << "AnchorBOffset" << YAML::Value << joint.anchorOffsetB;
+				out << YAML::EndMap;
 			}
 
 			out << YAML::EndSeq;
@@ -360,7 +354,6 @@ namespace engine{
 
 			for (auto &joint : component.joints){
 				out << YAML::BeginMap;
-
 				out << YAML::Key << "Joint" << YAML::Value << joint.joinedEntity;
 				out << YAML::Key << "Anchor" << YAML::Value << joint.anchor;
 				out << YAML::Key << "Limits" << YAML::Value << joint.limits;
@@ -369,7 +362,30 @@ namespace engine{
 				out << YAML::Key << "Motor" << YAML::Value << joint.motor;
 				out << YAML::Key << "MaxTorque" << YAML::Value << joint.maxTorque;
 				out << YAML::Key << "Speed" << YAML::Value << joint.speed;
+				out << YAML::EndMap;
+			}
 
+			out << YAML::EndSeq;
+		}
+	}
+
+	static void serializePrismaticJointComponent(YAML::Emitter &out, Entity entity){
+		if (entity.hasComponent<ECS::components::PrismaticJoint>()){
+			auto &component = entity.getComponent<ECS::components::PrismaticJoint>();
+			
+			out << YAML::Key << "PrismaticJointComponent";
+			out << YAML::BeginSeq;
+
+			for (auto &joint : component.joints){
+				out << YAML::BeginMap;
+				out << YAML::Key << "Joint" << YAML::Value << joint.joinedEntity;
+				out << YAML::Key << "Translation" << YAML::Value << joint.translation;
+				out << YAML::Key << "Limits" << YAML::Value << joint.limits;
+				out << YAML::Key << "MinTranslation" << YAML::Value << joint.minTranslation;
+				out << YAML::Key << "MaxTranslation" << YAML::Value << joint.maxTranslation;
+				out << YAML::Key << "Motor" << YAML::Value << joint.motor;
+				out << YAML::Key << "MaxForce" << YAML::Value << joint.maxForce;
+				out << YAML::Key << "Speed" << YAML::Value << joint.speed;
 				out << YAML::EndMap;
 			}
 
@@ -686,6 +702,25 @@ namespace engine{
 			}
 		}
 	}
+
+	static void deserializePrismaticJointComponent(YAML::Node data, Entity entity){
+		YAML::Node node = data["PrismaticJointComponent"];
+		if (node){
+			auto &component = entity.addComponent<ECS::components::PrismaticJoint>();
+
+			for (auto jointNode : node){
+				ECS::components::PrismaticJoint::Joint joint;
+				joint.joinedEntity = node["Joint"].as<uint64_t>();
+				joint.translation = node["Translation"].as<glm::vec2>();
+				joint.limits = node["Limits"].as<bool>();
+				joint.minTranslation = node["MinTranslation"].as<float>();
+				joint.maxTranslation = node["MaxTranslation"].as<float>();
+				joint.motor = node["Motor"].as<bool>();
+				joint.maxForce = node["MaxForce"].as<float>();
+				joint.speed = node["Speed"].as<float>();
+			}
+		}
+	}
 	
 	bool SceneSerializer::deserializeText(const std::string &filepath){
 		ENGINE_PROFILE_FUNCTION();
@@ -737,6 +772,7 @@ namespace engine{
 				deserializeDistanceJointComponent(entity, ent);
 				deserializeSpringJointComponent(entity, ent);
 				deserializeRevoluteJointComponent(entity, ent);
+				deserializePrismaticJointComponent(entity, ent);
 			}
 		}
 

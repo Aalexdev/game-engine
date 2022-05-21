@@ -34,6 +34,7 @@
 #include "scene/components/DistanceJointComponent.hpp"
 #include "scene/components/SpringJointComponent.hpp"
 #include "scene/components/RevoluteJoint.hpp"
+#include "scene/components/PrismaticJoint.hpp"
 
 #include "filesystem/Filesystem.hpp"
 #include "debug/Instrumentor.hpp"

@@ -16,6 +16,7 @@
 #include "engine/scene/components/DistanceJointComponent.hpp"
 #include "engine/scene/components/SpringJointComponent.hpp"
 #include "engine/scene/components/RevoluteJoint.hpp"
+#include "engine/scene/components/PrismaticJoint.hpp"
 
 #include <libs/yaml-cpp/yaml.h>
 #include <libs/glm/gtc/epsilon.hpp>
@@ -55,6 +56,7 @@ namespace engine{
 		copyComponent<ECS::components::DistanceJoint>(dst, src);
 		copyComponent<ECS::components::SpringJoint>(dst, src);
 		copyComponent<ECS::components::RevoluteJoint>(dst, src);
+		copyComponent<ECS::components::PrismaticJoint>(dst, src);
 	}
 	
 	Ref<Scene> Scene::copy(const Ref<Scene> &scene){
@@ -82,17 +84,18 @@ namespace engine{
 	Scene::Scene(const Ref<Renderer> &renderer, const Ref<PhysicMaterialLibrary> &physicMaterials) : renderer{renderer}, physicMaterials{physicMaterials}{
 		entityIDMap = new std::unordered_map<UUID, Entity>();
 
-		registry.registerComponent<ECS::components::Sprite>();
-		registry.registerComponent<ECS::components::BoxCollider>();
 		registry.registerComponent<ECS::components::Camera>();
-		registry.registerComponent<ECS::components::CircleRenderer>();
-		registry.registerComponent<ECS::components::RigidBody>();
 		registry.registerComponent<ECS::components::Transform>();
+		registry.registerComponent<ECS::components::Sprite>();
+		registry.registerComponent<ECS::components::CircleRenderer>();
 		registry.registerComponent<ECS::components::TriangleRenderer>();
+		registry.registerComponent<ECS::components::RigidBody>();
+		registry.registerComponent<ECS::components::BoxCollider>();
 		registry.registerComponent<ECS::components::CircleCollider>();
 		registry.registerComponent<ECS::components::DistanceJoint>();
 		registry.registerComponent<ECS::components::SpringJoint>();
 		registry.registerComponent<ECS::components::RevoluteJoint>();
+		registry.registerComponent<ECS::components::PrismaticJoint>();
 
 		batchRenderer = createScope<BatchRenderer>(this);
 
