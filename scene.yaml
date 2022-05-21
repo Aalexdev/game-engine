@@ -2,26 +2,121 @@ Scene: Name
 Textures:
   []
 Entities:
-  - Entity: 2047542677033771120
-    TagComponent:
-      tag: new Entity
+  - Entity: 6547323126845696568
+    Tag: camera
     TransformComponent:
-      translation: [0, 0]
+      translation: [0.0666670203, -1.06666565]
+      scale: [1, 1]
+      rotation: 0
+    CameraComponent:
+      viewportAspectRatio: 1.74731183
+      priorityLevel: 1
+      fixedAspectRatio: false
+      zoomLevel: 15
+  - Entity: 17373184080429697445
+    Tag: new Entity
+    TransformComponent:
+      translation: [1.49011612e-08, 0]
       scale: [1, 1]
       rotation: 0
     SpriteComponent:
       color: [1, 1, 1, 1]
-  - Entity: 9820505220837645924
-    TagComponent:
-      tag: camera
+    RigidBodyComponent:
+      Type: 0
+      FixedRotation: false
+      LinearVelocity: [0, 0]
+      AngularVelocity: 0
+      Bullet: false
+      GravityScale: 1
+    BoxColliderComponent:
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      ScaledSize: true
+      IsSensor: false
+      MaterialUD: ""
+    RevoluteJointComponent:
+      - Joint: 715933378772261302
+        Anchor: [0, -0.449999988]
+        Limits: false
+        MinAngle: 0
+        MaxAngle: 360
+        Motor: false
+        MaxTorque: 10
+        Speed: 0
+  - Entity: 715933378772261302
+    Tag: new Entity
     TransformComponent:
-      translation: [0, 0]
+      translation: [0.0217948705, -1.02435923]
+      scale: [0.999999881, 0.999999881]
+      rotation: -0.777914524
+    SpriteComponent:
+      color: [1, 1, 1, 1]
+    RigidBodyComponent:
+      Type: 1
+      FixedRotation: false
+      LinearVelocity: [0, 0]
+      AngularVelocity: 0
+      Bullet: false
+      GravityScale: 1
+    BoxColliderComponent:
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      ScaledSize: true
+      IsSensor: false
+      MaterialUD: ""
+    DistanceJointComponent:
+      - Joint
+      - Entity: 14393395868924984692
+        AnchorAOffset: [0.5, -0.5]
+        AnchorBOffset: [0, 0]
+  - Entity: 14393395868924984692
+    Tag: new Entity
+    TransformComponent:
+      translation: [3.18803406, -2.35897446]
       scale: [1, 1]
       rotation: 0
-    CameraComponent:
-      viewportAspectRatio: 1.77752292
-      priorityLevel: 1
-      fixedAspectRatio: false
-      zoomLevel: 1
-SpriteQueue:
-  - Entity: 2047542677033771120
+    RigidBodyComponent:
+      Type: 1
+      FixedRotation: false
+      LinearVelocity: [0, 0]
+      AngularVelocity: 0
+      Bullet: false
+      GravityScale: 1
+    CircleRendererComponent:
+      Color: [1, 1, 1, 1]
+      Thickness: 1
+      Fade: 0.00499999989
+    CircleColliderComponent:
+      Position: [0, 0]
+      Collider: 0.5
+      ScaledSize: true
+      IsSensor: false
+      MaterialUD: ""
+    DistanceJointComponent:
+      - Joint
+      - Entity: 7406928063252011938
+        AnchorAOffset: [0, 0]
+        AnchorBOffset: [0, 0]
+  - Entity: 7406928063252011938
+    Tag: new Entity
+    TransformComponent:
+      translation: [7.63333225, -0.416666985]
+      scale: [1, 1]
+      rotation: 0
+    RigidBodyComponent:
+      Type: 1
+      FixedRotation: false
+      LinearVelocity: [0, 0]
+      AngularVelocity: 0
+      Bullet: false
+      GravityScale: 1
+    CircleRendererComponent:
+      Color: [1, 1, 1, 1]
+      Thickness: 1
+      Fade: 0.00499999989
+    CircleColliderComponent:
+      Position: [0, 0]
+      Collider: 0.5
+      ScaledSize: true
+      IsSensor: false
+      MaterialUD: default
