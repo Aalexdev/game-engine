@@ -17,6 +17,7 @@
 #include "engine/scene/components/SpringJointComponent.hpp"
 #include "engine/scene/components/RevoluteJoint.hpp"
 #include "engine/scene/components/PrismaticJoint.hpp"
+#include "engine/scene/components/FrictionJointComponent.hpp"
 
 #include <libs/yaml-cpp/yaml.h>
 #include <libs/glm/gtc/epsilon.hpp>
@@ -57,6 +58,7 @@ namespace engine{
 		copyComponent<ECS::components::SpringJoint>(dst, src);
 		copyComponent<ECS::components::RevoluteJoint>(dst, src);
 		copyComponent<ECS::components::PrismaticJoint>(dst, src);
+		copyComponent<ECS::components::FrictionJoint>(dst, src);
 	}
 	
 	Ref<Scene> Scene::copy(const Ref<Scene> &scene){
@@ -96,6 +98,7 @@ namespace engine{
 		registry.registerComponent<ECS::components::SpringJoint>();
 		registry.registerComponent<ECS::components::RevoluteJoint>();
 		registry.registerComponent<ECS::components::PrismaticJoint>();
+		registry.registerComponent<ECS::components::FrictionJoint>();
 
 		batchRenderer = createScope<BatchRenderer>(this);
 

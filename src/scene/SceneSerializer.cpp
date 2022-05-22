@@ -17,6 +17,7 @@
 #include "engine/scene/components/SpringJointComponent.hpp"
 #include "engine/scene/components/RevoluteJoint.hpp"
 #include "engine/scene/components/PrismaticJoint.hpp"
+#include "engine/scene/components/FrictionJointComponent.hpp"
 
 // libs
 #include <libs/yaml-cpp/yaml.h>
@@ -393,6 +394,25 @@ namespace engine{
 		}
 	}
 
+	static void serializeFrictionJointComponent(YAML::Emitter &out, Entity entity){
+		if (entity.hasComponent<ECS::components::FrictionJoint>()){
+			auto &component = entity.getComponent<ECS::components::FrictionJoint>();
+
+			out << YAML::Key << "FrictionJointComponent";
+			out << YAML::BeginSeq;
+
+			for (auto &joint : component.joints){
+				out << YAML::BeginMap;
+				out << YAML::Key << "Joint" << YAML::Value << joint.joinedEntity;
+				out << YAML::Key << "MaxForce" << YAML::Value << joint.maxForce;
+				out << YAML::Key << "MaxTorque" << YAML::Value << joint.maxTorque;
+				out << YAML::EndMap;
+			}
+
+			out << YAML::EndSeq;
+		}
+	}
+
 	static void serializeEntity(YAML::Emitter& out, Entity entity){
 
 		out << YAML::BeginMap;
@@ -410,6 +430,7 @@ namespace engine{
 		serializeDistanceJointComponent(out, entity);
 		serializeSpringJointComponent(out, entity);
 		serializeRevoluteJointComponent(out, entity);
+		serializeFrictionJointComponent(out, entity);
 
 		out << YAML::EndMap;
 	}
@@ -721,6 +742,20 @@ namespace engine{
 			}
 		}
 	}
+
+	static void deserializeFirctionJointComponent(YAML::Node data, Entity entity){
+		YAML::Node node = data["FrictionJointComponent"];
+		if (node){
+			auto &component = entity.addComponent<ECS::components::FrictionJoint>();
+
+			for (auto jointNode : node){
+				ECS::components::FrictionJoint::Joint joint;
+				joint.joinedEntity = node["Joint"].as<uint64_t>();
+				joint.maxForce = node["MaxForce"].as<float>();
+				joint.maxTorque = node["MaxTorque"].as<float>();
+			}
+		}
+	}
 	
 	bool SceneSerializer::deserializeText(const std::string &filepath){
 		ENGINE_PROFILE_FUNCTION();
@@ -773,6 +808,7 @@ namespace engine{
 				deserializeSpringJointComponent(entity, ent);
 				deserializeRevoluteJointComponent(entity, ent);
 				deserializePrismaticJointComponent(entity, ent);
+				deserializeFirctionJointComponent(entity, ent);
 			}
 		}
 
