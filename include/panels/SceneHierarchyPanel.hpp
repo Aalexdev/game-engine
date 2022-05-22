@@ -56,6 +56,7 @@ namespace engine{
 			void drawSpringJointComponent(Entity entity);
 			void drawRevoluteJointComponent(Entity entity);
 			void drawPrismaticJointComponent(Entity entity);
+			void drawFrictionJointComponent(Entity entity);
 
 			// === Members ===
 			Entity selectedEntity; // the entity that is currently selected

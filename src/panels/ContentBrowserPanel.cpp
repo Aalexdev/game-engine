@@ -387,9 +387,6 @@ namespace engine{
 
 
 	void ContentBrowserPanel::select(std::filesystem::path path){
-		
-	
-
 		ContentBrowserNewSelectionEvent event(path);
 		callback(event);
 	}
