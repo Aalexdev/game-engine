@@ -1,8 +1,27 @@
 #include "panels/ContentBrowserPanel.hpp"
 #include "EditorLayer.hpp"
 #include <libs/ImGui/imgui_internal.h>
+#include <cstring>
 
 namespace engine{
+
+	static const std::list<std::string> IMAGE_EXTENTIONS = {".png", ".jpg", ".bmp", ".gif", ".jpe"};
+
+	void toLower(std::string &str){
+		for (auto &c : str){
+			c = std::tolower(c);
+		}
+	}
+
+	static bool isImage(const std::filesystem::path &path){
+		std::string ext = path.extension().string();
+		toLower(ext);
+		
+		for (auto &e : IMAGE_EXTENTIONS){
+			if (ext == e) return true;
+		}
+		return false;
+	}
 
 	Ref<ContentBrowserPanel> ContentBrowserPanel::create(){
 		return createRef<ContentBrowserPanel>();
@@ -165,12 +184,19 @@ namespace engine{
 			}
 
 			if (ImGui::BeginDragDropSource()){
+				
 				std::string path;
-
 				path.clear();
 				path = entry.path().string();
-
-				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", path.data(), path.size());
+			
+				if (isImage(entry.path())){
+					ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM_IMAGE", path.data(), path.size());
+				} else {
+					ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", path.data(), path.size());
+				}
+				
+				ImGui::Image(reinterpret_cast<ImTextureID>(editor->getIcons()->getTexture()), {75, 75}, {UVs.x, UVs.y}, {UVs.z, UVs.w});
+				
 				ImGui::EndDragDropSource();
 			}
 

@@ -113,7 +113,7 @@ namespace engine{
 		}
 
 		if (ImGui::BeginDragDropTarget()){
-			auto payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM");
+			auto payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM_IMAGE");
 
 			if (payload){
 				// convert the path into string

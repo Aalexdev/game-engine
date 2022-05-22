@@ -1,6 +1,6 @@
 Window:
-  WindowSize: [2560, 1377]
-  WindowPos: [0, 23]
+  WindowSize: [1684, 834]
+  WindowPos: [406, 239]
 Editor:
   IconAtlasPath: icons.png
   Icons:

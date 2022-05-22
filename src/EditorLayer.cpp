@@ -333,6 +333,17 @@ namespace engine{
 
 		ImGui::Image(reinterpret_cast<void*>(texture), size, ImVec2(0.f, 1.f), ImVec2(1.f, 0.f));
 
+		if (ImGui::BeginDragDropTarget()){
+			if (auto payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM_IMAGE")){
+				std::string path = reinterpret_cast<char*>(payload->Data);
+				path.resize(payload->DataSize);
+				Entity entity = createEntity();
+				auto &sprite = entity.addComponent<ECS::components::Sprite>();
+				sprite.texture = SubTexture2D::create(app->getTextures()->load(path));
+			}
+			ImGui::EndDragDropTarget();
+		}
+
 		ImVec2 windowSize = ImGui::GetWindowSize();
 		ImVec2 minBound = ImGui::GetWindowPos();
 		minBound.x += viewportOffset.x;
@@ -343,7 +354,7 @@ namespace engine{
 		viewportBounds[1] = {maxBound.x, maxBound.y};
 		
 		if (!runtime) drawGuizmo();
-
+	
 		ImGui::End();
 	}
 
