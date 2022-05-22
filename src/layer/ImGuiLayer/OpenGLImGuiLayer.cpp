@@ -11,6 +11,7 @@
 #include "engine/Application.hpp"
 #include "engine/windows/Window.hpp"
 #include "engine/windows/SDL2Window.hpp"
+#include "engine/filesystem/Filesystem.hpp"
 
 #include "engine/OpenGlAL/OpenGlContext.hpp"
 
@@ -49,8 +50,9 @@ namespace engine{
 		// io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;
 		// io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
 
-		io.Fonts->AddFontFromFileTTF("assets/fonts/lato/Lato-Bold.ttf", 14.f);
-		io.FontDefault = io.Fonts->AddFontFromFileTTF("assets/fonts/lato/Lato-Regular.ttf", 14.f);
+		
+		io.Fonts->AddFontFromFileTTF((Filesystem::getDataFolderPath() / "fonts/lato/Lato-Bold.ttf").string().c_str(), 14.f);
+		io.FontDefault = io.Fonts->AddFontFromFileTTF((Filesystem::getDataFolderPath() / "fonts/lato/Lato-Regular.ttf").string().c_str(), 14.f);
 		
 		ImGui::StyleColorsDark();
 
