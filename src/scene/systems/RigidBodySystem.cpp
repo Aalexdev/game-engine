@@ -140,12 +140,12 @@ namespace engine::ECS::systems{
 		auto &transform = entity.getComponent<components::Transform>();
 
 		if (entity.hasComponent<components::BoxCollider>()){
-			renderer->drawSquare(transform.transformMat, {0.8, 0.1, 0.2, 1.0}, static_cast<uint32_t>(entity));
+			// renderer->drawSquare(transform.transformMat, {0.8, 0.1, 0.2, 1.0}, static_cast<uint32_t>(entity));
 		}
 
 		if (entity.hasComponent<components::CircleCollider>()){
 			auto &circle = entity.getComponent<components::CircleCollider>();
-			renderer->drawCircle(transform.transformMat, {0.8, 0.1, 0.2, 1.0}, static_cast<uint32_t>(entity), 0.05);
+			// renderer->drawCircle(transform.transformMat, {0.8, 0.1, 0.2, 1.0}, static_cast<uint32_t>(entity), 0.05);
 		}
 	}
 
@@ -163,7 +163,7 @@ namespace engine::ECS::systems{
 
 				glm::vec2 end = glm::vec2(joinedEntity.getComponent<components::Transform>().transformMat * glm::vec4(j.anchorOffsetB, 0.f, 1.f));
 
-				renderer->drawLine(start, end, static_cast<uint32_t>(entity), {0.5, 0.5, 0.2, 1.0});
+				// renderer->drawLine(start, end, static_cast<uint32_t>(entity), {0.5, 0.5, 0.2, 1.0});
 			}
 		}
 
@@ -177,7 +177,7 @@ namespace engine::ECS::systems{
 
 				glm::vec2 end = glm::vec2(joinedEntity.getComponent<components::Transform>().transformMat * glm::vec4(j.anchorB, 0.f, 1.f));
 
-				renderer->drawLine(start, end, static_cast<uint32_t>(entity), {0.5, 0.5, 0.2, 1.0});
+				// renderer->drawLine(start, end, static_cast<uint32_t>(entity), {0.5, 0.5, 0.2, 1.0});
 			}
 		}
 
@@ -190,7 +190,7 @@ namespace engine::ECS::systems{
 				glm::vec2 start = entity.getComponent<components::Transform>().transform.translation;
 				glm::vec2 end = joinedEntity.getComponent<components::Transform>().transform.translation;
 
-				renderer->drawLine(start, end, static_cast<uint32_t>(entity), {0.5, 0.5, 0.2, 1.0});
+				// renderer->drawLine(start, end, static_cast<uint32_t>(entity), {0.5, 0.5, 0.2, 1.0});
 			}
 		}
 		
@@ -203,7 +203,7 @@ namespace engine::ECS::systems{
 				glm::vec2 start = entity.getComponent<components::Transform>().transform.translation;
 				glm::vec2 end = joinedEntity.getComponent<components::Transform>().transform.translation;
 
-				renderer->drawLine(start, end, static_cast<uint32_t>(entity), {0.5, 0.5, 0.2, 1.0});
+				// renderer->drawLine(start, end, static_cast<uint32_t>(entity), {0.5, 0.5, 0.2, 1.0});
 			}
 		}
 
@@ -213,14 +213,14 @@ namespace engine::ECS::systems{
 			for (auto &j : joints){
 				glm::vec2 pos = glm::vec2(transformMat * glm::vec4(j.anchor, 0.f, 1.f));
 
-				renderer->drawCircle(pos, 0.1f, glm::vec4(1.f, 0.f, 0.f, 1.f), static_cast<uint32_t>(entity));
+				// renderer->drawCircle(pos, 0.1f, glm::vec4(1.f, 0.f, 0.f, 1.f), static_cast<uint32_t>(entity));
 			}
 		}
 	}
 
 	void RigidBody::renderCollisions(){
 		auto renderer = scene->getRenderer();
-		renderer->setLineThickness(5);
+		// renderer->setLineThickness(5);
 		for (const auto &e : entities){
 			if (scene->getRegistry().getComponent<components::RigidBody>(e).renderCollisions){
 				engine::Entity entity = {e, scene};

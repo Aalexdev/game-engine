@@ -22,6 +22,9 @@ namespace engine{
 		physicMaterials = PhysicMaterialLibrary::create();
 
 		imGuiLayer = ImGuiLayer::create();
+		scene = Scene::create(renderer, physicMaterials);
+		sceneSerializer = SceneSerializer::create(scene, textures);
+		
 		pushLayer(imGuiLayer);
 	}
 
@@ -43,32 +46,111 @@ namespace engine{
 		}
 		layerStack.clear();
 	}
+	
+	void Application::gameThreadBegin(Application* app){
+		ENGINE_ASSERT(app != nullptr, "cannot begin a thread of a null app");
+		app->renderThreadLock.lock();
+		app->renderThreadFinished = false;
+		app->renderThreadCond.notify_all();
+		app->renderThreadLock.unlock();
+	}
+
+	void Application::renderThreadBegin(Application* app){
+		ENGINE_ASSERT(app != nullptr, "cannot begin a thread of a null app");
+		app->gameThreadLock.lock();
+		app->gameThreadFinished = false;
+		app->gameThreadCond.notify_all();
+		app->gameThreadLock.unlock();
+	}
+
+	void Application::gameThreadEnd(Application* app){
+		ENGINE_ASSERT(app != nullptr, "cannot end a thread of a null app");
+		app->gameThreadLock.lock();
+		app->gameThreadFinished = true;
+		app->gameThreadCond.notify_all();
+		app->gameThreadLock.unlock();
+	}
+
+	void Application::renderThreadEnd(Application* app){
+		ENGINE_ASSERT(app != nullptr, "cannot end a thread of a null app");
+		app->renderThreadLock.lock();
+		app->renderThreadFinished = true;
+		app->renderThreadCond.notify_all();
+		app->renderThreadLock.unlock();
+	}
+
+	void Application::waitForGameThread(Application* app){
+		ENGINE_ASSERT(app != nullptr, "cannot wait a thread of a null app");
+		auto lock = std::unique_lock(app->gameThreadLock);
+		app->gameThreadCond.wait(lock, [&]{return app->__gameThreadFinished();});
+	}
+	
+	void Application::waitForrRenderThread(Application* app){
+		ENGINE_ASSERT(app != nullptr, "cannot wait a thread of a null app");
+		auto lock = std::unique_lock(app->renderThreadLock);
+		app->renderThreadCond.wait(lock, [&]{return app->__renderThreadFinished();});
+	}
+
+	
+	void Application::gameThread(Application* app){
+		
+		Timestep timestep;
+		Timestep lastTime;
+
+		while(app->running){
+			gameThreadBegin(app);
+
+			float time = app->display->getTime();
+			timestep = time - lastTime;
+			lastTime = time;
+
+			// if (!app->minimized){
+			// 	for (const Ref<Layer> &layer : app->layerStack)
+			// 		layer->OnUpdate(timestep);
+			// }
+
+			
+			app->renderer->drawQuad(glm::vec2(0.f), 1.0, 0);
+
+			gameThreadEnd(app);
+			waitForrRenderThread(app);
+		}
+	}
 
 	void Application::run(){
 		ENGINE_PROFILE_END_SESSION();
 		ENGINE_PROFILE_STOP_RECORD();
 		ENGINE_PROFILE_BEGIN_SESSION("runtime", "EngineProfilingRuntime.json");
 
-		Timestep timestep;
-		Timestep lastTime;
+		std::thread gameTh(&gameThread, this);
 
 		while (running){
-			float time = display->getTime();
-			timestep = time - lastTime;
-			lastTime = time;
 
-			if (!minimized){
-				for (const Ref<Layer> &layer : layerStack)
-					layer->OnUpdate(timestep);
-			}
+			renderThreadBegin(this);
 			
-			imGuiLayer->begin();
-			for (const Ref<Layer> &layer : layerStack)
-				layer->OnImGuiRender();
-			imGuiLayer->end();
+			renderer->beginScene(Camera());
+			renderer->draw();
+			renderer->endScene();
+
+
+			waitForGameThread(this);
 			
+			renderer->swap();
 			display->update();
+
+			renderer->clear();
+			// 
+			
+			// imGuiLayer->begin();
+			// for (const Ref<Layer> &layer : layerStack)
+			// 	layer->OnImGuiRender();
+			// imGuiLayer->end();
+
+			renderThreadEnd(this);
+			
 		}
+
+		gameTh.join();
 
 		ENGINE_PROFILE_END_SESSION();
 	}

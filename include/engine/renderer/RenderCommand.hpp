@@ -4,49 +4,39 @@
 #include "RendererAPI.hpp"
 
 namespace engine{
-	class ENGINE_API RenderCommand{
-		public:
-			RenderCommand(){
-				rendererAPI = RendererAPI::create();
-			}
+	struct ENGINE_API RenderCommand{
 
-			~RenderCommand(){}
+		enum Type{
+			TYPE_NONE = 0,
+			TYPE_QUAD, // [Data]
+			TYPE_TEXTURED_QUAD, // [Data, texture data]
+			TYPE_CLEAR, // [null]
+			TYPE_SET_CLEAR_COLOR, // [Data]
+		};
+		
+		enum DataSpecs{
+			DATA_NONE,
+			DATA_TRANSFORM, // [transform mat4]
+			DATA_TRANSLATE, // [X, y]
+			DATA_TRANSLATE_SCALE1, // [X, Y, scaleXY]
+			DATA_TRANSLATE_SCALE2, // [X, Y, scaleX, scaleY]
+			DATA_TRANSLATE_SCALE1_ROTATE, // [X, Y, scaleXY, rotation]
+			DATA_TRANSLATE_SCALE2_ROTATE, // [X, Y, scaleX, scaleY, rotation]
+			DATA_TRANSLATE_ROTATE, // [X, Y, rotation]
+		};
 
-			inline void init(){
-				rendererAPI->init();
-			}
+		enum ColorSpec{
+			COLOR_NONE,
+			COLOR_WHITE,
+			COLOR_RGB,
+			COLOR_RGBA
+		};
 
-			inline void shutdown(){
-				rendererAPI = nullptr;
-			}
+		Type type = TYPE_NONE;
+		DataSpecs specs = DATA_NONE;
+		ColorSpec colorSpecs = COLOR_NONE;
 
-			inline void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height){
-				rendererAPI->setViewport(x, y, width, height);
-			}
-
-			inline void clear(){
-				rendererAPI->clear();
-			}
-
-			inline void setClearColor(const glm::vec4 &clearColor){
-				rendererAPI->setClearColor(clearColor);
-			}
-
-			inline void drawIndexed(const Ref<VertexArray> &vertexArray, uint32_t indexCount = 0){
-				rendererAPI->drawIndexed(vertexArray, indexCount);
-			}
-
-			inline void drawLines(const Ref<VertexArray> &vertexArray, uint32_t indexCount = 0){
-				rendererAPI->drawLines(vertexArray, indexCount);
-			}
-
-			inline void setLineThickness(float thickness){
-				rendererAPI->setLineThickness(thickness);
-			}
-
-			inline const Ref<RendererAPI>& getRendererAPI() const {return rendererAPI;}
-
-		private:
-			Ref<RendererAPI> rendererAPI;		
+		float* data = nullptr;
+		uint16_t count = 1;
 	};
 }

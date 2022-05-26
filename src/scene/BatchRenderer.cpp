@@ -33,32 +33,32 @@ namespace engine{
 					for (auto &entity : sprites[id]){
 						auto &sprite = entity.getComponent<ECS::components::Sprite>();
 						auto &transform = entity.getComponent<ECS::components::Transform>();
-						renderer->drawQuad(transform.transformMat, sprite.color, static_cast<uint32_t>(entity), sprite.texture);
+						renderer->drawQuad(transform.transformMat, sprite.color, static_cast<uint32_t>(entity));
 					}
 				}
 			}
 
-			{
-				auto it = circles.find(id);
-				if (it != circles.end()){
-					for (auto &entity : circles[id]){
-						auto &circle = entity.getComponent<ECS::components::CircleRenderer>();
-						auto &transform = entity.getComponent<ECS::components::Transform>();
-						renderer->drawCircle(transform.transformMat, circle.color, static_cast<uint32_t>(entity), circle.thickness, circle.fade);
-					}
-				}
-			}
+			// {
+			// 	auto it = circles.find(id);
+			// 	if (it != circles.end()){
+			// 		for (auto &entity : circles[id]){
+			// 			auto &circle = entity.getComponent<ECS::components::CircleRenderer>();
+			// 			auto &transform = entity.getComponent<ECS::components::Transform>();
+			// 			renderer->drawCircle(transform.transformMat, circle.color, static_cast<uint32_t>(entity), circle.thickness, circle.fade);
+			// 		}
+			// 	}
+			// }
 
-			{
-				auto it = triangles.find(id);
-				if (it != triangles.end()){
-					for (auto &entity : triangles[id]){
-						auto &triangle = entity.getComponent<ECS::components::TriangleRenderer>();
-						auto &transform = entity.getComponent<ECS::components::Transform>();
-						renderer->drawTriangle(triangle.p1, triangle.p2, triangle.p3, transform.transformMat, triangle.texture, static_cast<uint32_t>(entity));
-					}
-				}
-			}
+			// {
+			// 	auto it = triangles.find(id);
+			// 	if (it != triangles.end()){
+			// 		for (auto &entity : triangles[id]){
+			// 			auto &triangle = entity.getComponent<ECS::components::TriangleRenderer>();
+			// 			auto &transform = entity.getComponent<ECS::components::Transform>();
+			// 			renderer->drawTriangle(triangle.p1, triangle.p2, triangle.p3, transform.transformMat, triangle.texture, static_cast<uint32_t>(entity));
+			// 		}
+			// 	}
+			// }
 
 			renderer->endScene();
 			renderer->reloadScene();

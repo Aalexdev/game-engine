@@ -14,6 +14,7 @@
 #include <queue>
 #include <bitset>
 #include <set>
+#include <deque>
 
 #include <functional>
 #include <iostream>

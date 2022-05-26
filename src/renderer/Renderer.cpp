@@ -12,7 +12,8 @@ namespace engine{
 
 	void Renderer::init(){
 		ENGINE_PROFILE_FUNCTION();
-		renderCommand.init();
+		rendererAPI = RendererAPI::create();
+		rendererAPI->init();
 
 		quadVertexPositions[0] = {-0.5f, -0.5f, 0.f, 1.f};
 		quadVertexPositions[1] = { 0.5f, -0.5f, 0.f, 1.f};
@@ -21,6 +22,10 @@ namespace engine{
 
 		loadShaders();
 		reloadScene();
+
+		for (auto &buffer : renderCommandBuffers){
+			buffer.reserve(350);
+		}
 	}
 
 	void Renderer::loadShaders(){
@@ -30,7 +35,7 @@ namespace engine{
 	}
 
 	void Renderer::loadQuadShader(){
-		quadData = createScope<QuadData>();
+		quadData = createScope<QuadData>(1000);
 
 		// setup the quad datas
 		quadData->quadVertexArray = VertexArray::create();
@@ -88,7 +93,7 @@ namespace engine{
 	}
 
 	void Renderer::loadCircleShader(){
-		circleData = createScope<CircleData>();
+		circleData = createScope<CircleData>(1000);
 
 		circleData->circleVertexArray = VertexArray::create();
 		circleData->circleVertexBuffer = VertexBuffer::create(sizeof(CircleVertex) * circleData->maxVertices);
@@ -129,7 +134,7 @@ namespace engine{
 	}
 
 	void Renderer::loadLineShader(){
-		lineData = createScope<LineData>(10000);
+		lineData = createScope<LineData>(1000);
 
 		lineData->lineVertexArray = VertexArray::create();
 		lineData->lineVertexBuffer = VertexBuffer::create(sizeof(LineData) * lineData->maxVertices);
@@ -149,11 +154,11 @@ namespace engine{
 
 	void Renderer::shutdown(){
 		ENGINE_PROFILE_FUNCTION();
-		renderCommand.shutdown();
+		rendererAPI = nullptr;
 	}
 
 	void Renderer::OnWindowResized(uint32_t width, uint32_t height){
-		renderCommand.setViewport(0, 0, width, height);
+		rendererAPI->setViewport(0, 0, width, height);
 	}
 
 	void Renderer::beginScene(const Camera &camera){
@@ -206,7 +211,7 @@ namespace engine{
 			}
 
 			quadShader->bind();
-			renderCommand.drawIndexed(quadData->quadVertexArray, quadData->quadIndexCount);
+			rendererAPI->drawIndexed(quadData->quadVertexArray, quadData->quadIndexCount);
 		}
 
 		if (circleData->circleIndexCount > 0){
@@ -214,7 +219,7 @@ namespace engine{
 			circleData->circleVertexBuffer->setData(circleData->circleVertexBufferBase, size);
 
 			circleShader->bind();
-			renderCommand.drawIndexed(circleData->circleVertexArray, circleData->circleIndexCount);
+			rendererAPI->drawIndexed(circleData->circleVertexArray, circleData->circleIndexCount);
 		}
 
 		if (lineData->lineCount > 0){
@@ -222,410 +227,534 @@ namespace engine{
 			lineData->lineVertexBuffer->setData(lineData->lineVertexBufferBase, size);
 
 			lineShader->bind();
-			renderCommand.drawLines(lineData->lineVertexArray, lineData->lineCount);
+			rendererAPI->drawLines(lineData->lineVertexArray, lineData->lineCount);
 		}
 	}
 
-	void Renderer::drawQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4& color, float tilingFactor, uint32_t textureIndex, const glm::vec2 &TextureCoordsStart, const glm::vec2 &TextureCoordsEnd, uint32_t entityIndex){
-		ENGINE_PROFILE_FUNCTION();
-
-		// add one to the entity index, so the index 0 is never used and count a no entity, instead of using a non unsigned int value
-		entityIndex++;
-
-		if (quadData->quadIndexCount + 6 > quadData->maxIndices){
-			endScene();
-			reloadScene();
-		}
-
-		glm::mat4 transform = glm::scale(glm::translate(glm::mat4(1.f), position), {size.x, size.y, 1.f});
-
-		quadData->quadVertexBufferPtr->position = transform * quadVertexPositions[0];
-		quadData->quadVertexBufferPtr->color = color;
-		quadData->quadVertexBufferPtr->TextCoord = {TextureCoordsStart.x, TextureCoordsEnd.y};
-		quadData->quadVertexBufferPtr->textureIndex = textureIndex;
-		quadData->quadVertexBufferPtr->tilingFactor = tilingFactor;
-		quadData->quadVertexBufferPtr->entityIndex = entityIndex;
-		quadData->quadVertexBufferPtr++;
-
-		quadData->quadVertexBufferPtr->position = transform * quadVertexPositions[1];
-		quadData->quadVertexBufferPtr->color = color;
-		quadData->quadVertexBufferPtr->TextCoord = TextureCoordsEnd;
-		quadData->quadVertexBufferPtr->textureIndex = textureIndex;
-		quadData->quadVertexBufferPtr->tilingFactor = tilingFactor;
-		quadData->quadVertexBufferPtr->entityIndex = entityIndex;
-		quadData->quadVertexBufferPtr++;
-
-		quadData->quadVertexBufferPtr->position = transform * quadVertexPositions[2];
-		quadData->quadVertexBufferPtr->color = color;
-		quadData->quadVertexBufferPtr->TextCoord = {TextureCoordsEnd.x, TextureCoordsStart.y};
-		quadData->quadVertexBufferPtr->textureIndex = textureIndex;
-		quadData->quadVertexBufferPtr->tilingFactor = tilingFactor;
-		quadData->quadVertexBufferPtr->entityIndex = entityIndex;
-		quadData->quadVertexBufferPtr++;
-
-		quadData->quadVertexBufferPtr->position = transform * quadVertexPositions[3];
-		quadData->quadVertexBufferPtr->color = color;
-		quadData->quadVertexBufferPtr->TextCoord = TextureCoordsStart;
-		quadData->quadVertexBufferPtr->textureIndex = textureIndex;
-		quadData->quadVertexBufferPtr->tilingFactor = tilingFactor;
-		quadData->quadVertexBufferPtr->entityIndex = entityIndex;
-		quadData->quadVertexBufferPtr++;
-
-		quadData->quadIndexCount += 6;
+	static void initializeCommand(RenderCommand &command, RenderCommand::DataSpecs data, RenderCommand::Type type, RenderCommand::ColorSpec color){
+		command.specs = data;
+		command.type = type;
+		command.colorSpecs = color;
+	}
+	
+	void Renderer::drawQuad(const glm::mat4 &mat, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSFORM, RenderCommand::TYPE_QUAD, RenderCommand::COLOR_WHITE);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushMat4(mat);
+		getCurrentRenderQueue().push_back(command);
 	}
 
-	void Renderer::drawQuad(const glm::mat4 &transform, const glm::vec4 &color, uint32_t entityIndex, const Ref<SubTexture2D> &texture){
-
-		entityIndex++;
-
-		if (quadData->quadIndexCount + 6 > quadData->maxIndices){
-			endScene();
-			reloadScene();
-		}
-		
-		glm::vec2 TextureCoordsStart = texture ? texture->getStart() : glm::vec2(0.f);
-		glm::vec2 TextureCoordsEnd = texture ? texture->getEnd() : glm::vec2(1.f);
-		
-		uint16_t textureIndex = texture ? pushTexture(texture->getTexture()) : 0;
-
-		quadData->quadVertexBufferPtr->position = transform * quadVertexPositions[0];
-		quadData->quadVertexBufferPtr->color = color;
-		quadData->quadVertexBufferPtr->TextCoord = {TextureCoordsStart.x, TextureCoordsEnd.y};
-		quadData->quadVertexBufferPtr->textureIndex = textureIndex;
-		quadData->quadVertexBufferPtr->tilingFactor = 1.f;
-		quadData->quadVertexBufferPtr->entityIndex = entityIndex;
-		quadData->quadVertexBufferPtr++;
-
-		quadData->quadVertexBufferPtr->position = transform * quadVertexPositions[1];
-		quadData->quadVertexBufferPtr->color = color;
-		quadData->quadVertexBufferPtr->TextCoord = TextureCoordsEnd;
-		quadData->quadVertexBufferPtr->textureIndex = textureIndex;
-		quadData->quadVertexBufferPtr->tilingFactor = 1.f;
-		quadData->quadVertexBufferPtr->entityIndex = entityIndex;
-		quadData->quadVertexBufferPtr++;
-
-		quadData->quadVertexBufferPtr->position = transform * quadVertexPositions[2];
-		quadData->quadVertexBufferPtr->color = color;
-		quadData->quadVertexBufferPtr->TextCoord = {TextureCoordsEnd.x, TextureCoordsStart.y};
-		quadData->quadVertexBufferPtr->textureIndex = textureIndex;
-		quadData->quadVertexBufferPtr->tilingFactor = 1.f;
-		quadData->quadVertexBufferPtr->entityIndex = entityIndex;
-		quadData->quadVertexBufferPtr++;
-
-		quadData->quadVertexBufferPtr->position = transform * quadVertexPositions[3];
-		quadData->quadVertexBufferPtr->color = color;
-		quadData->quadVertexBufferPtr->TextCoord = TextureCoordsStart;
-		quadData->quadVertexBufferPtr->textureIndex = textureIndex;
-		quadData->quadVertexBufferPtr->tilingFactor = 1.f;
-		quadData->quadVertexBufferPtr->entityIndex = entityIndex;
-		quadData->quadVertexBufferPtr++;
-
-		quadData->quadIndexCount += 6;
+	void Renderer::drawQuad(const glm::mat4 &mat, const glm::vec3 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSFORM, RenderCommand::TYPE_QUAD, RenderCommand::COLOR_RGB);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushMat4(mat);
+		commandBufferPushVec3(color);
+		getCurrentRenderQueue().push_back(command);
 	}
 
-	void Renderer::drawRotatedQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4& color, float tilingFactor, uint32_t textureIndex, const glm::vec2 &TextureCoordsStart, const glm::vec2 &TextureCoordsEnd, float angle, uint32_t entityIndex){
-		ENGINE_PROFILE_FUNCTION();
-
-		// add one to the entity index, so the index 0 is never used and count a no entity, instead of using a non unsigned int value
-		entityIndex++;
-
-		if (quadData->quadIndexCount + 6 > quadData->maxIndices){
-			endScene();
-			reloadScene();
-		}
-
-		glm::mat4 rotation = glm::rotate(glm::mat4(1.f), angle, {0.f, 0.f, 1.f});
-
-		glm::mat4 transform = glm::translate(glm::mat4(1.f), position) * rotation * glm::scale(glm::mat4(1.f), glm::vec3(size, 1.f));
-
-		quadData->quadVertexBufferPtr->position = transform * quadVertexPositions[0];
-		quadData->quadVertexBufferPtr->color = color;
-		quadData->quadVertexBufferPtr->TextCoord = {TextureCoordsStart.x, TextureCoordsEnd.y};
-		quadData->quadVertexBufferPtr->textureIndex = textureIndex;
-		quadData->quadVertexBufferPtr->tilingFactor = tilingFactor;
-		quadData->quadVertexBufferPtr->entityIndex = entityIndex;
-		quadData->quadVertexBufferPtr++;
-
-		quadData->quadVertexBufferPtr->position = transform * quadVertexPositions[1];
-		quadData->quadVertexBufferPtr->color = color;
-		quadData->quadVertexBufferPtr->TextCoord = TextureCoordsEnd;
-		quadData->quadVertexBufferPtr->textureIndex = textureIndex;
-		quadData->quadVertexBufferPtr->tilingFactor = tilingFactor;
-		quadData->quadVertexBufferPtr->entityIndex = entityIndex;
-		quadData->quadVertexBufferPtr++;
-
-		quadData->quadVertexBufferPtr->position = transform * quadVertexPositions[2];
-		quadData->quadVertexBufferPtr->color = color;
-		quadData->quadVertexBufferPtr->TextCoord = {TextureCoordsEnd.x, TextureCoordsStart.y};
-		quadData->quadVertexBufferPtr->textureIndex = textureIndex;
-		quadData->quadVertexBufferPtr->tilingFactor = tilingFactor;
-		quadData->quadVertexBufferPtr->entityIndex = entityIndex;
-		quadData->quadVertexBufferPtr++;
-
-		quadData->quadVertexBufferPtr->position = transform * quadVertexPositions[3];
-		quadData->quadVertexBufferPtr->color = color;
-		quadData->quadVertexBufferPtr->TextCoord = TextureCoordsStart;
-		quadData->quadVertexBufferPtr->textureIndex = textureIndex;
-		quadData->quadVertexBufferPtr->tilingFactor = tilingFactor;
-		quadData->quadVertexBufferPtr->entityIndex = entityIndex;
-		quadData->quadVertexBufferPtr++;
-
-		quadData->quadIndexCount += 6;
+	void Renderer::drawQuad(const glm::mat4 &mat, const glm::vec4 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSFORM, RenderCommand::TYPE_QUAD, RenderCommand::COLOR_RGBA);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushMat4(mat);
+		commandBufferPushVec4(color);
+		getCurrentRenderQueue().push_back(command);
 	}
 
-	void Renderer::drawQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4 &color, uint32_t entityIndex, const Ref<SubTexture2D> &texture){
-		uint16_t textureIndex = texture ? pushTexture(texture->getTexture()) : 0;
-		glm::vec2 UVstart = texture ? texture->getStart() : glm::vec2(0.f);
-		glm::vec2 UVend = texture ? texture->getEnd() : glm::vec2(1.f);
-
-		drawQuad(position, size, color, 1, textureIndex, UVstart, UVend, entityIndex);
+	void Renderer::drawQuad(const glm::vec2 &translation, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE, RenderCommand::TYPE_QUAD, RenderCommand::COLOR_WHITE);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		getCurrentRenderQueue().push_back(command);
 	}
 
-	void Renderer::drawQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4 &color, uint32_t entityIndex, const Ref<Texture2D> &texture){
-		uint16_t textureIndex = texture ? pushTexture(texture) : 0;
-		drawQuad(position, size, color, 1, textureIndex, {0, 0}, {1, 1}, entityIndex);
+	void Renderer::drawQuad(const glm::vec2 &translation, const glm::vec3 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE, RenderCommand::TYPE_QUAD, RenderCommand::COLOR_RGB);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushVec3(color);
+		getCurrentRenderQueue().push_back(command);
 	}
 
-	void Renderer::drawRotatedQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4 &color, float rotation, uint32_t entityIndex, const Ref<SubTexture2D> &texture){
-		uint16_t textureIndex = texture ? pushTexture(texture->getTexture()) : 0;
-		glm::vec2 UVstart = texture ? texture->getStart() : glm::vec2(0.f);
-		glm::vec2 UVend = texture ? texture->getEnd() : glm::vec2(1.f);
-
-		drawRotatedQuad(position, size, color, 1, textureIndex, UVstart, UVend, rotation, entityIndex);
+	void Renderer::drawQuad(const glm::vec2 &translation, const glm::vec4 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE, RenderCommand::TYPE_QUAD, RenderCommand::COLOR_RGBA);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushVec4(color);
+		getCurrentRenderQueue().push_back(command);
 	}
 
-	void Renderer::drawRotatedQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4 &color, float rotation, uint32_t entityIndex, const Ref<Texture2D> &texture){
-		uint16_t textureIndex = texture ? pushTexture(texture) : 0;
-		drawRotatedQuad(position, size, color, 1, textureIndex, {0, 0}, {1, 1}, rotation, entityIndex);
+	void Renderer::drawQuad(const glm::vec2 &translation, float scale, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE1, RenderCommand::TYPE_QUAD, RenderCommand::COLOR_WHITE);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushFloat(scale);
+		getCurrentRenderQueue().push_back(command);
 	}
 
-	uint16_t Renderer::texturePushed(const Ref<Texture2D> &texture){
-		for (size_t i=0; i<quadData->textureSlotIndex; i++){
-			if (quadData->textureSlots[i] == texture){
-				return i;
+	void Renderer::drawQuad(const glm::vec2 &translation, float scale, const glm::vec3 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE1, RenderCommand::TYPE_QUAD, RenderCommand::COLOR_RGB);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushFloat(scale);
+		commandBufferPushVec3(color);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawQuad(const glm::vec2 &translation, float scale, const glm::vec4 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE1, RenderCommand::TYPE_QUAD, RenderCommand::COLOR_RGBA);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushFloat(scale);
+		commandBufferPushVec4(color);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawQuad(const glm::vec2 &translation, glm::vec2 &scale, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE2, RenderCommand::TYPE_QUAD, RenderCommand::COLOR_WHITE);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushVec2(scale);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawQuad(const glm::vec2 &translation, glm::vec2 &scale, const glm::vec3 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE2, RenderCommand::TYPE_QUAD, RenderCommand::COLOR_RGB);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushVec2(scale);
+		commandBufferPushVec3(color);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawQuad(const glm::vec2 &translation, glm::vec2 &scale, const glm::vec4 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE2, RenderCommand::TYPE_QUAD, RenderCommand::COLOR_RGBA);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushVec2(scale);
+		commandBufferPushVec4(color);
+		getCurrentRenderQueue().push_back(command);
+	}
+	
+	void Renderer::drawRotatedQuad(const glm::vec2 &translation, float rotation, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_ROTATE, RenderCommand::TYPE_QUAD, RenderCommand::COLOR_WHITE);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushFloat(rotation);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawRotatedQuad(const glm::vec2 &translation, float rotation, const glm::vec3 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_ROTATE, RenderCommand::TYPE_QUAD, RenderCommand::COLOR_RGB);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushFloat(rotation);
+		commandBufferPushVec3(color);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawRotatedQuad(const glm::vec2 &translation, float rotation, const glm::vec4 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_ROTATE, RenderCommand::TYPE_QUAD, RenderCommand::COLOR_RGBA);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushFloat(rotation);
+		commandBufferPushVec4(color);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawRotatedQuad(const glm::vec2 &translation, float rotation, float scale, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE1_ROTATE, RenderCommand::TYPE_QUAD, RenderCommand::COLOR_WHITE);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushFloat(scale);
+		commandBufferPushFloat(rotation);
+		getCurrentRenderQueue().push_back(command);
+
+	}
+
+	void Renderer::drawRotatedQuad(const glm::vec2 &translation, float rotation, float scale, const glm::vec3 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE1_ROTATE, RenderCommand::TYPE_QUAD, RenderCommand::COLOR_RGB);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushFloat(scale);
+		commandBufferPushFloat(rotation);
+		commandBufferPushVec3(color);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawRotatedQuad(const glm::vec2 &translation, float rotation, float scale, const glm::vec4 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE1_ROTATE, RenderCommand::TYPE_QUAD, RenderCommand::COLOR_RGBA);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushFloat(scale);
+		commandBufferPushFloat(rotation);
+		commandBufferPushVec4(color);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawRotatedQuad(const glm::vec2 &translation, float rotation, glm::vec2 &scale, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE2_ROTATE, RenderCommand::TYPE_QUAD, RenderCommand::COLOR_WHITE);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushVec2(scale);
+		commandBufferPushFloat(rotation);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawRotatedQuad(const glm::vec2 &translation, float rotation, glm::vec2 &scale, const glm::vec3 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE2_ROTATE, RenderCommand::TYPE_QUAD, RenderCommand::COLOR_RGB);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushVec2(scale);
+		commandBufferPushFloat(rotation);
+		commandBufferPushVec3(color);
+		getCurrentRenderQueue().push_back(command);
+
+	}
+
+	void Renderer::drawRotatedQuad(const glm::vec2 &translation, float rotation, glm::vec2 &scale, const glm::vec4 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE2_ROTATE, RenderCommand::TYPE_QUAD, RenderCommand::COLOR_RGBA);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushVec2(scale);
+		commandBufferPushFloat(rotation);
+		commandBufferPushVec4(color);
+		getCurrentRenderQueue().push_back(command);
+
+	}
+
+	void Renderer::clear(){
+		RenderCommand command;
+		command.type = RenderCommand::TYPE_CLEAR;
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::setClearColor(const glm::vec3 &color){
+		RenderCommand command;
+		command.type = RenderCommand::TYPE_CLEAR;
+		command.data = commandBufferPushVec3(color);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::swap(){
+		currentRenderQueue = (currentRenderQueue+1)%2;
+		getCurrentRenderQueue().clear();
+		getCurrentRenderBuffer().clear();
+	}
+
+	void Renderer::draw(){
+		batchDrawQueue();
+
+		for (auto &command : batchRenderCommand){
+			if (!command || command->type == RenderCommand::TYPE_NONE) continue;
+
+			bool reload = false;
+			switch (command->type){
+				case RenderCommand::TYPE_CLEAR: commandClear(command); break;
+				case RenderCommand::TYPE_SET_CLEAR_COLOR: commandSetClearColor(command); break;
+				case RenderCommand::TYPE_QUAD: commandDrawQuad(command); reload = true; break;
+				case RenderCommand::TYPE_TEXTURED_QUAD: reload = true; break;
+			}
+
+			if (reload){
+				endScene();
+				reloadScene();
 			}
 		}
-		return static_cast<uint16_t>(-1);
 	}
 
-	uint16_t Renderer::pushTexture(const Ref<Texture2D> &texture){
+	void Renderer::batchDrawQueue(){
+		RenderCommand *lastCommand = nullptr;
+		std::deque<RenderCommand>& deque = renderCommands[(currentRenderQueue+1)%2];
+		for (auto &command : deque){
+			if (lastCommand){
+				if (lastCommand->type == command.type){
+					lastCommand->count++;
+					continue;
+				}
+			}
 
-		if (!texture) return 0;
+			lastCommand = &command;
+			batchRenderCommand.push_back(lastCommand);
+		}
+	}
 
-		uint16_t pushed = texturePushed(texture);
+	void Renderer::commandClear(RenderCommand* command){
+		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
+		rendererAPI->clear();
+	}
 
-		// if the texture is already pushed, we return the texture index
-		if (pushed != static_cast<uint16_t>(-1)) return 0;
+	void Renderer::commandSetClearColor(RenderCommand* command){
+		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
 
-		// if the max amount of texture pushed has been reached
-		// this part might be uptated for better batching
-		// TODO
-		if (quadData->textureSlotIndex == quadData->maxTextureSlots){
-			endScene();
-			reloadScene();
+		float* data = command->data;
+		float r = data[0];
+		float g = data[1];
+		float b = data[2];
+
+		rendererAPI->setClearColor({r, g, b, 1});
+	}
+
+	void Renderer::commandDrawQuad(RenderCommand* command){
+		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
+
+
+		for (int i=0; i<command->count; i++){
+			switch (command->specs){
+				case RenderCommand::DATA_TRANSFORM: commandDrawQuadTransformation(command); break;
+				case RenderCommand::DATA_TRANSLATE: commandDrawQuadTranslate(command); break;
+				case RenderCommand::DATA_TRANSLATE_ROTATE: commandDrawQuadTranslateRotate(command); break;
+				case RenderCommand::DATA_TRANSLATE_SCALE1: commandDrawQuadTranslateScale1(command); break;
+				case RenderCommand::DATA_TRANSLATE_SCALE2: commandDrawQuadTranslateScale2(command); break;
+				case RenderCommand::DATA_TRANSLATE_SCALE1_ROTATE: commandDrawQuadTranslateScale1Rotate(command); break;
+				case RenderCommand::DATA_TRANSLATE_SCALE2_ROTATE: commandDrawQuadTranslateScale2Rotate(command); break;
+			}
+		}
+	}
+
+	#define GET_COLOR(x) switch (command->colorSpecs){ case RenderCommand::COLOR_WHITE:{color = {1.0f, 1.0f, 1.0f, 1.0f}; break; } case RenderCommand::COLOR_RGB:{color.r = data[x];color.g = data[x+1];color.b = data[x+2];color.a = 1.f;break;}case RenderCommand::COLOR_RGBA:{color.r = data[x];color.g = data[x+1];color.b = data[x+2];color.a = data[x+3];}}
+
+	void Renderer::commandDrawQuadTransformation(RenderCommand* command){
+		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
+		float* data = command->data;
+
+		float entityIndex = data[0];
+		glm::mat4 mat;
+		for (int x=0; x<4; x++){
+			for (int y=0; y<4; y++){
+				mat[x][y] = data[x+y+1];
+			}
 		}
 
-		quadData->textureSlots[quadData->textureSlotIndex] = texture;
-		quadData->textureSlotIndex++;
-		return quadData->textureSlotIndex-1;
-	}
-
-	void Renderer::drawCircle(const glm::mat4 &transform, const glm::vec4 &color, uint32_t entityIndex, float thickness, float fade){
+		glm::vec4 color;
+		GET_COLOR(17);
 		
-		ENGINE_PROFILE_FUNCTION();
 
-		// add one to the entity index, so the index 0 is never used and count a no entity, instead of using a non unsigned int value
-		entityIndex++;
-
-		if (circleData->circleIndexCount + 6 > circleData->maxIndices){
-			endScene();
-			reloadScene();
-		}
-
-		circleData->circleVertexBufferPtr->position = transform * quadVertexPositions[0];
-		circleData->circleVertexBufferPtr->color = color;
-		circleData->circleVertexBufferPtr->localPos = glm::vec2(quadVertexPositions[0]) * glm::vec2(2);
-		circleData->circleVertexBufferPtr->entityIndex = entityIndex;
-		circleData->circleVertexBufferPtr->fade = fade;
-		circleData->circleVertexBufferPtr->thickness = thickness;
-		circleData->circleVertexBufferPtr++;
-
-		circleData->circleVertexBufferPtr->position = transform * quadVertexPositions[1];
-		circleData->circleVertexBufferPtr->color = color;
-		circleData->circleVertexBufferPtr->localPos = glm::vec2(quadVertexPositions[1]) * glm::vec2(2);
-		circleData->circleVertexBufferPtr->entityIndex = entityIndex;
-		circleData->circleVertexBufferPtr->fade = fade;
-		circleData->circleVertexBufferPtr->thickness = thickness;
-		circleData->circleVertexBufferPtr++;
-
-		circleData->circleVertexBufferPtr->position = transform * quadVertexPositions[2];
-		circleData->circleVertexBufferPtr->color = color;
-		circleData->circleVertexBufferPtr->localPos = glm::vec2(quadVertexPositions[2]) * glm::vec2(2);
-		circleData->circleVertexBufferPtr->entityIndex = entityIndex;
-		circleData->circleVertexBufferPtr->fade = fade;
-		circleData->circleVertexBufferPtr->thickness = thickness;
-		circleData->circleVertexBufferPtr++;
-
-		circleData->circleVertexBufferPtr->position = transform * quadVertexPositions[3];
-		circleData->circleVertexBufferPtr->color = color;
-		circleData->circleVertexBufferPtr->localPos = glm::vec2(quadVertexPositions[3]) * glm::vec2(2);
-		circleData->circleVertexBufferPtr->entityIndex = entityIndex;
-		circleData->circleVertexBufferPtr->fade = fade;
-		circleData->circleVertexBufferPtr->thickness = thickness;
-		circleData->circleVertexBufferPtr++;
-
-		circleData->circleIndexCount += 6;
+		drawQuad(mat, color, 1, 0, {0, 0}, {1, 1}, static_cast<uint32_t>(entityIndex));
 	}
 
-	void Renderer::drawTriangle(const Vertex &p1, const Vertex &p2, const Vertex &p3, const Ref<Texture2D> &texture, uint32_t entityIndex){
-		ENGINE_PROFILE_FUNCTION();
+	void Renderer::commandDrawQuadTranslate(RenderCommand* command){
+		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
+		float* data = command->data;
 
-		if (entityIndex == static_cast<uint32_t>(-1)){
-			entityIndex = 0;
-		} else {
-			entityIndex++;
-		}
+		float entityIndex = data[0];
+		glm::vec2 translation;
+		translation.x = data[1];
+		translation.y = data[2];
 
+		glm::vec4 color;
+		GET_COLOR(3);
+
+		glm::mat4 mat = glm::translate(glm::mat4(1.f), glm::vec3(translation, 0.f));
+		drawQuad(mat, color, 1, 0, {0, 0}, {1, 1}, static_cast<uint32_t>(entityIndex));
+	}
+
+	void Renderer::commandDrawQuadTranslateRotate(RenderCommand* command){
+		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
+		float* data = command->data;
+
+		float entityIndex = data[0];
+		glm::vec2 translation;
+		translation.x = data[1];
+		translation.y = data[2];
+
+		float rotation = data[3];
+
+		glm::vec4 color;
+		GET_COLOR(4);
+
+		glm::mat4 mat = glm::translate(glm::mat4(1.f), glm::vec3(translation, 0.f)) * glm::rotate(glm::mat4(1.f), rotation, {0.f, 0.f, 1.f});
+		drawQuad(mat, color, 1, 0, {0, 0}, {1, 1}, static_cast<uint32_t>(entityIndex));
+
+	}
+
+	void Renderer::commandDrawQuadTranslateScale1(RenderCommand* command){
+		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
+		float* data = command->data;
+
+		float entityIndex = data[0];
+		glm::vec2 translation;
+		translation.x = data[1];
+		translation.y = data[2];
+
+		float scale = data[3];
+
+		glm::vec4 color;
+		GET_COLOR(4);
+
+		glm::mat4 mat = glm::translate(glm::mat4(1.f), glm::vec3(translation, 0.f)) * glm::scale(glm::mat4(1.f), {scale, scale, 1.f});
+		drawQuad(mat, color, 1, 0, {0, 0}, {1, 1}, static_cast<uint32_t>(entityIndex));
+	}
+	
+	void Renderer::commandDrawQuadTranslateScale2(RenderCommand* command){
+		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
+		float* data = command->data;
+
+		float entityIndex = data[0];
+		glm::vec2 translation;
+		translation.x = data[1];
+		translation.y = data[2];
+
+		glm::vec2 scale;
+		scale.x = data[3];
+		scale.x = data[4];
+
+		glm::vec4 color;
+		GET_COLOR(5);
+
+		glm::mat4 mat = glm::translate(glm::mat4(1.f), glm::vec3(translation, 0.f)) * glm::scale(glm::mat4(1.f), {scale.x, scale.y, 1.f});
+		drawQuad(mat, color, 1, 0, {0, 0}, {1, 1}, static_cast<uint32_t>(entityIndex));
+
+	}
+
+	void Renderer::commandDrawQuadTranslateScale1Rotate(RenderCommand* command){
+		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
+		float* data = command->data;
+
+		float entityIndex = data[0];
+		glm::vec2 translation;
+		translation.x = data[1];
+		translation.y = data[2];
+
+		float scale = data[3];
+		float rotation = data[4];
+
+		glm::vec4 color;
+		GET_COLOR(5);
+
+		glm::mat4 mat = glm::translate(glm::mat4(1.f), glm::vec3(translation, 0.f)) * glm::scale(glm::mat4(1.f), {scale, scale, 1.f}) * glm::rotate(glm::mat4(1.f), rotation, {0.f, 0.f, 1.f});
+		drawQuad(mat, color, 1, 0, {0, 0}, {1, 1}, static_cast<uint32_t>(entityIndex));
+
+	}
+
+	void Renderer::commandDrawQuadTranslateScale2Rotate(RenderCommand* command){
+		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
+		float* data = command->data;
+
+		float entityIndex = data[0];
+		glm::vec2 translation;
+		translation.x = data[1];
+		translation.y = data[2];
+
+		glm::vec2 scale;
+		scale.x = data[3];
+		scale.y = data[4];
+		float rotation = data[5];
+
+		glm::vec4 color;
+		GET_COLOR(6);
+
+		glm::mat4 mat = glm::translate(glm::mat4(1.f), glm::vec3(translation, 0.f)) * glm::scale(glm::mat4(1.f), {scale.x, scale.y, 1.f}) * glm::rotate(glm::mat4(1.f), rotation, {0.f, 0.f, 1.f});
+		drawQuad(mat, color, 1, 0, {0, 0}, {1, 1}, static_cast<uint32_t>(entityIndex));
+
+	}
+	
+	void Renderer::drawQuad(const glm::mat4 &transform, const glm::vec4& color, float tilingFactor, uint32_t textureIndex, const glm::vec2 &TextureCoordsStart, const glm::vec2 &TextureCoordsEnd, uint32_t entityIndex){
 		if (quadData->quadIndexCount + 6 > quadData->maxIndices){
 			endScene();
 			reloadScene();
 		}
 
-		uint16_t textureIndex = texture ? pushTexture(texture) : 0;
+		glm::vec2 textureCoords[] = {
+			{TextureCoordsStart.x, TextureCoordsEnd.y},
+			TextureCoordsEnd,
+			{TextureCoordsEnd.x, TextureCoordsStart.y},
+			TextureCoordsStart
+		};
 
-		quadData->quadVertexBufferPtr->position = glm::vec3(p1.position, 0.f);
-		quadData->quadVertexBufferPtr->color = p1.color;
-		quadData->quadVertexBufferPtr->TextCoord = p1.textCoord;
-		quadData->quadVertexBufferPtr->textureIndex = textureIndex;
-		quadData->quadVertexBufferPtr->tilingFactor = p1.tilingFactor;
-		quadData->quadVertexBufferPtr->entityIndex = entityIndex;
-		quadData->quadVertexBufferPtr++;
-
-		quadData->quadVertexBufferPtr->position = glm::vec3(p2.position, 0.f);
-		quadData->quadVertexBufferPtr->color = p2.color;
-		quadData->quadVertexBufferPtr->TextCoord = p2.textCoord;
-		quadData->quadVertexBufferPtr->textureIndex = textureIndex;
-		quadData->quadVertexBufferPtr->tilingFactor = p2.tilingFactor;
-		quadData->quadVertexBufferPtr->entityIndex = entityIndex;
-		quadData->quadVertexBufferPtr++;
-
-		quadData->quadVertexBufferPtr->position = glm::vec3(p3.position, 0.f);
-		quadData->quadVertexBufferPtr->color = p3.color;
-		quadData->quadVertexBufferPtr->TextCoord = p3.textCoord;
-		quadData->quadVertexBufferPtr->textureIndex = textureIndex;
-		quadData->quadVertexBufferPtr->tilingFactor = p3.tilingFactor;
-		quadData->quadVertexBufferPtr->entityIndex = entityIndex;
-		quadData->quadVertexBufferPtr++;
-
-		quadData->quadIndexCount += 3;
-	}
-
-	void Renderer::drawTriangle(const Vertex &p1, const Vertex &p2, const Vertex &p3, const glm::mat4 &transform, const Ref<Texture2D> &texture, uint32_t entityIndex){
-		ENGINE_PROFILE_FUNCTION();
-
-		if (entityIndex == static_cast<uint32_t>(-1)){
-			entityIndex = 0;
-		} else {
-			entityIndex++;
+		for (uint8_t i=0; i<4; i++){
+			quadData->quadVertexBufferPtr->position = transform * quadVertexPositions[i];
+			quadData->quadVertexBufferPtr->color = color;
+			quadData->quadVertexBufferPtr->TextCoord = textureCoords[i];
+			quadData->quadVertexBufferPtr->textureIndex = textureIndex;
+			quadData->quadVertexBufferPtr->tilingFactor = tilingFactor;
+			quadData->quadVertexBufferPtr->entityIndex = entityIndex;
+			quadData->quadVertexBufferPtr++;
 		}
 
-		if (quadData->quadIndexCount + 3 > quadData->maxIndices){
-			endScene();
-			reloadScene();
+		quadData->quadIndexCount += 6;
+	}
+
+	std::deque<RenderCommand>& Renderer::getCurrentRenderQueue(){
+		return renderCommands[currentRenderQueue];
+	}
+
+	std::vector<float>& Renderer::getCurrentRenderBuffer(){
+		return renderCommandBuffers[currentRenderQueue];
+	}
+
+	float* Renderer::commandBufferPushFloat(const float &value){
+		std::vector<float>& buffer = getCurrentRenderBuffer();
+		buffer.push_back(value);
+		return &buffer.back();
+	}
+
+
+	float* Renderer::commandBufferPushVec2(const glm::vec2 &vec){
+		std::vector<float>& buffer = getCurrentRenderBuffer();
+		buffer.push_back(vec.x);
+		float* data = &buffer.back();
+		buffer.push_back(vec.y);
+		return data;
+	}
+
+	float* Renderer::commandBufferPushVec3(const glm::vec3 &vec){
+		std::vector<float>& buffer = getCurrentRenderBuffer();
+		buffer.push_back(vec.x);
+		float* data = &buffer.back();
+		buffer.push_back(vec.y);
+		buffer.push_back(vec.z);
+		return data;
+	}
+
+	float* Renderer::commandBufferPushVec4(const glm::vec4 &vec){
+		std::vector<float>& buffer = getCurrentRenderBuffer();
+		buffer.push_back(vec.x);
+		float* data = &buffer.back();
+		buffer.push_back(vec.y);
+		buffer.push_back(vec.z);
+		buffer.push_back(vec.w);
+		return data;
+	}
+
+	float* Renderer::commandBufferPushMat4(const glm::mat4 &mat){
+		std::vector<float>& buffer = getCurrentRenderBuffer();
+		float* data = nullptr;
+		for (int x=0; x<4; x++){
+			for (int y=0; y<4; y++){
+				buffer.push_back(mat[x][y]);
+
+				if (x==0 && y==0){
+					data = &buffer.back();
+				}
+			}
 		}
-
-		uint16_t textureIndex = texture ? pushTexture(texture) : 0;
-
-		quadData->quadVertexBufferPtr->position = transform * glm::vec4(p1.position, 0.f, 1.f);
-		quadData->quadVertexBufferPtr->color = p1.color;
-		quadData->quadVertexBufferPtr->TextCoord = p1.textCoord;
-		quadData->quadVertexBufferPtr->textureIndex = textureIndex;
-		quadData->quadVertexBufferPtr->tilingFactor = p1.tilingFactor;
-		quadData->quadVertexBufferPtr->entityIndex = entityIndex;
-		quadData->quadVertexBufferPtr++;
-
-		quadData->quadVertexBufferPtr->position = transform * glm::vec4(p2.position, 0.f, 1.f);
-		quadData->quadVertexBufferPtr->color = p2.color;
-		quadData->quadVertexBufferPtr->TextCoord = p2.textCoord;
-		quadData->quadVertexBufferPtr->textureIndex = textureIndex;
-		quadData->quadVertexBufferPtr->tilingFactor = p2.tilingFactor;
-		quadData->quadVertexBufferPtr->entityIndex = entityIndex;
-		quadData->quadVertexBufferPtr++;
-
-		quadData->quadVertexBufferPtr->position = transform * glm::vec4(p3.position, 0.f, 1.f);
-		quadData->quadVertexBufferPtr->color = p3.color;
-		quadData->quadVertexBufferPtr->TextCoord = p3.textCoord;
-		quadData->quadVertexBufferPtr->textureIndex = textureIndex;
-		quadData->quadVertexBufferPtr->tilingFactor = p3.tilingFactor;
-		quadData->quadVertexBufferPtr->entityIndex = entityIndex;
-		quadData->quadVertexBufferPtr++;
-
-		quadData->quadIndexCount += 3;
+		return data;
 	}
 
-
-	void Renderer::drawTriangle(const Vertex &p1, const Vertex &p2, const Vertex &p3, const glm::vec2 &translation, const glm::vec2 &scale, float angle, const Ref<Texture2D> &texture, uint32_t entityIndex){
-		ENGINE_PROFILE_FUNCTION();
-
-		glm::mat4 rotation = glm::rotate(glm::mat4(1.f), angle, {0.f, 0.f, 1.f});
-		glm::mat4 transform = glm::translate(glm::mat4(1.f), glm::vec3(translation, 0.f)) * rotation * glm::scale(glm::mat4(1.f), glm::vec3(scale, 1.f));
-
-		drawTriangle(p1, p2, p3, transform, texture, entityIndex);
-	}
-
-	void Renderer::drawRotatedQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4 &color, float rotation, uint32_t entityIndex){
-		drawRotatedQuad(position, size, color, 1.f, 0, {0.f, 0.f}, {1.f, 1.f}, rotation, entityIndex);
-	}
-
-	void Renderer::drawQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4 &color, uint32_t entityIndex){
-		drawQuad(position, size, color, 1.f, 0, {0.f, 0.f}, {1.f, 1.f}, entityIndex);
-	}
-
-	void Renderer::drawLine(const glm::vec2 &start, const glm::vec2 &end, uint32_t entityIndex, glm::vec4 color){
-		ENGINE_PROFILE_FUNCTION();
-
-		if (entityIndex == static_cast<uint32_t>(-1)){
-			entityIndex = 0;
-		} else {
-			entityIndex++;
-		}
-
-		if (lineData->lineCount + 2 > lineData->maxVertices){
-			endScene();
-			reloadScene();
-		}
-
-		lineData->lineVertexBufferPtr->position = glm::vec3(start, 0);
-		lineData->lineVertexBufferPtr->color = color;
-		lineData->lineVertexBufferPtr->entityIndex = entityIndex;
-		lineData->lineVertexBufferPtr++;
-		
-		lineData->lineVertexBufferPtr->position = glm::vec3(end, 0);
-		lineData->lineVertexBufferPtr->color = color;
-		lineData->lineVertexBufferPtr->entityIndex = entityIndex;
-		lineData->lineVertexBufferPtr++;
-
-		lineData->lineCount += 2;
-	}
-
-	void Renderer::setLineThickness(float thickness){
-		renderCommand.setLineThickness(thickness);
-	}
-
-	void Renderer::drawSquare(const glm::mat4 &transform, const glm::vec4 &color, uint32_t entityIndex){
-		glm::vec2 p0 = transform * quadVertexPositions[0];
-		glm::vec2 p1 = transform * quadVertexPositions[1];
-		glm::vec2 p2 = transform * quadVertexPositions[2];
-		glm::vec2 p3 = transform * quadVertexPositions[3];
-
-		drawLine(p0, p1, entityIndex, color);
-		drawLine(p1, p2, entityIndex, color);
-		drawLine(p2, p3, entityIndex, color);
-		drawLine(p3, p0, entityIndex, color);
-	}
-
-	void Renderer::drawCircle(const glm::vec2 &center, float radius, const glm::vec4 &color, uint32_t entityIndex, float thickness, float fade){
-		glm::mat4 transform = glm::translate(glm::mat4(1.f), glm::vec3(center, 0.f)) * glm::scale(glm::mat4(1.f), glm::vec3(radius*2, radius*2, 1.f));
-		drawCircle(transform, color, entityIndex, thickness, fade);
+	float* Renderer::commandBufferPushUint32_t(const uint32_t &value){
+		std::vector<float>& buffer = getCurrentRenderBuffer();
+		buffer.push_back(static_cast<float>(value));
+		return &buffer.back();
 	}
 }
