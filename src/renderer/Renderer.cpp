@@ -428,7 +428,6 @@ namespace engine{
 		commandBufferPushFloat(rotation);
 		commandBufferPushVec3(color);
 		getCurrentRenderQueue().push_back(command);
-
 	}
 
 	void Renderer::drawRotatedQuad(const glm::vec2 &translation, float rotation, glm::vec2 &scale, const glm::vec4 &color, uint32_t entityIndex){
@@ -440,7 +439,231 @@ namespace engine{
 		commandBufferPushFloat(rotation);
 		commandBufferPushVec4(color);
 		getCurrentRenderQueue().push_back(command);
+	}
 
+	
+	void Renderer::drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::mat4 &mat, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSFORM, RenderCommand::TYPE_TEXTURED_QUAD, RenderCommand::COLOR_WHITE);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushMat4(mat);
+		commandBufferPushSubTexture(subTexture);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::mat4 &mat, const glm::vec3 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSFORM, RenderCommand::TYPE_TEXTURED_QUAD, RenderCommand::COLOR_RGB);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushMat4(mat);
+		commandBufferPushVec3(color);
+		commandBufferPushSubTexture(subTexture);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::mat4 &mat, const glm::vec4 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSFORM, RenderCommand::TYPE_TEXTURED_QUAD, RenderCommand::COLOR_RGBA);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushMat4(mat);
+		commandBufferPushVec4(color);
+		commandBufferPushSubTexture(subTexture);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE, RenderCommand::TYPE_TEXTURED_QUAD, RenderCommand::COLOR_WHITE);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushSubTexture(subTexture);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, const glm::vec3 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE, RenderCommand::TYPE_TEXTURED_QUAD, RenderCommand::COLOR_RGB);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushVec3(color);
+		commandBufferPushSubTexture(subTexture);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, const glm::vec4 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE, RenderCommand::TYPE_TEXTURED_QUAD, RenderCommand::COLOR_RGBA);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushVec4(color);
+		commandBufferPushSubTexture(subTexture);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float scale, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE1, RenderCommand::TYPE_TEXTURED_QUAD, RenderCommand::COLOR_WHITE);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushFloat(scale);
+		commandBufferPushSubTexture(subTexture);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float scale, const glm::vec3 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE1, RenderCommand::TYPE_TEXTURED_QUAD, RenderCommand::COLOR_RGB);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushFloat(scale);
+		commandBufferPushVec3(color);
+		commandBufferPushSubTexture(subTexture);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float scale, const glm::vec4 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE1, RenderCommand::TYPE_TEXTURED_QUAD, RenderCommand::COLOR_RGBA);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushFloat(scale);
+		commandBufferPushVec4(color);
+		commandBufferPushSubTexture(subTexture);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, glm::vec2 &scale, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE2, RenderCommand::TYPE_TEXTURED_QUAD, RenderCommand::COLOR_WHITE);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushVec2(scale);
+		commandBufferPushSubTexture(subTexture);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, glm::vec2 &scale, const glm::vec3 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE2, RenderCommand::TYPE_TEXTURED_QUAD, RenderCommand::COLOR_RGB);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushVec2(scale);
+		commandBufferPushVec3(color);
+		commandBufferPushSubTexture(subTexture);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, glm::vec2 &scale, const glm::vec4 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE2, RenderCommand::TYPE_TEXTURED_QUAD, RenderCommand::COLOR_RGBA);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushVec2(scale);
+		commandBufferPushVec4(color);
+		commandBufferPushSubTexture(subTexture);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_ROTATE, RenderCommand::TYPE_TEXTURED_QUAD, RenderCommand::COLOR_WHITE);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushFloat(rotation);
+		commandBufferPushSubTexture(subTexture);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, const glm::vec3 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_ROTATE, RenderCommand::TYPE_TEXTURED_QUAD, RenderCommand::COLOR_RGB);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushFloat(rotation);
+		commandBufferPushVec3(color);
+		commandBufferPushSubTexture(subTexture);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, const glm::vec4 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_ROTATE, RenderCommand::TYPE_TEXTURED_QUAD, RenderCommand::COLOR_RGBA);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushFloat(rotation);
+		commandBufferPushVec4(color);
+		commandBufferPushSubTexture(subTexture);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, float scale, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE1_ROTATE, RenderCommand::TYPE_TEXTURED_QUAD, RenderCommand::COLOR_WHITE);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushFloat(scale);
+		commandBufferPushFloat(rotation);
+		commandBufferPushSubTexture(subTexture);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, float scale, const glm::vec3 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE1_ROTATE, RenderCommand::TYPE_TEXTURED_QUAD, RenderCommand::COLOR_RGB);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushFloat(scale);
+		commandBufferPushFloat(rotation);
+		commandBufferPushVec3(color);
+		commandBufferPushSubTexture(subTexture);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, float scale, const glm::vec4 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE1_ROTATE, RenderCommand::TYPE_TEXTURED_QUAD, RenderCommand::COLOR_RGBA);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushFloat(scale);
+		commandBufferPushFloat(rotation);
+		commandBufferPushVec4(color);
+		commandBufferPushSubTexture(subTexture);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, glm::vec2 &scale, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE2_ROTATE, RenderCommand::TYPE_TEXTURED_QUAD, RenderCommand::COLOR_WHITE);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushVec2(scale);
+		commandBufferPushFloat(rotation);
+		commandBufferPushSubTexture(subTexture);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, glm::vec2 &scale, const glm::vec3 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE2_ROTATE, RenderCommand::TYPE_TEXTURED_QUAD, RenderCommand::COLOR_RGB);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushVec2(scale);
+		commandBufferPushFloat(rotation);
+		commandBufferPushVec3(color);
+		commandBufferPushSubTexture(subTexture);
+		getCurrentRenderQueue().push_back(command);
+	}
+
+	void Renderer::drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, glm::vec2 &scale, const glm::vec4 &color, uint32_t entityIndex){
+		RenderCommand command;
+		initializeCommand(command, RenderCommand::DATA_TRANSLATE_SCALE2_ROTATE, RenderCommand::TYPE_TEXTURED_QUAD, RenderCommand::COLOR_RGBA);
+		command.data = commandBufferPushUint32_t(entityIndex);
+		commandBufferPushVec2(translation);
+		commandBufferPushVec2(scale);
+		commandBufferPushFloat(rotation);
+		commandBufferPushVec4(color);
+		commandBufferPushSubTexture(subTexture);
+		getCurrentRenderQueue().push_back(command);
 	}
 
 	void Renderer::clear(){
@@ -532,22 +755,25 @@ namespace engine{
 		}
 	}
 
-	#define GET_COLOR(x) switch (command->colorSpecs){ case RenderCommand::COLOR_WHITE:{color = {1.0f, 1.0f, 1.0f, 1.0f}; break; } case RenderCommand::COLOR_RGB:{color.r = data[x];color.g = data[x+1];color.b = data[x+2];color.a = 1.f;break;}case RenderCommand::COLOR_RGBA:{color.r = data[x];color.g = data[x+1];color.b = data[x+2];color.a = data[x+3];}}
+	#define GET_COLOR() switch(command->colorSpecs){case RenderCommand::COLOR_WHITE:{color={1.0f,1.0f,1.0f,1.0f};break;}case RenderCommand::COLOR_RGB:{color.r=data[i++];color.g=data[i++];color.b=data[i++];color.a=1.f;break;}case RenderCommand::COLOR_RGBA:{color.r=data[i++];color.g=data[i++];color.b=data[i++];color.a=data[i++];}}
+
+	#define GET_SUBTEXTURE() uv1.x=data[i++];uv1.y=data[i++];uv2.x=data[i++];uv2.y=data[i++];
 
 	void Renderer::commandDrawQuadTransformation(RenderCommand* command){
 		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
 		float* data = command->data;
+		uint8_t i=0;
 
-		float entityIndex = data[0];
+		float entityIndex = data[i++];
 		glm::mat4 mat;
 		for (int x=0; x<4; x++){
 			for (int y=0; y<4; y++){
-				mat[x][y] = data[x+y+1];
+				mat[x][y] = data[i++];
 			}
 		}
 
 		glm::vec4 color;
-		GET_COLOR(17);
+		GET_COLOR();
 		
 
 		drawQuad(mat, color, 1, 0, {0, 0}, {1, 1}, static_cast<uint32_t>(entityIndex));
@@ -556,14 +782,15 @@ namespace engine{
 	void Renderer::commandDrawQuadTranslate(RenderCommand* command){
 		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
 		float* data = command->data;
+		uint8_t i=0;
 
-		float entityIndex = data[0];
+		float entityIndex = data[i++];
 		glm::vec2 translation;
-		translation.x = data[1];
-		translation.y = data[2];
+		translation.x = data[i++];
+		translation.y = data[i++];
 
 		glm::vec4 color;
-		GET_COLOR(3);
+		GET_COLOR();
 
 		glm::mat4 mat = glm::translate(glm::mat4(1.f), glm::vec3(translation, 0.f));
 		drawQuad(mat, color, 1, 0, {0, 0}, {1, 1}, static_cast<uint32_t>(entityIndex));
@@ -572,16 +799,17 @@ namespace engine{
 	void Renderer::commandDrawQuadTranslateRotate(RenderCommand* command){
 		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
 		float* data = command->data;
+		uint8_t i=0;
 
-		float entityIndex = data[0];
+		float entityIndex = data[i++];
 		glm::vec2 translation;
-		translation.x = data[1];
-		translation.y = data[2];
+		translation.x = data[i++];
+		translation.y = data[i++];
 
-		float rotation = data[3];
+		float rotation = data[i++];
 
 		glm::vec4 color;
-		GET_COLOR(4);
+		GET_COLOR();
 
 		glm::mat4 mat = glm::translate(glm::mat4(1.f), glm::vec3(translation, 0.f)) * glm::rotate(glm::mat4(1.f), rotation, {0.f, 0.f, 1.f});
 		drawQuad(mat, color, 1, 0, {0, 0}, {1, 1}, static_cast<uint32_t>(entityIndex));
@@ -591,16 +819,17 @@ namespace engine{
 	void Renderer::commandDrawQuadTranslateScale1(RenderCommand* command){
 		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
 		float* data = command->data;
+		uint8_t i=0;
 
-		float entityIndex = data[0];
+		float entityIndex = data[i++];
 		glm::vec2 translation;
-		translation.x = data[1];
-		translation.y = data[2];
+		translation.x = data[i++];
+		translation.y = data[i++];
 
-		float scale = data[3];
+		float scale = data[i++];
 
 		glm::vec4 color;
-		GET_COLOR(4);
+		GET_COLOR();
 
 		glm::mat4 mat = glm::translate(glm::mat4(1.f), glm::vec3(translation, 0.f)) * glm::scale(glm::mat4(1.f), {scale, scale, 1.f});
 		drawQuad(mat, color, 1, 0, {0, 0}, {1, 1}, static_cast<uint32_t>(entityIndex));
@@ -609,18 +838,19 @@ namespace engine{
 	void Renderer::commandDrawQuadTranslateScale2(RenderCommand* command){
 		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
 		float* data = command->data;
+		uint8_t i=0;
 
-		float entityIndex = data[0];
+		float entityIndex = data[i++];
 		glm::vec2 translation;
-		translation.x = data[1];
-		translation.y = data[2];
+		translation.x = data[i++];
+		translation.y = data[i++];
 
 		glm::vec2 scale;
-		scale.x = data[3];
-		scale.x = data[4];
+		scale.x = data[i++];
+		scale.x = data[i++];
 
 		glm::vec4 color;
-		GET_COLOR(5);
+		GET_COLOR();
 
 		glm::mat4 mat = glm::translate(glm::mat4(1.f), glm::vec3(translation, 0.f)) * glm::scale(glm::mat4(1.f), {scale.x, scale.y, 1.f});
 		drawQuad(mat, color, 1, 0, {0, 0}, {1, 1}, static_cast<uint32_t>(entityIndex));
@@ -630,19 +860,20 @@ namespace engine{
 	void Renderer::commandDrawQuadTranslateScale1Rotate(RenderCommand* command){
 		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
 		float* data = command->data;
+		uint8_t i=0;
 
-		float entityIndex = data[0];
+		float entityIndex = data[i++];
 		glm::vec2 translation;
-		translation.x = data[1];
-		translation.y = data[2];
+		translation.x = data[i++];
+		translation.y = data[i++];
 
-		float scale = data[3];
-		float rotation = data[4];
+		float scale = data[i++];
+		float rotation = data[i++];
 
 		glm::vec4 color;
-		GET_COLOR(5);
+		GET_COLOR();
 
-		glm::mat4 mat = glm::translate(glm::mat4(1.f), glm::vec3(translation, 0.f)) * glm::scale(glm::mat4(1.f), {scale, scale, 1.f}) * glm::rotate(glm::mat4(1.f), rotation, {0.f, 0.f, 1.f});
+		glm::mat4 mat = glm::translate(glm::mat4(1.f), glm::vec3(translation, 0.f)) * glm::rotate(glm::mat4(1.f), rotation, {0.f, 0.f, 1.f}) * glm::scale(glm::mat4(1.f), {scale, scale, 1.f});
 		drawQuad(mat, color, 1, 0, {0, 0}, {1, 1}, static_cast<uint32_t>(entityIndex));
 
 	}
@@ -650,22 +881,205 @@ namespace engine{
 	void Renderer::commandDrawQuadTranslateScale2Rotate(RenderCommand* command){
 		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
 		float* data = command->data;
+		uint8_t i=0;
 
-		float entityIndex = data[0];
+		float entityIndex = data[i++];
 		glm::vec2 translation;
-		translation.x = data[1];
-		translation.y = data[2];
+		translation.x = data[i++];
+		translation.y = data[i++];
 
 		glm::vec2 scale;
-		scale.x = data[3];
-		scale.y = data[4];
-		float rotation = data[5];
+		scale.x = data[i++];
+		scale.y = data[i++];
+		float rotation = data[i++];
 
 		glm::vec4 color;
-		GET_COLOR(6);
+		GET_COLOR();
 
-		glm::mat4 mat = glm::translate(glm::mat4(1.f), glm::vec3(translation, 0.f)) * glm::scale(glm::mat4(1.f), {scale.x, scale.y, 1.f}) * glm::rotate(glm::mat4(1.f), rotation, {0.f, 0.f, 1.f});
+		glm::mat4 mat = glm::translate(glm::mat4(1.f), glm::vec3(translation, 0.f)) * glm::rotate(glm::mat4(1.f), rotation, {0.f, 0.f, 1.f}) * glm::scale(glm::mat4(1.f), {scale.x, scale.y, 1.f});
 		drawQuad(mat, color, 1, 0, {0, 0}, {1, 1}, static_cast<uint32_t>(entityIndex));
+	}
+	
+	void Renderer::commandTexturedDrawQuad(RenderCommand* command){
+		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
+
+
+		for (int i=0; i<command->count; i++){
+			switch (command->specs){
+				case RenderCommand::DATA_TRANSFORM: commandTexturedDrawQuadTransformation(command); break;
+				case RenderCommand::DATA_TRANSLATE: commandTexturedDrawQuadTranslate(command); break;
+				case RenderCommand::DATA_TRANSLATE_ROTATE: commandTexturedDrawQuadTranslateRotate(command); break;
+				case RenderCommand::DATA_TRANSLATE_SCALE1: commandTexturedDrawQuadTranslateScale1(command); break;
+				case RenderCommand::DATA_TRANSLATE_SCALE2: commandTexturedDrawQuadTranslateScale2(command); break;
+				case RenderCommand::DATA_TRANSLATE_SCALE1_ROTATE: commandTexturedDrawQuadTranslateScale1Rotate(command); break;
+				case RenderCommand::DATA_TRANSLATE_SCALE2_ROTATE: commandTexturedDrawQuadTranslateScale2Rotate(command); break;
+			}
+		}
+	}
+
+	void Renderer::commandTexturedDrawQuadTransformation(RenderCommand* command){
+		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
+		float* data = command->data;
+		uint8_t i=0;
+
+		float entityIndex = data[i++];
+		glm::mat4 mat;
+		for (int x=0; x<4; x++){
+			for (int y=0; y<4; y++){
+				mat[x][y] = data[i++];
+			}
+		}
+
+		glm::vec4 color;
+		GET_COLOR();
+		
+		float textureIndex = data[i++];
+		glm::vec2 uv1, uv2;
+		GET_SUBTEXTURE();
+
+		drawQuad(mat, color, 1, static_cast<uint32_t>(textureIndex), uv1, uv2, static_cast<uint32_t>(entityIndex));
+	}
+
+	void Renderer::commandTexturedDrawQuadTranslate(RenderCommand* command){
+		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
+		float* data = command->data;
+		uint8_t i=0;
+
+		float entityIndex = data[i++];
+		glm::vec2 translation;
+		translation.x = data[i++];
+		translation.y = data[i++];
+
+		glm::vec4 color;
+		GET_COLOR();
+
+		float textureIndex = data[i++];
+		glm::vec2 uv1, uv2;
+		GET_SUBTEXTURE();
+
+		glm::mat4 mat = glm::translate(glm::mat4(1.f), glm::vec3(translation, 0.f));
+		drawQuad(mat, color, 1, static_cast<uint32_t>(textureIndex), uv1, uv2, static_cast<uint32_t>(entityIndex));
+	}
+
+	void Renderer::commandTexturedDrawQuadTranslateRotate(RenderCommand* command){
+		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
+		float* data = command->data;
+		uint8_t i=0;
+
+		float entityIndex = data[i++];
+		glm::vec2 translation;
+		translation.x = data[i++];
+		translation.y = data[i++];
+		
+		float rotation = data[i++];
+
+		glm::vec4 color;
+		GET_COLOR();
+
+		float textureIndex = data[i++];
+		glm::vec2 uv1, uv2;
+		GET_SUBTEXTURE();
+
+		glm::mat4 mat = glm::translate(glm::mat4(1.f), glm::vec3(translation, 0.f)) * glm::rotate(glm::mat4(1.f), rotation, {0.f, 0.f, 1.f});
+		drawQuad(mat, color, 1, static_cast<uint32_t>(textureIndex), uv1, uv2, static_cast<uint32_t>(entityIndex));
+	}
+
+	void Renderer::commandTexturedDrawQuadTranslateScale1(RenderCommand* command){
+		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
+		float* data = command->data;
+		uint8_t i=0;
+
+		float entityIndex = data[i++];
+		glm::vec2 translation;
+		translation.x = data[i++];
+		translation.y = data[i++];
+		
+		float scale = data[i++];
+
+		glm::vec4 color;
+		GET_COLOR();
+
+		float textureIndex = data[i++];
+		glm::vec2 uv1, uv2;
+		GET_SUBTEXTURE();
+
+		glm::mat4 mat = glm::translate(glm::mat4(1.f), glm::vec3(translation, 0.f)) * glm::scale(glm::mat4(1.f), {scale, scale, 1.f});
+		drawQuad(mat, color, 1, static_cast<uint32_t>(textureIndex), uv1, uv2, static_cast<uint32_t>(entityIndex));
+	}
+
+	void Renderer::commandTexturedDrawQuadTranslateScale2(RenderCommand* command){
+		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
+		float* data = command->data;
+		uint8_t i=0;
+
+		float entityIndex = data[i++];
+		glm::vec2 translation;
+		translation.x = data[i++];
+		translation.y = data[i++];
+		
+		glm::vec2 scale;
+		scale.x = data[i++];
+		scale.y = data[i++];
+
+		glm::vec4 color;
+		GET_COLOR();
+
+		float textureIndex = data[i++];
+		glm::vec2 uv1, uv2;
+		GET_SUBTEXTURE();
+
+		glm::mat4 mat = glm::translate(glm::mat4(1.f), glm::vec3(translation, 0.f)) * glm::scale(glm::mat4(1.f), glm::vec3(scale, 1.f));
+		drawQuad(mat, color, 1, static_cast<uint32_t>(textureIndex), uv1, uv2, static_cast<uint32_t>(entityIndex));
+	}
+
+	void Renderer::commandTexturedDrawQuadTranslateScale1Rotate(RenderCommand* command){
+		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
+		float* data = command->data;
+		uint8_t i=0;
+
+		float entityIndex = data[i++];
+		glm::vec2 translation;
+		translation.x = data[i++];
+		translation.y = data[i++];
+
+		float scale = data[i++];
+		float rotation = data[i++];
+
+		glm::vec4 color;
+		GET_COLOR();
+		
+		float textureIndex = data[i++];
+		glm::vec2 uv1, uv2;
+		GET_SUBTEXTURE();
+
+		glm::mat4 mat = glm::translate(glm::mat4(1.f), glm::vec3(translation, 0.f)) * glm::rotate(glm::mat4(1.f), rotation, {0.f, 0.f, 1.f}) * glm::scale(glm::mat4(1.f), {scale, scale, 1.f});
+		drawQuad(mat, color, 1, static_cast<uint32_t>(textureIndex), uv1, uv2, static_cast<uint32_t>(entityIndex));
+	}
+
+	void Renderer::commandTexturedDrawQuadTranslateScale2Rotate(RenderCommand* command){
+		ENGINE_ASSERT(command != nullptr, "cannot execute a null render command");
+		float* data = command->data;
+		uint8_t i=0;
+
+		float entityIndex = data[i++];
+		glm::vec2 translation;
+		translation.x = data[i++];
+		translation.y = data[i++];
+
+		glm::vec2 scale;
+		scale.x = data[i++];
+		scale.y = data[i++];
+		float rotation = data[i++];
+
+		glm::vec4 color;
+		GET_COLOR();
+		
+		float textureIndex = data[i++];
+		glm::vec2 uv1, uv2;
+		GET_SUBTEXTURE();
+
+		glm::mat4 mat = glm::translate(glm::mat4(1.f), glm::vec3(translation, 0.f)) * glm::rotate(glm::mat4(1.f), rotation, {0.f, 0.f, 1.f}) * glm::scale(glm::mat4(1.f), {scale.x, scale.y, 1.f});
+		drawQuad(mat, color, 1, static_cast<uint32_t>(textureIndex), uv1, uv2, static_cast<uint32_t>(entityIndex));
 
 	}
 	
@@ -756,5 +1170,45 @@ namespace engine{
 		std::vector<float>& buffer = getCurrentRenderBuffer();
 		buffer.push_back(static_cast<float>(value));
 		return &buffer.back();
+	}
+
+	float* Renderer::commandBufferPushSubTexture(const Ref<SubTexture2D> &texture){
+		std::vector<float>& buffer = getCurrentRenderBuffer();
+		buffer.push_back(static_cast<float>(pushTexture(texture->getTexture())));
+		float* data = &buffer.back();
+		commandBufferPushVec2(texture->getStart());
+		commandBufferPushVec2(texture->getEnd());
+		return data;
+	}
+
+	uint16_t Renderer::texturePushed(const Ref<Texture2D> &texture){
+		for (size_t i=0; i<quadData->textureSlotIndex; i++){
+			if (quadData->textureSlots[i] == texture){
+				return i;
+			}
+		}
+		return static_cast<uint16_t>(-1);
+	}
+
+	uint16_t Renderer::pushTexture(const Ref<Texture2D> &texture){
+
+		if (!texture) return 0;
+
+		uint16_t pushed = texturePushed(texture);
+
+		// if the texture is already pushed, we return the texture index
+		if (pushed != static_cast<uint16_t>(-1)) return 0;
+
+		// if the max amount of texture pushed has been reached
+		// this part might be uptated for better batching
+		// TODO
+		if (quadData->textureSlotIndex == quadData->maxTextureSlots){
+			endScene();
+			reloadScene();
+		}
+
+		quadData->textureSlots[quadData->textureSlotIndex] = texture;
+		quadData->textureSlotIndex++;
+		return quadData->textureSlotIndex-1;
 	}
 }

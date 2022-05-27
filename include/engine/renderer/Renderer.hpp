@@ -92,6 +92,28 @@ namespace engine{
 			void drawRotatedQuad(const glm::vec2 &translation, float rotation, glm::vec2 &scale, uint32_t entityIndex);
 			void drawRotatedQuad(const glm::vec2 &translation, float rotation, glm::vec2 &scale, const glm::vec3 &color, uint32_t entityIndex);
 			void drawRotatedQuad(const glm::vec2 &translation, float rotation, glm::vec2 &scale, const glm::vec4 &color, uint32_t entityIndex);
+			
+			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::mat4 &mat, uint32_t entityIndex);
+			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::mat4 &mat, const glm::vec3 &color, uint32_t entityIndex);
+			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::mat4 &mat, const glm::vec4 &color, uint32_t entityIndex);
+			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, uint32_t entityIndex);
+			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, const glm::vec3 &color, uint32_t entityIndex);
+			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, const glm::vec4 &color, uint32_t entityIndex);
+			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float scale, uint32_t entityIndex);
+			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float scale, const glm::vec3 &color, uint32_t entityIndex);
+			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float scale, const glm::vec4 &color, uint32_t entityIndex);
+			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, glm::vec2 &scale, uint32_t entityIndex);
+			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, glm::vec2 &scale, const glm::vec3 &color, uint32_t entityIndex);
+			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, glm::vec2 &scale, const glm::vec4 &color, uint32_t entityIndex);
+			void drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, uint32_t entityIndex);
+			void drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, const glm::vec3 &color, uint32_t entityIndex);
+			void drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, const glm::vec4 &color, uint32_t entityIndex);
+			void drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, float scale, uint32_t entityIndex);
+			void drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, float scale, const glm::vec3 &color, uint32_t entityIndex);
+			void drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, float scale, const glm::vec4 &color, uint32_t entityIndex);
+			void drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, glm::vec2 &scale, uint32_t entityIndex);
+			void drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, glm::vec2 &scale, const glm::vec3 &color, uint32_t entityIndex);
+			void drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, glm::vec2 &scale, const glm::vec4 &color, uint32_t entityIndex);
 
 			void reloadScene();
 
@@ -102,7 +124,7 @@ namespace engine{
 			std::array<std::vector<float>, 2> renderCommandBuffers;
 			std::array<std::deque<RenderCommand>, 2> renderCommands;
 			std::deque<RenderCommand*> batchRenderCommand;
-			uint8_t currentRenderQueue;
+			uint8_t currentRenderQueue=0;
 
 			std::deque<RenderCommand>& getCurrentRenderQueue();
 			std::vector<float>& getCurrentRenderBuffer();
@@ -113,6 +135,7 @@ namespace engine{
 			float* commandBufferPushVec4(const glm::vec4 &vec);
 			float* commandBufferPushMat4(const glm::mat4 &mat);
 			float* commandBufferPushUint32_t(const uint32_t &value);
+			float* commandBufferPushSubTexture(const Ref<SubTexture2D> &texture);
 
 			void batchDrawQueue();
 
@@ -126,6 +149,14 @@ namespace engine{
 			void commandDrawQuadTranslateScale2(RenderCommand* command);
 			void commandDrawQuadTranslateScale1Rotate(RenderCommand* command);
 			void commandDrawQuadTranslateScale2Rotate(RenderCommand* command);
+			void commandTexturedDrawQuad(RenderCommand* command);
+			void commandTexturedDrawQuadTransformation(RenderCommand* command);
+			void commandTexturedDrawQuadTranslate(RenderCommand* command);
+			void commandTexturedDrawQuadTranslateRotate(RenderCommand* command);
+			void commandTexturedDrawQuadTranslateScale1(RenderCommand* command);
+			void commandTexturedDrawQuadTranslateScale2(RenderCommand* command);
+			void commandTexturedDrawQuadTranslateScale1Rotate(RenderCommand* command);
+			void commandTexturedDrawQuadTranslateScale2Rotate(RenderCommand* command);
 
 			struct QuadVertex{
 				glm::vec3 position;

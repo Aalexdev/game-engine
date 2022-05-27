@@ -187,22 +187,19 @@ namespace engine{
 		registry.destroy(static_cast<ECS::Entity>(entity));
 	}
 
-	void Scene::OnUpdateRuntime(Timestep dt){
-		
+	Camera* Scene::OnUpdateRuntime(Timestep dt){
 		SceneCamera *primaryCamera = cameraSystem->update();
-
-		if (primaryCamera){
-			renderer->beginScene(primaryCamera->getCamera());
-		} else {
-			// a camera with zero transformation
-			renderer->beginScene(Camera());
-		}
 
 		rigidBodySystem->update(dt, velocityIteration, positionIteration);
 		transformSystem->update();
 		batchRenderer->render();
 		rigidBodySystem->renderCollisions();
-		renderer->endScene();
+
+		if (primaryCamera){
+			return &primaryCamera->getCamera();
+		}
+		
+		return nullptr;
 	}
 
 	void Scene::OnUpdateEditor(const EditorCamera &camera){

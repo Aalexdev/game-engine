@@ -39,7 +39,7 @@ namespace engine{
 			void destroyEntity(Entity entity);
 			void clear();
 
-			void OnUpdateRuntime(Timestep dt);
+			Camera* OnUpdateRuntime(Timestep dt);
 			void OnUpdateEditor(const EditorCamera &camera);
 			void OnRuntimeStart();
 			void OnRuntimeStop();

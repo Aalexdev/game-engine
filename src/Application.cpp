@@ -91,9 +91,22 @@ namespace engine{
 		app->renderThreadCond.wait(lock, [&]{return app->__renderThreadFinished();});
 	}
 
-	
+	void Application::setPrimaryCamera(Application* app, Camera* camera){
+		ENGINE_ASSERT(app != nullptr, "cannot set the primary camera of a null app");
+		app->cameraLock.lock();
+		app->primaryCamera = camera;
+		app->cameraLock.unlock();
+	}
+
+	Camera* Application::getPrimaryCamera(Application* app){
+		ENGINE_ASSERT(app != nullptr, "cannot get the primary camera of a null app");
+		app->cameraLock.lock();
+		Camera* camera = app->primaryCamera;
+		app->cameraLock.unlock();
+		return camera;
+	}
+
 	void Application::gameThread(Application* app){
-		
 		Timestep timestep;
 		Timestep lastTime;
 
@@ -104,16 +117,21 @@ namespace engine{
 			timestep = time - lastTime;
 			lastTime = time;
 
-			// if (!app->minimized){
-			// 	for (const Ref<Layer> &layer : app->layerStack)
-			// 		layer->OnUpdate(timestep);
-			// }
-
+			setPrimaryCamera(app, app->scene->OnUpdateRuntime(timestep));
 			
 			app->renderer->drawQuad(glm::vec2(0.f), 1.0, 0);
 
 			gameThreadEnd(app);
 			waitForrRenderThread(app);
+		}
+	}
+
+	void Application::beginScene(){
+		Camera* camera = getPrimaryCamera(this);
+		if (camera){
+			renderer->beginScene(*camera);
+		} else {
+			renderer->beginScene(Camera());
 		}
 	}
 
@@ -123,21 +141,19 @@ namespace engine{
 		ENGINE_PROFILE_BEGIN_SESSION("runtime", "EngineProfilingRuntime.json");
 
 		std::thread gameTh(&gameThread, this);
+		scene->OnRuntimeStart();
 
 		while (running){
-
 			renderThreadBegin(this);
 			
-			renderer->beginScene(Camera());
+			beginScene();
 			renderer->draw();
 			renderer->endScene();
-
 
 			waitForGameThread(this);
 			
 			renderer->swap();
 			display->update();
-
 			renderer->clear();
 			// 
 			
@@ -149,9 +165,9 @@ namespace engine{
 			renderThreadEnd(this);
 			
 		}
-
+		
 		gameTh.join();
-
+		scene->OnRuntimeStop();
 		ENGINE_PROFILE_END_SESSION();
 	}
 
@@ -172,6 +188,7 @@ namespace engine{
 			return false;
 		}
 		minimized = false;
+		if (renderer) renderer->OnWindowResized(e.getWidth(), e.getHeight());
 
 		return false;
 	}

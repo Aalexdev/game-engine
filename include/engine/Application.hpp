@@ -83,6 +83,7 @@ namespace engine{
 
 			bool running = true;
 			bool minimized = false;
+			Camera* primaryCamera = nullptr;
 
 			bool gameThreadFinished = false;
 			bool renderThreadFinished = false;
@@ -90,7 +91,9 @@ namespace engine{
 			std::condition_variable renderThreadCond;
 			std::mutex gameThreadLock;
 			std::mutex renderThreadLock;
+			std::mutex cameraLock;
 
+			// === multithreading ===
 			static void gameThread(Application* app);
 
 			static void gameThreadBegin(Application* app);
@@ -99,10 +102,17 @@ namespace engine{
 			static void renderThreadEnd(Application* app);
 			static void waitForGameThread(Application* app);
 			static void waitForrRenderThread(Application* app);
-	
+
+			static void setPrimaryCamera(Application* app, Camera* camera);
+			static Camera* getPrimaryCamera(Application* app);
+
+			// === Events ===
 			void OnEvent(Event &e);
 			bool OnWindowResized(WindowResizedEvent &e);
 			bool OnWindowClosed(WindowCloseEvent &e);
+
+			// === scene ===
+			void beginScene();
 
 			void clearLayers();
 			

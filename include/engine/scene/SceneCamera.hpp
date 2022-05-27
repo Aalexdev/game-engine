@@ -22,7 +22,7 @@ namespace engine{
 			inline void setRotation(float rotation) {camera.setRotation(rotation);}
 			inline float getRotation() const {return camera.getRotation();}
 
-			inline const Camera& getCamera() const {return camera;}
+			inline Camera& getCamera() {return camera;}
 
 			inline const glm::mat4 &getViewMatrix() const {return camera.getViewMatrix();}
 			inline const glm::mat4 &getProjectionMatrix() const {return camera.getProjectionMatrix();}
