@@ -2,6 +2,7 @@
 
 #include "../pch.hpp"
 #include "../core.hpp"
+#include "Renderer.hpp"
 
 #include <libs/glm/glm.hpp>
 
@@ -10,8 +11,8 @@ namespace engine{
 		public:
 			virtual ~Shader() {}
 
-			static Ref<Shader> create(const std::string &filepath);
-			static Ref<Shader> create(const std::string &name, const std::string &filepath);
+			static Ref<Shader> create(Renderer *renderer, const std::filesystem::path &filepath);
+			static Ref<Shader> create(Renderer *renderer, const std::string &name, const std::filesystem::path &filepath);
 
 			virtual void bind() const = 0;
 			virtual void unBind() const = 0;

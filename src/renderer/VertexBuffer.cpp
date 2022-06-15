@@ -4,20 +4,20 @@
 #include "engine/debug/Instrumentor.hpp"
 #include "engine/debug/Log.hpp"
 
-#include "engine/OpenGlAL/OpenGlVertexBuffer.hpp"
+#include "engine/OpenGL_AL/OpenGL_VertexBuffer.hpp"
 
 namespace engine{
-	Ref<VertexBuffer> VertexBuffer::create(float *vertices, uint32_t size){
-		switch (Renderer::getRenderAPI()){
-			case Renderer::RenderAPI::OpenGL: return createRef<OpenGl::OpenGlVertexBuffer>(vertices, size);
+	Ref<VertexBuffer> VertexBuffer::create(Renderer *renderer,float *vertices, uint32_t size){
+		switch (renderer->getRenderAPI()){
+			case RenderAPI::OPENGL: return OpenGL::VertexBuffer::create(renderer, vertices, size);
 		}
 		ENGINE_CORE_ASSERT(false, "unknown render API");
 		return nullptr;
 	}
 
-	Ref<VertexBuffer> VertexBuffer::create(uint32_t size){
-		switch (Renderer::getRenderAPI()){
-			case Renderer::RenderAPI::OpenGL: return createRef<OpenGl::OpenGlVertexBuffer>(size);
+	Ref<VertexBuffer> VertexBuffer::create(Renderer *renderer,uint32_t size){
+		switch (renderer->getRenderAPI()){
+			case RenderAPI::OPENGL: return OpenGL::VertexBuffer::create(renderer, size);
 		}
 		ENGINE_CORE_ASSERT(false, "unknown render API");
 		return nullptr;

@@ -18,29 +18,11 @@
 #include "renderer/Texture2D.hpp"
 #include "renderer/Texture.hpp"
 
-#include "scene/Scene.hpp"
-#include "scene/Entity.hpp"
-#include "scene/SceneSerializer.hpp"
-#include "scene/PhysicMaterialLibrary.hpp"
-
-#include "scene/components/SpriteComponent.hpp"
-#include "scene/components/CameraComponent.hpp"
-#include "scene/components/TriangleRenderer.hpp"
-#include "scene/components/TransformComponent.hpp"
-#include "scene/components/RigidBodyComponent.hpp"
-#include "scene/components/BoxColliderComponent.hpp"
-#include "scene/components/CircleRendererComponent.hpp"
-#include "scene/components/CircleColliderComponent.hpp"
-#include "scene/components/DistanceJointComponent.hpp"
-#include "scene/components/SpringJointComponent.hpp"
-#include "scene/components/RevoluteJoint.hpp"
-#include "scene/components/PrismaticJoint.hpp"
-#include "scene/components/FrictionJointComponent.hpp"
-
 #include "filesystem/Filesystem.hpp"
 #include "debug/Instrumentor.hpp"
 #include "debug/Log.hpp"
 #include "math/Math.hpp"
+#include "Exception.hpp"
 
 #include <libs/ImGuiFileDialog/ImGuiFileDialog.h>
 #include <libs/ImGuizmo/ImGuizmo.h>

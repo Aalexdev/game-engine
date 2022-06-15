@@ -12,9 +12,9 @@ namespace engine{
 		return createRef<SubTexture2D>(texture);
 	}
 
-	static void checkY(uint32_t &y, uint32_t height){
+	static void checkY(RenderAPI api, uint32_t &y, uint32_t height){
 		// opengl invert the y axis
-		if (Renderer::getRenderAPI() == Renderer::RenderAPI::OpenGL) y = height - y;
+		if (api == RenderAPI::OPENGL) y = height - y;
 	}
 
 	SubTexture2D::SubTexture2D(const Ref<Texture2D> &texture, uint32_t x, uint32_t y, uint32_t width, uint32_t height) : texture{texture}{
@@ -42,7 +42,7 @@ namespace engine{
 		
 		start = {x, y};
 
-		checkY(y, texture->getHeight());
+		checkY(texture->getRenderer()->getRenderAPI(), y, texture->getHeight());
 
 		normalizedStart.x = static_cast<float>(x) / static_cast<float>(texture->getWidth());
 		normalizedStart.y = static_cast<float>(y) / static_cast<float>(texture->getHeight());
@@ -60,7 +60,7 @@ namespace engine{
 
 		end = {x, y};
 		
-		checkY(y, texture->getHeight());
+		checkY(texture->getRenderer()->getRenderAPI(), y, texture->getHeight());
 
 		normalizedEnd.x = static_cast<float>(x) / static_cast<float>(texture->getWidth());
 		normalizedEnd.y = static_cast<float>(y) / static_cast<float>(texture->getHeight());

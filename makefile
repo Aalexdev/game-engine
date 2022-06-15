@@ -22,6 +22,9 @@ OBJS := $(patsubst %.cpp, $(OBJ)/%.o, $(notdir $(SRCS)))
 
 all: $(DLL)
 
+test:
+	$(CXX) -std=$(STD_VERSION) -I $(INCLUDE) tests/*.cpp -o out/test.exe -L out/ -l engine
+
 release: CFLAGS = -Wall -O2 -D NDEBUG
 release: clean
 release: $(DLL)
@@ -38,13 +41,9 @@ rebuild: $(DLL)
 clean:
 	@del $(OBJ)\*.o
 
-glad: 
-	$(CXX) -std=c++17 -O2 -c .\extern\glad\glad.c -I $(INCLUDE) -o .\extern\obj\glad.o
 
 $(DLL) : $(OBJS)
 	$(CXX) -std=$(STD_VERSION) -shared $(OBJ)/*.o -I $(INCLUDE) -L $(LIB) -o $(BIN)\$(DLL).dll $(CFLAGS) $(DEFINES) $(LIBSFLAGS) -Wl,--out-implib,$(BIN)\$(DLL).lib
-	copy .\out\engine.dll ..\editor\out\engine.dll
-	copy .\out\engine.lib ..\editor\libs\engine.lib
 
 $(OBJ)/%.o : $(SRC)/%.cpp
 	$(CXX) -std=$(STD_VERSION) -shared -o $@ -c $< -I $(INCLUDE) -L $(LIB) $(DEFINES) $(CFLAGS)
@@ -69,10 +68,3 @@ info:
 	@echo 	compiled object directory    : $(OBJ)
 	@echo 	include directory            : $(INCLUDE)
 	@echo -----------------------------------------------------
-
-# test
-test : test/test.cpp
-	$(CXX) -std=$(STD_VERSION) test/*.cpp -I include -o out/test -L out/ -l engine
-
-dbgTest: test/test.cpp
-	$(CXX) -std=$(STD_VERSION) -g3 test/*.cpp -I include -o out/test -L out/ -l engine

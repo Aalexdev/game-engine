@@ -2,13 +2,14 @@
 
 #include "../core.hpp"
 #include "FramebufferLayout.hpp"
+#include "Renderer.hpp"
 
 namespace engine{
 	class ENGINE_API Framebuffer{
 		public:
 			virtual ~Framebuffer() {}
 			
-			static Ref<Framebuffer> create(const FramebufferLayout &layout);
+			static Ref<Framebuffer> create(Renderer *renderer, const FramebufferLayout &layout);
 
 			virtual void bind() = 0;
 			virtual void unBind() = 0;

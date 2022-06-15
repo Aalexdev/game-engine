@@ -34,10 +34,10 @@ namespace engine{
 			return textures[paths[rel]];
 		}
 
-		Ref<Texture2D> texture = Texture2D::create(path.string());
-		ENGINE_CORE_ASSERT(texture, "failed to load the texture");
-		push(texture);
-		return texture;
+		// Ref<Texture2D> texture = Texture2D::create(path.string());
+		// ENGINE_CORE_ASSERT(texture, "failed to load the texture");
+		// push(texture);
+		// return texture;
 	}
 
 	Ref<Texture2D> Texture2DLibrary::load(const std::filesystem::path &path, const std::string &name, UUID uuid){
@@ -48,14 +48,14 @@ namespace engine{
 			return textures[paths[rel]];
 		}
 
-		Ref<Texture2D> texture = Texture2D::create(path.string(), Ref<Texture2DLibrary>(this));
-		ENGINE_CORE_ASSERT(texture, "failed to load the texture");
+		// Ref<Texture2D> texture = Texture2D::create(path.string(), Ref<Texture2DLibrary>(this));
+		// ENGINE_CORE_ASSERT(texture, "failed to load the texture");
 
-		texture->setName(name);
-		texture->setUUID(uuid);
+		// texture->setName(name);
+		// texture->setUUID(uuid);
 		
-		push(texture);
-		return texture;
+		// push(texture);
+		// return texture;
 	}
 
 

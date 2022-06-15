@@ -2,225 +2,91 @@
 #include "engine/Application.hpp"
 #include "engine/debug/Instrumentor.hpp"
 #include "engine/filesystem/Filesystem.hpp"
+#include "engine/Exception.hpp"
 
 namespace engine{
-	Application::Application(){
+
+	static void checkDefinition(const Application::Definition &def){
+		if (def.displayCount == 0) throw exceptions::Lenght("invalid display count : must be greater tha zero");
+	}
+
+	Ref<Application> Application::create(const Definition &def){
 		ENGINE_PROFILE_RECORD();
 		ENGINE_PROFILE_BEGIN_SESSION("startup", "EngineProfilingStartup.json");
+		checkDefinition(def);
 
-		ENGINE_PROFILE_FUNCTION();
-
-		display = Window::create();
-		display->setEventCallback(ENGINE_BIND_EVENT_FN(OnEvent));
-		display->setVSync(false);
-		input = display->getInputs();
-
-		renderer = createRef<Renderer>();
-		renderer->init();
-
-		textures = createRef<Texture2DLibrary>();
-		physicMaterials = PhysicMaterialLibrary::create();
-
-		imGuiLayer = ImGuiLayer::create();
-		scene = Scene::create(renderer, physicMaterials);
-		sceneSerializer = SceneSerializer::create(scene, textures);
-		
-		pushLayer(imGuiLayer);
-	}
-
-	Application::~Application(){
-		ENGINE_PROFILE_RECORD();
-		ENGINE_PROFILE_BEGIN_SESSION("shutdown", "EngineProfilingShutdown.json");
-
-		clearLayers();
-
-		renderer->shutdown();
-		imGuiLayer = nullptr;
-
+		Ref<Application> app = createRef<Application>(def);
+		app->launched = true;
 		ENGINE_PROFILE_END_SESSION();
+		return app;
 	}
 
-	void Application::clearLayers(){
-		for (auto &layer : layerStack){
-			layerStack.popLayer(layer, layer != imGuiLayer);
+	Application::Application(const Definition &def){
+		displays.resize(def.displayCount);
+
+		eventHandler = EventHandler::create();
+
+		for (int i=0; i<def.displayCount; i++){
+			def.displaysDefinitions[i].app = this;
+			if (def.displaysDefinitions[i].eventCallback == nullptr){
+				def.displaysDefinitions[i].eventCallback = eventHandler->getEventCallback();
+			}
 		}
-		layerStack.clear();
+
+		registerSystemEvents();
+		eventHandler->subscribeToEvent("WindowClosed", &onWindowClosedEvent);
+
+		for (uint8_t i=0; i<def.displayCount; i++){
+			displays[i] = Display::create(*def.displaysDefinitions);
+		}
 	}
 	
-	void Application::gameThreadBegin(Application* app){
-		ENGINE_ASSERT(app != nullptr, "cannot begin a thread of a null app");
-		app->renderThreadLock.lock();
-		app->renderThreadFinished = false;
-		app->renderThreadCond.notify_all();
-		app->renderThreadLock.unlock();
-	}
+	Application::~Application(){
 
-	void Application::renderThreadBegin(Application* app){
-		ENGINE_ASSERT(app != nullptr, "cannot begin a thread of a null app");
-		app->gameThreadLock.lock();
-		app->gameThreadFinished = false;
-		app->gameThreadCond.notify_all();
-		app->gameThreadLock.unlock();
-	}
-
-	void Application::gameThreadEnd(Application* app){
-		ENGINE_ASSERT(app != nullptr, "cannot end a thread of a null app");
-		app->gameThreadLock.lock();
-		app->gameThreadFinished = true;
-		app->gameThreadCond.notify_all();
-		app->gameThreadLock.unlock();
-	}
-
-	void Application::renderThreadEnd(Application* app){
-		ENGINE_ASSERT(app != nullptr, "cannot end a thread of a null app");
-		app->renderThreadLock.lock();
-		app->renderThreadFinished = true;
-		app->renderThreadCond.notify_all();
-		app->renderThreadLock.unlock();
-	}
-
-	void Application::waitForGameThread(Application* app){
-		ENGINE_ASSERT(app != nullptr, "cannot wait a thread of a null app");
-		auto lock = std::unique_lock(app->gameThreadLock);
-		app->gameThreadCond.wait(lock, [&]{return app->__gameThreadFinished();});
-	}
-	
-	void Application::waitForrRenderThread(Application* app){
-		ENGINE_ASSERT(app != nullptr, "cannot wait a thread of a null app");
-		auto lock = std::unique_lock(app->renderThreadLock);
-		app->renderThreadCond.wait(lock, [&]{return app->__renderThreadFinished();});
-	}
-
-	void Application::setPrimaryCamera(Application* app, Camera* camera){
-		ENGINE_ASSERT(app != nullptr, "cannot set the primary camera of a null app");
-		app->cameraLock.lock();
-		app->primaryCamera = camera;
-		app->cameraLock.unlock();
-	}
-
-	Camera* Application::getPrimaryCamera(Application* app){
-		ENGINE_ASSERT(app != nullptr, "cannot get the primary camera of a null app");
-		app->cameraLock.lock();
-		Camera* camera = app->primaryCamera;
-		app->cameraLock.unlock();
-		return camera;
-	}
-
-	void Application::gameThread(Application* app){
-		Timestep timestep;
-		Timestep lastTime;
-
-		while(app->running){
-			gameThreadBegin(app);
-
-			float time = app->display->getTime();
-			timestep = time - lastTime;
-			lastTime = time;
-
-			setPrimaryCamera(app, app->scene->OnUpdateRuntime(timestep));
-			
-			app->renderer->drawQuad(glm::vec2(0.f), 1.0, 0);
-
-			gameThreadEnd(app);
-			waitForrRenderThread(app);
-		}
-	}
-
-	void Application::beginScene(){
-		Camera* camera = getPrimaryCamera(this);
-		if (camera){
-			renderer->beginScene(*camera);
-		} else {
-			renderer->beginScene(Camera());
-		}
 	}
 
 	void Application::run(){
-		ENGINE_PROFILE_END_SESSION();
-		ENGINE_PROFILE_STOP_RECORD();
-		ENGINE_PROFILE_BEGIN_SESSION("runtime", "EngineProfilingRuntime.json");
+		while (launched){
+			// update
 
-		std::thread gameTh(&gameThread, this);
-		scene->OnRuntimeStart();
+			// for each camera : render
 
-		while (running){
-			renderThreadBegin(this);
-			
-			beginScene();
-			renderer->draw();
-			renderer->endScene();
-
-			waitForGameThread(this);
-			
-			renderer->swap();
-			display->update();
-			renderer->clear();
-			// 
-			
-			// imGuiLayer->begin();
-			// for (const Ref<Layer> &layer : layerStack)
-			// 	layer->OnImGuiRender();
-			// imGuiLayer->end();
-
-			renderThreadEnd(this);
-			
-		}
-		
-		gameTh.join();
-		scene->OnRuntimeStop();
-		ENGINE_PROFILE_END_SESSION();
-	}
-
-	void Application::OnEvent(Event &e){
-		EventDispatcher dispatcher(e);
-		dispatcher.dispatch<WindowCloseEvent>(ENGINE_BIND_EVENT_FN(OnWindowClosed));
-		dispatcher.dispatch<WindowResizedEvent>(ENGINE_BIND_EVENT_FN(OnWindowResized));
-
-		for (auto it = layerStack.end(); it != layerStack.begin();){
-			(*--it)->OnEvent(e);
-			if (e.isHandled()) break;
+			// update displays
+			for (auto &display : displays){
+				display->update();
+			}
 		}
 	}
 
-	bool Application::OnWindowResized(WindowResizedEvent &e){
-		if (e.getWidth() == 0 || e.getHeight() == 0){
-			minimized = true;
-			return false;
-		}
-		minimized = false;
-		if (renderer) renderer->OnWindowResized(e.getWidth(), e.getHeight());
-
-		return false;
-	}
-
-	bool Application::OnWindowClosed(WindowCloseEvent &e){
-		running = false;
-		return true;
-	}
-
-	void Application::pushLayer(const Ref<Layer> &layer){
-		layer->app = this;
-		layer->renderer = renderer;
-		layer->input = input;
-		layerStack.pushLayer(layer);
-	}
-
-	void Application::pushOverlay(const Ref<Layer> &overlay){
-		overlay->app = this;
-		overlay->renderer = renderer;
-		overlay->input = input;
-		layerStack.pushOverlay(overlay);
-	}
-
-	Ref<Texture2D> Application::loadTexture(const std::filesystem::path &path){
-		Ref<Texture2D> texture;
-
-		if (path.is_absolute()){
-			texture = textures->load(path);
-		} else{
-			texture = textures->load(Filesystem::getDataFolderPath() / path);
+	void Application::onWindowClosedEvent(WindowCloseEvent &e){
+		Application* app = e.app;
+		auto it = app->displays.begin();
+		while (it != app->displays.end()){
+			if ((*it).get() == e.getDisplay()){
+				app->displays.erase(it);
+				break;
+			}
+			it++;
 		}
 
-		return texture;
+		if (app->displays.empty()) app->launched = false;
+	}
+
+	void Application::registerSystemEvents(){
+		eventHandler->registerEvent("WindowClosed", static_cast<uint32_t>(EventType::EVENT_WINDOW_CLOSED));
+		eventHandler->registerEvent("WindowResized", static_cast<uint32_t>(EventType::EVENT_WINDOW_RESIZED));
+		eventHandler->registerEvent("WindowFocused", static_cast<uint32_t>(EventType::EVENT_WINDOW_FOCUSED));
+		eventHandler->registerEvent("WindowLostFocus", static_cast<uint32_t>(EventType::EVENT_WINDOW_LOST_FOCUS));
+		eventHandler->registerEvent("WindowMoved", static_cast<uint32_t>(EventType::EVENT_WINDOW_MOVED));
+		eventHandler->registerEvent("WindowMinimized", static_cast<uint32_t>(EventType::EVENT_WINDOW_MINIMIZED));
+		eventHandler->registerEvent("WindowMaximized", static_cast<uint32_t>(EventType::EVENT_WINDOW_MAXIMIZED));
+		eventHandler->registerEvent("AppTick", static_cast<uint32_t>(EventType::EVENT_APP_TICK));
+		eventHandler->registerEvent("KeyPressed", static_cast<uint32_t>(EventType::EVENT_KEY_PRESSED));
+		eventHandler->registerEvent("KeyTyped", static_cast<uint32_t>(EventType::EVENT_KEY_TYPED));
+		eventHandler->registerEvent("KeyReleased", static_cast<uint32_t>(EventType::EVENT_KEY_RELEASED));
+		eventHandler->registerEvent("MouseButtonReleased", static_cast<uint32_t>(EventType::EVENT_MOUSE_BUTTON_RELEASED));
+		eventHandler->registerEvent("MouseButtonPressed", static_cast<uint32_t>(EventType::EVENT_MOUSE_BUTTON_PRESSED));
+		eventHandler->registerEvent("MouseMoved", static_cast<uint32_t>(EventType::EVENT_MOUSE_MOVED));
+		eventHandler->registerEvent("MouseScolled", static_cast<uint32_t>(EventType::EVENT_MOUSE_SCROLLED));
 	}
 }

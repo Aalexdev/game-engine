@@ -5,6 +5,7 @@
 
 #include "IndexBuffer.hpp"
 #include "VertexBuffer.hpp"
+#include "Renderer.hpp"
 
 namespace engine{
 	class ENGINE_API VertexArray{
@@ -20,6 +21,6 @@ namespace engine{
 			virtual const std::vector<Ref<VertexBuffer>> &getVertexBuffers() const = 0;
 			virtual const Ref<IndexBuffer> &getIndexBuffer() const = 0;
 			
-			static Ref<VertexArray> create();
+			static Ref<VertexArray> create(Renderer *renderer);
 	};
 }

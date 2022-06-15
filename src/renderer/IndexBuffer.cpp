@@ -4,12 +4,12 @@
 #include "engine/debug/Log.hpp"
 #include "engine/renderer/Renderer.hpp"
 
-#include "engine/OpenGlAL/OpenGlIndexBuffer.hpp"
+#include "engine/OpenGL_AL/OpenGL_IndexBuffer.hpp"
 
 namespace engine{
-	Ref<IndexBuffer> IndexBuffer::create(uint32_t *indices, uint32_t count){
-		switch (Renderer::getRenderAPI()){
-			case Renderer::RenderAPI::OpenGL: return createRef<OpenGl::OpenGlIndexBuffer>(indices, count);
+	Ref<IndexBuffer> IndexBuffer::create(Renderer *renderer, uint32_t *indices, uint32_t count){
+		switch (renderer->getRenderAPI()){
+			case RenderAPI::OPENGL: return OpenGL::IndexBuffer::create(renderer, indices, count);
 		}
 		ENGINE_CORE_ASSERT(false, "unknown render API");
 		return nullptr;

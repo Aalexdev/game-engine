@@ -13,6 +13,8 @@ namespace engine{
 		RGBA = 4
 	};
 
+	class Renderer;
+
 	class ENGINE_API Texture{
 		public:
 			virtual ~Texture() {}
@@ -27,6 +29,7 @@ namespace engine{
 
 			virtual bool operator==(const Texture &texture) const = 0;
 
+			virtual Renderer* getRenderer() const = 0;
 
 	};
 }

@@ -1,270 +1,126 @@
 #pragma once
 
 #include "../core.hpp"
+#include "../pch.hpp"
+#include "../displays/Display.hpp"
+#include "FramebufferLayout.hpp"
 #include "RenderCommand.hpp"
-#include "Shader.hpp"
-#include "Camera.hpp"
-#include "Texture2D.hpp"
-#include "SubTexture2D.hpp"
-#include "Texture2DLibrary.hpp"
-#include "../UUID.hpp"
+#include "RenderAPI.hpp"
+
+#include <libs/glm/glm.hpp>
 
 namespace engine{
+	class SubTexture2D;
+	class Texture2D;
 	class ENGINE_API Renderer{
 		public:
-			enum class RenderAPI{
-				OpenGL,
-				Vulkan,
-				Metal,
-				DirectX
+			static constexpr uint16_t REFRESH_RATE_UNLIMITED = static_cast<uint16_t>(-1);
+
+			struct ENGINE_API Definition{
+				Ref<Display> display = nullptr;
+				glm::vec3 clearColor = {0.f, 0.f, 0.f};
+				bool VSync = true;
+				uint16_t refreshRate = 60; // used when VSync is not enabled
+				glm::u32vec2 resolution = {1080, 720};
+				FramebufferAttachmentSpecification attachments = {FramebufferTextureFormat::RGB8};
+				uint16_t bufferSize = 2000;
+				uint16_t commandCount = 500;
+				RenderAPI renderAPI = RenderAPI::OPENGL;
 			};
 
-			static inline RenderAPI getRenderAPI() {return renderAPI;} 
-			static inline void setRenderAPI(RenderAPI API) {renderAPI = API;}
+			static Ref<Renderer> create(const Definition &def);
+			virtual ~Renderer() = default;
 
-			struct Vertex{
-				glm::vec2 position;
-				glm::vec2 textCoord;
-				glm::vec4 color;
-				float tilingFactor;
-			};
+			void drawQuad(const glm::mat3 &transform, uint32_t entityIndex = 0);
+			void drawQuad(const glm::mat3 &transform, const glm::vec4 &color, uint32_t entityIndex = 0);
+			void drawTexturedQuad(const glm::mat3 &transform, const Ref<SubTexture2D> &texture, uint32_t entityIndex = 0);
+			void drawTexturedQuad(const glm::mat3 &transform, const Ref<SubTexture2D> &texture, const glm::vec4 &color, uint32_t entityIndex = 0);
 
-			Renderer(){}
-			~Renderer(){}
-
-			void init();
-			void shutdown();
-
-			void OnWindowResized(uint32_t width, uint32_t height);
-
-			void beginScene(const Camera &camera);
-			void endScene();
-
-			// inline void clear() {renderCommand.clear();}
-			// inline void setClearColor(const glm::vec4& clearColor) {renderCommand.setClearColor(clearColor);}
-
-			// void setShader(const Ref<Shader> &shader);
-
-			// void drawQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4 &color, uint32_t entityIndex);
-			// void drawQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4 &color, uint32_t entityIndex, const Ref<SubTexture2D> &texture);
-			// void drawQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4 &color, uint32_t entityIndex, const Ref<Texture2D> &texture);
-			// void drawRotatedQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4 &color, float rotation, uint32_t entityIndex);
-			// void drawRotatedQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4 &color, float rotation, uint32_t entityIndex, const Ref<SubTexture2D> &texture);
-			// void drawRotatedQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4 &color, float rotation, uint32_t entityIndex, const Ref<Texture2D> &texture);
-			// void drawQuad(const glm::mat4 &transform, const glm::vec4 &color, uint32_t entityIndex, const Ref<SubTexture2D> &texture);
-
-			// void drawCircle(const glm::mat4 &transform, const glm::vec4 &color, uint32_t entityIndex, float thickness = 1.f, float fade = 0.005);
-			// void drawCircle(const glm::vec2 &center, float radius, const glm::vec4 &color, uint32_t entityIndex, float thickness = 1.f, float fade = 0.005f);
-
-			// void drawTriangle(const Vertex &p1, const Vertex &p2, const Vertex &p3, const Ref<Texture2D> &texture = nullptr, uint32_t entityIndex = -1);
-			// void drawTriangle(const Vertex &p1, const Vertex &p2, const Vertex &p3, const glm::vec2 &translation, const glm::vec2 &scale, float angle, const Ref<Texture2D> &texture = nullptr, uint32_t entityIndex = -1);
-			// void drawTriangle(const Vertex &p1, const Vertex &p2, const Vertex &p3, const glm::mat4 &transform, const Ref<Texture2D> &texture = nullptr, uint32_t entityIndex = -1);
-
-			// void drawLine(const glm::vec2 &start, const glm::vec2 &end, uint32_t entityIndex, glm::vec4 color);
-			// void drawSquare(const glm::mat4 &transform, const glm::vec4 &color, uint32_t entityIndex);
-
-			// void setLineThickness(float thickness);
-
-			void swap();
-			void draw();
-
-			void clear();
+			void setRefreshRate(uint16_t refreshRate);
 			void setClearColor(const glm::vec3 &color);
+			void setViewport(const glm::u32vec2 &viewport);
+			void resize(const glm::u32vec2 &resolution);
+			void enableVSync(bool enabled = true);
+			void clear();
+			void useShader(const std::string &name);
+			void setViewProjectionMat(const glm::mat3 &mat);
 
-			void drawQuad(const glm::mat4 &mat, uint32_t entityIndex);
-			void drawQuad(const glm::mat4 &mat, const glm::vec3 &color, uint32_t entityIndex);
-			void drawQuad(const glm::mat4 &mat, const glm::vec4 &color, uint32_t entityIndex);
-			void drawQuad(const glm::vec2 &translation, uint32_t entityIndex);
-			void drawQuad(const glm::vec2 &translation, const glm::vec3 &color, uint32_t entityIndex);
-			void drawQuad(const glm::vec2 &translation, const glm::vec4 &color, uint32_t entityIndex);
-			void drawQuad(const glm::vec2 &translation, float scale, uint32_t entityIndex);
-			void drawQuad(const glm::vec2 &translation, float scale, const glm::vec3 &color, uint32_t entityIndex);
-			void drawQuad(const glm::vec2 &translation, float scale, const glm::vec4 &color, uint32_t entityIndex);
-			void drawQuad(const glm::vec2 &translation, glm::vec2 &scale, uint32_t entityIndex);
-			void drawQuad(const glm::vec2 &translation, glm::vec2 &scale, const glm::vec3 &color, uint32_t entityIndex);
-			void drawQuad(const glm::vec2 &translation, glm::vec2 &scale, const glm::vec4 &color, uint32_t entityIndex);
-			void drawRotatedQuad(const glm::vec2 &translation, float rotation, uint32_t entityIndex);
-			void drawRotatedQuad(const glm::vec2 &translation, float rotation, const glm::vec3 &color, uint32_t entityIndex);
-			void drawRotatedQuad(const glm::vec2 &translation, float rotation, const glm::vec4 &color, uint32_t entityIndex);
-			void drawRotatedQuad(const glm::vec2 &translation, float rotation, float scale, uint32_t entityIndex);
-			void drawRotatedQuad(const glm::vec2 &translation, float rotation, float scale, const glm::vec3 &color, uint32_t entityIndex);
-			void drawRotatedQuad(const glm::vec2 &translation, float rotation, float scale, const glm::vec4 &color, uint32_t entityIndex);
-			void drawRotatedQuad(const glm::vec2 &translation, float rotation, glm::vec2 &scale, uint32_t entityIndex);
-			void drawRotatedQuad(const glm::vec2 &translation, float rotation, glm::vec2 &scale, const glm::vec3 &color, uint32_t entityIndex);
-			void drawRotatedQuad(const glm::vec2 &translation, float rotation, glm::vec2 &scale, const glm::vec4 &color, uint32_t entityIndex);
+			virtual void swap() = 0;
+
+			void loadShader(const std::string &name, std::filesystem::path path);
+			RenderAPI getRenderAPI() const;
+		
+		protected:
+			std::vector<float> dataBuffers[2];
+			std::vector<RenderCommand> commandQueues[2];
+			uint8_t currentQueue = 0;
+			glm::mat3 viewProjectionMat = glm::mat3(1.f);
+			glm::vec3 vertexPosition[4];
 			
-			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::mat4 &mat, uint32_t entityIndex);
-			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::mat4 &mat, const glm::vec3 &color, uint32_t entityIndex);
-			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::mat4 &mat, const glm::vec4 &color, uint32_t entityIndex);
-			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, uint32_t entityIndex);
-			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, const glm::vec3 &color, uint32_t entityIndex);
-			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, const glm::vec4 &color, uint32_t entityIndex);
-			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float scale, uint32_t entityIndex);
-			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float scale, const glm::vec3 &color, uint32_t entityIndex);
-			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float scale, const glm::vec4 &color, uint32_t entityIndex);
-			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, glm::vec2 &scale, uint32_t entityIndex);
-			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, glm::vec2 &scale, const glm::vec3 &color, uint32_t entityIndex);
-			void drawTexturedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, glm::vec2 &scale, const glm::vec4 &color, uint32_t entityIndex);
-			void drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, uint32_t entityIndex);
-			void drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, const glm::vec3 &color, uint32_t entityIndex);
-			void drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, const glm::vec4 &color, uint32_t entityIndex);
-			void drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, float scale, uint32_t entityIndex);
-			void drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, float scale, const glm::vec3 &color, uint32_t entityIndex);
-			void drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, float scale, const glm::vec4 &color, uint32_t entityIndex);
-			void drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, glm::vec2 &scale, uint32_t entityIndex);
-			void drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, glm::vec2 &scale, const glm::vec3 &color, uint32_t entityIndex);
-			void drawTexturedRotatedQuad(const Ref<SubTexture2D> &subTexture, const glm::vec2 &translation, float rotation, glm::vec2 &scale, const glm::vec4 &color, uint32_t entityIndex);
+			void render();
 
-			void reloadScene();
+			struct SubTexture{
+				glm::vec2 start = {0.f, 0.f};
+				glm::vec2 end = {1.f, 1.f};
+				uint32_t textureIndex = 0;
+			};
 
+			virtual void drawQuad_impl_(const glm::mat3 &transform, const glm::vec4 &color, const SubTexture &texture, uint32_t entityIndex) = 0;
+			virtual void setRefreshRate_impl_(float fps) = 0;
+			virtual void setClearColor_impl_(const glm::vec3 &color) = 0;
+			virtual void setViewport_impl_(const glm::vec2 &viewport) = 0;
+			virtual void resized_impl_(const glm::vec2 &size) = 0;
+			virtual void enableVSync_impl_(bool enabled) = 0;
+			virtual void clear_impl_() = 0;
+			virtual void useShader_impl_(const std::string &name) = 0;
+			virtual void setViewProjectionMat_impl_(const glm::mat3 &mat) = 0;
+
+			virtual uint8_t getMaxTextureSlots() = 0;
+
+			virtual uint8_t texturePushed(const Ref<Texture2D> &texture) = 0;
+			virtual uint8_t pushTexture(const Ref<Texture2D> &texture) = 0;
+
+			virtual void loadShader_impl_(const std::string &name, std::filesystem::path path) = 0;
+
+			virtual void reloadScene() = 0;
+			virtual void flush() = 0;
+			virtual void endScene() = 0;
+
+			virtual void bindDefaultShader() = 0;
+
+			
+			RenderAPI renderAPI;
+			
 		private:
-			static RenderAPI renderAPI;
-			Ref<RendererAPI> rendererAPI;
-			
-			std::array<std::vector<float>, 2> renderCommandBuffers;
-			std::array<std::deque<RenderCommand>, 2> renderCommands;
-			std::deque<RenderCommand*> batchRenderCommand;
-			uint8_t currentRenderQueue=0;
 
-			std::deque<RenderCommand>& getCurrentRenderQueue();
-			std::vector<float>& getCurrentRenderBuffer();
+			float* pushMat3(const glm::mat3 &mat);
+			float* pushVec4(const glm::vec4 &vec);
+			float* pushVec3(const glm::vec3 &vec);
+			float* pushVec2(const glm::vec2 &vec);
+			float* pushFloat(float value);
+			float* pushTexture(const Ref<SubTexture2D> &texture);
+			float* pushStr(const std::string &str);
 
-			float* commandBufferPushFloat(const float &value);
-			float* commandBufferPushVec2(const glm::vec2 &vec);
-			float* commandBufferPushVec3(const glm::vec3 &vec);
-			float* commandBufferPushVec4(const glm::vec4 &vec);
-			float* commandBufferPushMat4(const glm::mat4 &mat);
-			float* commandBufferPushUint32_t(const uint32_t &value);
-			float* commandBufferPushSubTexture(const Ref<SubTexture2D> &texture);
+			void popMat3(glm::mat3 &mat, float *data, uint32_t &i);
+			void popVec4(glm::vec4 &vec, float *data, uint32_t &i);
+			void popVec3(glm::vec3 &vec, float *data, uint32_t &i);
+			void popVec2(glm::vec2 &vec, float *data, uint32_t &i);
+			void popFloat(float &value, float *data, uint32_t &i);
+			void popTexture(SubTexture &texture, float *data, uint32_t &i);
+			void popStr(std::string &str, float *data, uint32_t &i);
+			void popBool(bool &value, float *data, uint32_t &i);
 
-			void batchDrawQueue();
-
-			void commandClear(RenderCommand* command);
-			void commandSetClearColor(RenderCommand* command);
-			void commandDrawQuad(RenderCommand* command);
-			void commandDrawQuadTransformation(RenderCommand* command);
-			void commandDrawQuadTranslate(RenderCommand* command);
-			void commandDrawQuadTranslateRotate(RenderCommand* command);
-			void commandDrawQuadTranslateScale1(RenderCommand* command);
-			void commandDrawQuadTranslateScale2(RenderCommand* command);
-			void commandDrawQuadTranslateScale1Rotate(RenderCommand* command);
-			void commandDrawQuadTranslateScale2Rotate(RenderCommand* command);
-			void commandTexturedDrawQuad(RenderCommand* command);
-			void commandTexturedDrawQuadTransformation(RenderCommand* command);
-			void commandTexturedDrawQuadTranslate(RenderCommand* command);
-			void commandTexturedDrawQuadTranslateRotate(RenderCommand* command);
-			void commandTexturedDrawQuadTranslateScale1(RenderCommand* command);
-			void commandTexturedDrawQuadTranslateScale2(RenderCommand* command);
-			void commandTexturedDrawQuadTranslateScale1Rotate(RenderCommand* command);
-			void commandTexturedDrawQuadTranslateScale2Rotate(RenderCommand* command);
-
-			struct QuadVertex{
-				glm::vec3 position;
-				glm::vec2 TextCoord;
-				glm::vec4 color;
-				uint32_t textureIndex;
-				float tilingFactor;
-
-				uint32_t entityIndex;
-			};
-
-			struct CircleVertex{
-				glm::vec3 position;
-				glm::vec2 localPos;
-				glm::vec4 color;
-				float thickness;
-				float fade;
-
-				uint32_t entityIndex;
-			};
-
-			struct LineVertex{
-				glm::vec3 position;
-				glm::vec4 color;
-				uint32_t entityIndex;
-			};
-
-			struct QuadData{
-				uint32_t maxQuads = 10000;
-				uint32_t maxVertices;
-				uint32_t maxIndices;
-				uint32_t maxTextureSlots = 32;
-
-				Ref<VertexArray> quadVertexArray;
-				Ref<VertexBuffer> quadVertexBuffer;
-
-				uint32_t quadIndexCount = 0;
-				QuadVertex* quadVertexBufferBase = nullptr;
-				QuadVertex* quadVertexBufferPtr = nullptr;
-
-				Scope<Ref<Texture2D>[]> textureSlots;
-				uint32_t textureSlotIndex = 1;
-
-
-				QuadData(uint32_t maxQuads = 10000) : maxQuads{maxQuads}{
-					maxVertices = maxQuads * 4;
-					maxIndices = maxQuads * 6;
-				}
-			};
-
-			struct CircleData{
-				uint32_t maxCircle = 10000;
-				uint32_t maxVertices;
-				uint32_t maxIndices;
-				
-				Ref<VertexArray> circleVertexArray;
-				Ref<VertexBuffer> circleVertexBuffer;
-
-				uint32_t circleIndexCount = 0;
-				CircleVertex* circleVertexBufferBase = nullptr;
-				CircleVertex* circleVertexBufferPtr = nullptr;
-
-				CircleData(uint32_t maxCircle = 10000) : maxCircle{maxCircle}{
-					maxVertices = maxCircle * 4;
-					maxIndices = maxCircle * 6;
-				}
-			};
-
-			struct LineData{
-				uint32_t maxLines = 10000;
-				uint32_t maxVertices;
-
-				Ref<VertexArray> lineVertexArray;
-				Ref<VertexBuffer> lineVertexBuffer;
-
-				uint32_t lineCount;
-				LineVertex* lineVertexBufferBase = nullptr;
-				LineVertex* lineVertexBufferPtr = nullptr;
-
-				LineData(uint32_t maxLines = 10000) : maxLines{maxLines}{
-					maxVertices = maxLines * 2;
-				}
-			};
-			
-			glm::vec4 quadVertexPositions[4];
-
-			Ref<Shader> quadShader;
-			Ref<Shader> circleShader;
-			Ref<Shader> lineShader;
-
-			void flush();
-
-			RenderCommand renderCommand;
-			Scope<QuadData> quadData;
-			Scope<CircleData> circleData;
-			Scope<LineData> lineData;
-
-			uint16_t texturePushed(const Ref<Texture2D> &texture);
-			uint16_t pushTexture(const Ref<Texture2D> &texture);
-
-			void drawQuad(const glm::mat4 &transform, const glm::vec4& color, float tilingFactor, uint32_t textureIndex, const glm::vec2 &TextureCoordsStart, const glm::vec2 &TextureCoordsEnd, uint32_t entityIndex);
-			void drawRotatedQuad(const glm::vec3 &position, const glm::vec2 &size, const glm::vec4& color, float tilingFactor, uint32_t textureIndex, const glm::vec2 &TextureCoordsStart, const glm::vec2 &TextureCoordsEnd, float angle, uint32_t entityIndex);
-			void drawCircle(const glm::vec3 &center, const glm::vec2 &size, const glm::vec4 &color, float thickness, float fade, uint32_t entityIndex);
-
-			void loadShaders();
-			void loadQuadShader();
-			void loadCircleShader();
-			void loadLineShader();
-
+			void renderQuad(float *data);
+			void renderQuadColored(float *data);
+			void renderTexturedQuad(float *data);
+			void renderTexturedQuadColored(float *data);
+			void setRefreshRate(float *data);
+			void setClearColor(float *data);
+			void setViewport(float *data);
+			void resized(float *data);
+			void enableVSync(float *data);
+			void clear(float *data);
+			void useShader(float *data);
+			void setViewProjectionMat(float *data);
 	};
 }
