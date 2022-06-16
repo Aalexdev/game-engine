@@ -28,7 +28,7 @@ namespace engine{
 	}
 
 	void EventHandler::OnEvent(Event &e){
-		ENGINE_CORE_TRACE(e.toString());
+		// ENGINE_CORE_TRACE(e.toString());
 		Application *app = e.app;
 		app->eventHandler->dispatchEvent(e);
 	}

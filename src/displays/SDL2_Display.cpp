@@ -192,18 +192,12 @@ namespace engine::displays{
 	Ref<SDL2_Display> SDL2_Display::create(const Definition &properties){
 		Ref<SDL2_Display> display = createRef<SDL2_Display>(properties);
 		SDL_SetWindowData(static_cast<SDL_Window*>(display->window), "data", display.get());
-		
-		Renderer::Definition def;
-		def.display = display;
-		def.resolution = display->windowData.size;
-		display->renderer = Renderer::create(def);
 
 		return display;
 	}
 
 	SDL2_Display::SDL2_Display(const Definition &properties) : windowData{properties}{
 		window = initializeNewWindow(properties);
-
 	}
 
 	SDL2_Display::~SDL2_Display(){
@@ -298,7 +292,6 @@ namespace engine::displays{
 	}
 
 	void SDL2_Display::update(){
-		renderer->swap();
 		// update renderer
 
 		SDL_Event event;
@@ -352,7 +345,8 @@ namespace engine::displays{
 	void SDL2_Display::onWindowLostFocusEvent(void *event){
 		SDL_Event *e = static_cast<SDL_Event*>(event);
 		SDL_Window* window = SDL_GetWindowFromID(e->window.windowID);
-		ENGINE_CORE_ASSERT(window, "SDL_GetWindowFromID Error : ", SDL_GetError())
+		// when a window is quitted, it trigger the lost focus event event if the window is destroyed
+		if (!window) return;
 		SDL2_Display* display = reinterpret_cast<SDL2_Display*>(SDL_GetWindowData(window, "data"));
 		
 		WindowLostFocusEvent windowEvent{windowData.app, display};

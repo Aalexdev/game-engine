@@ -37,7 +37,7 @@ namespace engine{
 		eventHandler->subscribeToEvent("WindowClosed", &onWindowClosedEvent);
 
 		for (uint8_t i=0; i<def.displayCount; i++){
-			displays[i] = Display::create(*def.displaysDefinitions);
+			displays[i] = Display::create(def.displaysDefinitions[i]);
 		}
 	}
 	
@@ -55,6 +55,13 @@ namespace engine{
 			for (auto &display : displays){
 				display->update();
 			}
+
+			for (auto &displayIt : destroyedDisplays){
+				displays.erase(displayIt);
+			}
+			destroyedDisplays.clear();
+
+			if (displays.empty()) launched = false;
 		}
 	}
 
@@ -63,13 +70,12 @@ namespace engine{
 		auto it = app->displays.begin();
 		while (it != app->displays.end()){
 			if ((*it).get() == e.getDisplay()){
-				app->displays.erase(it);
+				app->destroyedDisplays.push_back(it);
 				break;
 			}
 			it++;
 		}
 
-		if (app->displays.empty()) app->launched = false;
 	}
 
 	void Application::registerSystemEvents(){

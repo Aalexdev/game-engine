@@ -43,8 +43,6 @@ namespace engine::displays{
 			void *window;
 			Definition windowData;
 
-			Ref<Renderer> renderer;
-
 			void onWindowEvent(void *event);
 			void onWindowClosedEvent(void *event);
 			void onWindowFocusedEvent(void *event);

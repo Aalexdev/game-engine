@@ -31,14 +31,14 @@ namespace engine{
 
 			void run();
 
-			
-
 		private:
 			static void onWindowClosedEvent(WindowCloseEvent &e);
 			void registerSystemEvents();
 
 			bool launched;
 			std::vector<Ref<Display>> displays;
+			std::list<std::vector<Ref<Display>>::iterator> destroyedDisplays;
 			Ref<EventHandler> eventHandler;
+
 	};
 }
