@@ -5,3 +5,7 @@ out/
 *.lib
 *.a
 *.gch
+
+test.cpp
+test.exe
+allocationLog.txt
