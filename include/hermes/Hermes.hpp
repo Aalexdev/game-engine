@@ -92,6 +92,11 @@ class Hermes{
 		// this function will call all callbacks of the triggered events and then reset the data buffer
 		static void update();
 
+		static EventID getRegisteredEventCount();
+		static EventID getMaxEventTypeCount();
+		static size_t getMaxDataBufferSize();
+		static size_t getCurrentlyUsedDataBufferSize();
+
 
 		// ! DEBUG
 		static void printEvents();

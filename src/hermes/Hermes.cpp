@@ -146,3 +146,19 @@ void Hermes::subscribe(EventID id, void* subscribedInstance, EventMt callback){
 	cb.type = cb.Method;
 	event.callbacks->push_back(cb);
 }
+
+Hermes::EventID Hermes::getRegisteredEventCount(){
+	return getInstance().registeredEventCount;
+}
+
+Hermes::EventID Hermes::getMaxEventTypeCount(){
+	return getInstance().maxAvailableEventTypeCount;
+}
+
+size_t Hermes::getMaxDataBufferSize(){
+	return getInstance().dataBuffer->getMaxSize();
+}
+
+size_t Hermes::getCurrentlyUsedDataBufferSize(){
+	return getInstance().dataBuffer->getCurrentUsedSize();
+}
