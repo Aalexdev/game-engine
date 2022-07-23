@@ -6,7 +6,7 @@ CXX = g++
 STD_VERSION = c++17
 LIBSFLAGS = -lmingw32
 CFLAGS =
-DEFINES = -D VERSION='"$(VERSION)"' -D HORREUM_ASSERTS -D HORREUM_PROFILE -D HORREUM_ALLOC_LOG
+DEFINES = -D VERSION='"$(VERSION)"' -D HERMES_ASSERTS -D HERMES_PROFILE -D HORREUM_ALLOC_LOG
 INCLUDE = include/
 
 # directories
@@ -14,7 +14,7 @@ BIN = out
 SRC = src
 OBJ = .obj
 LIB = libs
-EXEC = libhorreum
+EXEC = libHermes
 
 # source files
 SRCS = $(wildcard $(SRC)/*.cpp) $(wildcard $(SRC)/**/*.cpp) $(wildcard $(SRC)/**/**/*.cpp)
@@ -22,12 +22,9 @@ OBJS := $(patsubst %.cpp, $(OBJ)/%.o, $(notdir $(SRCS)))
 
 all: $(EXEC)
 
-test:
-	g++ -o test .\test.cpp -L.\out\ -lhorreum
-
 release: CFLAGS = -Wall -O2 -D NDEBUG
 release: clean
-release: $(EXEC)
+release: all
 
 dbg: CFLAGS = -g3
 dbg: all
