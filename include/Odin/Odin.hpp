@@ -263,7 +263,6 @@ class Odin{
 			Odin &instance = getInstance();
 			Factory* factory = getTypeFactory<T>();
 
-			printf("%s\n", name);
 			void* asset = factory->create(Data(args...));
 			assert(asset != nullptr && "cannot use a nullptr as an asset");
 
