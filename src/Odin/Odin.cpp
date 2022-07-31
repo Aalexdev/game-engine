@@ -5,7 +5,12 @@ Odin& Odin::getInstance(){
 	return instance;
 }
 
+Odin::Odin(){
+	pthread_mutex_init(&lock, nullptr);
+}
+
 Odin::~Odin(){
+	pthread_mutex_destroy(&lock);
 	clear();
 }
 
@@ -28,9 +33,11 @@ void Odin::clear(){
 
 void Odin::removeAsset(std::unordered_map<std::string, AssetData>::iterator it){
 	Odin& instance = getInstance();
-	assert(it != instance.nameToAssetMap.end() && "cannot remove a not registered asset");
-	deleteAssetData(it->second);
 
+	assert(it != instance.nameToAssetMap.end() && "cannot remove a not registered asset");
+	
+
+	deleteAssetData(it->second);
 	instance.nameToAssetMap.erase(it);
 }
 

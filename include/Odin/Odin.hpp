@@ -3,6 +3,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <cassert>
+#include <pthread.h>
 
 #include "../horreum/Horreum.hpp"
 
@@ -184,6 +185,7 @@ class Odin{
 				IT it;
 		};
 
+		Odin();
 		~Odin();
 
 		static void initialize();
@@ -207,21 +209,33 @@ class Odin{
 		static Reference<T> getAsset(const char* name, Args&&... args){
 			Odin& instance = getInstance();
 			// check if the asset as already been loaded
+
+			pthread_mutex_lock(&instance.lock);
 			auto it = instance.nameToAssetMap.find(name);
-			if (it == instance.nameToAssetMap.end()){
-				return loadAsset<T, Args...>(name, args...);
+			bool assetDontExist = it == instance.nameToAssetMap.end();
+
+			if (assetDontExist){
+				auto ref = loadAsset<T, Args...>(name, args...);
+				pthread_mutex_unlock(&instance.lock);
+				return ref;
 			}
 
 			Reference<T> ref(it);
+			
+			pthread_mutex_unlock(&instance.lock);
 			return ref;
 		}
 		
 		template<typename T, typename... Args>
 		static void reload(const char* name, Args&&... args){
 			Odin& instance = getInstance();
+
+			pthread_mutex_lock(&instance.lock);
 			auto it = instance.nameToAssetMap.find(name);
+
 			removeAsset(it);
 			loadAsset<T, Args...>(name, args...);
+			pthread_mutex_unlock(&instance.lock);
 		}
 
 		static void clear();
@@ -236,8 +250,10 @@ class Odin{
 
 		static Factory* getTypeFactory(size_t hashCode){
 			Odin& instance = getInstance();
+
 			auto it = instance.typeToFactoryMap.find(hashCode);
 			assert(it != instance.typeToFactoryMap.end() && "factory not registred for this type of asset");
+
 			return it->second;
 		}
 
@@ -247,6 +263,7 @@ class Odin{
 			Odin &instance = getInstance();
 			Factory* factory = getTypeFactory<T>();
 
+			printf("%s\n", name);
 			void* asset = factory->create(Data(args...));
 			assert(asset != nullptr && "cannot use a nullptr as an asset");
 
@@ -264,22 +281,24 @@ class Odin{
 			#endif
 
 			auto it = instance.nameToAssetMap.find(name);
+			bool assetExist = it != instance.nameToAssetMap.end();
 
 			// if the asset name is already used, we delete the previous asset
-			if (it != instance.nameToAssetMap.end()){
+			if (assetExist){
 				removeAsset(it);
 			}
 
 			instance.nameToAssetMap.insert({name, data});
 			it = instance.nameToAssetMap.find(name);
-			Reference<T> ref(it);
 
+			Reference<T> ref(it);
 			return ref;
 		}
 
 		static void removeAsset(std::unordered_map<std::string, AssetData>::iterator it);
 		static void deleteAssetData(AssetData &asset);
 
+		pthread_mutex_t lock;
 		std::unordered_map<size_t, Factory*> typeToFactoryMap;
 		std::unordered_map<std::string, AssetData> nameToAssetMap;
 };
