@@ -6,7 +6,7 @@ CXX = g++
 STD_VERSION = c++17
 LIBSFLAGS = -lmingw32 -lhorreum
 CFLAGS =
-DEFINES = -D VERSION='"$(VERSION)"' -D ODIN_ASSERTS -D ODIN_PROFILE -D HORREUM_ALLOC_LOG
+DEFINES = -D VERSION='"$(VERSION)"' -D HORREUM_ALLOC_LOG
 INCLUDE = include/
 
 # directories
@@ -14,7 +14,7 @@ BIN = out
 SRC = src
 OBJ = .obj
 LIB = libs
-EXEC = libOdin
+EXEC = libFovea
 
 # source files
 SRCS = $(wildcard $(SRC)/*.cpp) $(wildcard $(SRC)/**/*.cpp) $(wildcard $(SRC)/**/**/*.cpp)

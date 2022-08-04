@@ -5,6 +5,7 @@ out/
 *.lib
 *.a
 *.gch
+*.dll
 
 test.cpp
 test.exe
