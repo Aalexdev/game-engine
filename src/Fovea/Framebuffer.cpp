@@ -71,6 +71,8 @@ namespace Fovea{
 		depthAttachmentEnabled = builder.depthBufferEnabled;
 
 		if (depthAttachmentEnabled){
+			depthFormat = builder.depthFormat;
+
 			if (builder.depthImage == VK_NULL_HANDLE){
 				depthImage = createDepthAttachmentImage(builder);
 			} else {
@@ -85,7 +87,6 @@ namespace Fovea{
 				depthImageView = builder.depthImageView;
 			}
 
-			depthFormat = builder.depthFormat;
 		}
 
 		if (builder.renderPass == VK_NULL_HANDLE){
@@ -176,7 +177,7 @@ namespace Fovea{
 		createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		createInfo.queueFamilyIndexCount = 1;
 		createInfo.pQueueFamilyIndices = &queueFamily;
-		createInfo.initialLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+		createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
 		VkImage image = VK_NULL_HANDLE;
 		getInstance().logicalDevice.createImageWithInfo(createInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image, depthImageMemory);

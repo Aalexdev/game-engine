@@ -10,3 +10,5 @@ out/
 test.cpp
 test.exe
 allocationLog.txt
+compileShaders.bat
+shaders/

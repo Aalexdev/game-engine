@@ -14,7 +14,7 @@ namespace Fovea{
 			VkInstance getInstance() const;
 			VkSurfaceKHR getSurface() const;
 
-			std::vector<const char*> getValidationLayers();
+			std::vector<char*>& getValidationLayers();
 		
 		private:
 			void checkValidationLayers(std::vector<const char *> &validationLayers);
@@ -27,7 +27,7 @@ namespace Fovea{
 			VkDebugUtilsMessengerEXT debugMessenger;
 			VkSurfaceKHR surface;
 
-			std::vector<const char*> validationLayers;
+			std::vector<char*> validationLayers;
 
 			bool validationLayerEnabled;
 

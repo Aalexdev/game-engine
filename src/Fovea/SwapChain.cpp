@@ -7,7 +7,6 @@
 namespace Fovea{
 	SwapChain::SwapChain(std::shared_ptr<SwapChain> previous){
 		oldSwapChain = previous;
-		create();
 	}
 
 	SwapChain::~SwapChain(){

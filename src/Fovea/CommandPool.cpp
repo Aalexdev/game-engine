@@ -9,11 +9,14 @@ namespace Fovea{
 	}
 
 	void CommandPool::initialize(CommandPoolBuilder &builder){
+		flags = builder.flags;
+		family = builder.family;
+		
 		VkCommandPoolCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 
 		createInfo.queueFamilyIndex = getInstance().physicalDevice.getFamily(family).family;
-		createInfo.flags = flags;
+		createInfo.flags = builder.flags;
 
 		if (vkCreateCommandPool(getInstance().logicalDevice.getDevice(), &createInfo, nullptr, &commandPool)){
 			throw std::runtime_error("failed to create a command pool");

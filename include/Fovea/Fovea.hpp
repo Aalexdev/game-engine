@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __FOVEA__H__
+#define __FOVEA__H__
 
 #ifndef _STDINT_H
 	typedef char int8_t;
@@ -15,31 +16,78 @@
 	typedef signed long long sint64_t;
 #endif
 
-namespace Fovea{
+#ifdef __cplusplus
+	extern "C"{
+#endif
 
-	struct ColorRGBA{
-		float r = 0.f;
-		float g = 0.f;
-		float b = 0.f;
-		float a = 0.f;
-	};
+	typedef struct FoveaColor{
+		float r;
+		float g;
+		float b;
+		float a;
+	} FoveaColor;
 
-	struct ColorRGB{
-		float r = 0.f;
-		float g = 0.f;
-		float b = 0.f;
-	};
+	typedef enum FoveaFormats{
+		FoveaFormat_Float,
+		FoveaFormat_Float_vec2,
+		FoveaFormat_Float_vec3,
+		FoveaFormat_Float_vec4,
+		FoveaFormat_Int,
+		FoveaFormat_Int_vec2,
+		FoveaFormat_Int_vec3,
+		FoveaFormat_Int_vec4,
+		FoveaFormat_Uint,
+		FoveaFormat_Uint_vec2,
+		FoveaFormat_Uint_vec3,
+		FoveaFormat_Uint_vec4,
+	} FoveaFormats;
 
+	void FoveaInitialize(void *window);
 
-	void initialize(void *window);
+	void FoveaSetClearColor(const FoveaColor &color);
 
-	void setClearColor(const ColorRGBA &color);
+	void FoveaOnWindowResized(uint32_t width, uint32_t height);
 
-	void setClearColor(const ColorRGB &color);
+	void FoveaBeginFrame();
+	void FoveaEndFrame();
 
-	void onWindowResized(uint32_t width, uint32_t height);
+	// =================== shaders ====================
 
-	void beginFrame();
+	typedef struct FoveaShader{
+		uint64_t id;
+	} FoveaShader;
 
-	void endFrame();
-}
+	typedef enum FoveaShaderSample{
+		FoveaShaderSample_1,
+		FoveaShaderSample_2,
+		FoveaShaderSample_4,
+		FoveaShaderSample_8,
+		FoveaShaderSample_16,
+		FoveaShaderSample_32,
+		FoveaShaderSample_64,
+	} FoveaShaderSample;
+
+	typedef struct FoveaShaderCreateInfo{
+		FoveaShaderSample sample;
+
+		const char* vertexFilepath;
+		const char* fragmentFilepath;
+		const char* geometryFilepath;
+		const char* computeFilepath;
+	} FoveaShaderCreateInfo;
+
+	void FoveaDefaultCreateInfo(FoveaShaderCreateInfo *createInfo);
+
+	FoveaShader FoveaGetShaderFromName(const char *name);
+
+	FoveaShader FoveaCreateShader(const char *name, FoveaShaderCreateInfo *createInfo);
+
+	void FoveaDestroyShader(FoveaShader shader);
+
+	void FoveaUseShader(FoveaShader shader);
+
+#ifdef __cplusplus
+	}
+#endif
+
+#endif

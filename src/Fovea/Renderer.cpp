@@ -140,7 +140,6 @@ namespace Fovea{
 		// 	extent = device.getInstance().getWindow().getExtent();
 		// 	glfwWaitEvents();
 		// }
-
 		vkDeviceWaitIdle(device);
 
 		if (swapChain == nullptr){

@@ -10,6 +10,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityF
 
 	if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT){
 		fprintf(stderr, "%s\n", pCallbackData->pMessage);
+		
 		return VK_FALSE;
 	}
 
@@ -37,6 +38,10 @@ static inline void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUti
 namespace Fovea{
 	Instance::~Instance(){
 		if (validationLayerEnabled) DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
+
+		for (auto &layer : validationLayers){
+			delete layer;
+		}
 
 		vkDestroySurfaceKHR(instance, surface, nullptr);
 		vkDestroyInstance(instance, nullptr);
@@ -87,7 +92,13 @@ namespace Fovea{
 			throw std::runtime_error("failed to create the window surface : " + std::string(SDL_GetError()));
 		}
 
-		validationLayers = builder.validationLayers;
+		validationLayers.resize(builder.validationLayers.size());
+		for (int i=0; i<static_cast<int>(validationLayers.size()); i++){
+			auto &l = validationLayers[i];
+			l = new char[strlen(builder.validationLayers[i])];
+
+			strcpy(l, builder.validationLayers[i]);
+		}
 	}
 
 	void Instance::checkValidationLayers(std::vector<const char *> &validationLayers){
@@ -184,7 +195,7 @@ namespace Fovea{
 		return surface;
 	}
 
-	std::vector<const char*> Instance::getValidationLayers(){
+	std::vector<char*>& Instance::getValidationLayers(){
 		return validationLayers;
 	}
 }

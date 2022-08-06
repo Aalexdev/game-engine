@@ -17,7 +17,7 @@ namespace Fovea{
 
 		FramebufferAttachments() = default;
 		FramebufferAttachments(std::initializer_list<Attachment> attachments){
-			this->attachments.resize(attachments.size());
+ 			this->attachments.resize(attachments.size());
 			size_t i=0;
 			for (auto &a : attachments){
 				this->attachments[i] = a;
