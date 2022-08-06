@@ -2,8 +2,75 @@
 #include "Fovea/Fovea.hpp"
 
 #include "Fovea/Pipeline.hpp"
+#include "Fovea/RenderTarget.hpp"
 
 using namespace Fovea;
+
+VkFormat FoveaImageFormatToVkFormat(FoveaImageFormat format){
+	switch (format){
+		case FoveaImageFormat_R8: return VK_FORMAT_R8_UINT;
+		case FoveaImageFormat_R8G8: return VK_FORMAT_R8G8_UINT;
+		case FoveaImageFormat_R8G8B8: return VK_FORMAT_R8G8B8_UINT;
+		case FoveaImageFormat_R8G8B8A8: return VK_FORMAT_R8G8B8A8_UINT;
+		case FoveaImageFormat_R16: return VK_FORMAT_R16_UINT;
+		case FoveaImageFormat_R16G16: return VK_FORMAT_R16G16_UINT;
+		case FoveaImageFormat_R16G16B16: return VK_FORMAT_R16G16B16_UINT;
+		case FoveaImageFormat_R16G16B16A16: return VK_FORMAT_R16G16B16A16_UINT;
+		case FoveaImageFormat_R32: return VK_FORMAT_R32_UINT;
+		case FoveaImageFormat_R32G32: return VK_FORMAT_R32G32_UINT;
+		case FoveaImageFormat_R32G32B32: return VK_FORMAT_R32G32B32_UINT;
+		case FoveaImageFormat_R32G32B32A32: return VK_FORMAT_R32G32B32A32_UINT;
+		case FoveaImageFormat_R64: return VK_FORMAT_R64_UINT;
+		case FoveaImageFormat_R64G64: return VK_FORMAT_R64G64_UINT;
+		case FoveaImageFormat_R64G64B64: return VK_FORMAT_R64G64B64_UINT;
+		case FoveaImageFormat_R64G64B64A64: return VK_FORMAT_R64G64B64A64_UINT;
+		case FoveaImageFormat_R4G4: return VK_FORMAT_R4G4_UNORM_PACK8;
+		case FoveaImageFormat_R4G4B4A4: return VK_FORMAT_R4G4B4A4_UNORM_PACK16;
+		case FoveaImageFormat_R5G5B5A1: return VK_FORMAT_R5G5B5A1_UNORM_PACK16;
+		case FoveaImageFormat_R5B6G5: return VK_FORMAT_R5G6B5_UNORM_PACK16;
+		case FoveaImageFormat_D32: return VK_FORMAT_D32_SFLOAT;
+		case FoveaImageFormat_D32_S8: return VK_FORMAT_D32_SFLOAT_S8_UINT;
+		case FoveaImageFormat_D24_S8: return VK_FORMAT_D24_UNORM_S8_UINT;
+	}
+	return VK_FORMAT_R8G8B8_UINT;
+}
+
+VkImageTiling FoveaImageTilingToVulkanImageTiling(FoveaImageTiling tiling){
+	switch (tiling){
+		case FoveaImageTiling_Linear: VK_IMAGE_TILING_LINEAR;
+		case FoveaImageTiling_Nearest: VK_IMAGE_TILING_OPTIMAL;
+	}
+	return VK_IMAGE_TILING_LINEAR;
+}
+
+VkSampleCountFlagBits FoveaSampleToVkSample(FoveaSample sample){
+	switch (sample){
+		case FoveaSample_1: return VK_SAMPLE_COUNT_1_BIT;
+		case FoveaSample_2: return VK_SAMPLE_COUNT_2_BIT;
+		case FoveaSample_4: return VK_SAMPLE_COUNT_4_BIT;
+		case FoveaSample_8: return VK_SAMPLE_COUNT_8_BIT;
+		case FoveaSample_16: return VK_SAMPLE_COUNT_16_BIT;
+		case FoveaSample_32: return VK_SAMPLE_COUNT_32_BIT;
+		case FoveaSample_64: return VK_SAMPLE_COUNT_64_BIT;
+	}
+	return VK_SAMPLE_COUNT_1_BIT;
+}
+
+int FoveaShaderTypeToPipelineStage(FoveaShaderType type){
+	switch (type){
+		case FoveaShaderType_Graphic: return VK_SHADER_STAGE_ALL_GRAPHICS;
+		case FoveaShaderType_Compute: return VK_SHADER_STAGE_COMPUTE_BIT;
+	}
+	return 0;
+}
+
+RenderTarget::ClearColor FoveaColorToRenderTargetClearColor(FoveaColor color){
+	return {color.r, color.g, color.b, color.a};
+}
+
+VkExtent2D FoveaUIVec2ToVkExtent(FoveaUIVec2 vec){
+	return {vec.width, vec.height};
+}
 
 void initializeInstance(void *window){
 	InstanceBuilder builder;
@@ -98,21 +165,11 @@ void FoveaEndFrame(){
 }
 
 void FoveaDefaultCreateInfo(FoveaShaderCreateInfo *createInfo){
-	createInfo->sample = FoveaShaderSample_1;
+	createInfo->sample = FoveaSample_1;
+	createInfo->type = FoveaShaderType_Graphic;
+	createInfo->pushConstantSize = 0;
 }
 
-VkSampleCountFlagBits FoveaSampleToVkSample(FoveaShaderSample sample){
-	switch (sample){
-		case FoveaShaderSample_1: return VK_SAMPLE_COUNT_1_BIT;
-		case FoveaShaderSample_2: return VK_SAMPLE_COUNT_2_BIT;
-		case FoveaShaderSample_4: return VK_SAMPLE_COUNT_4_BIT;
-		case FoveaShaderSample_8: return VK_SAMPLE_COUNT_8_BIT;
-		case FoveaShaderSample_16: return VK_SAMPLE_COUNT_16_BIT;
-		case FoveaShaderSample_32: return VK_SAMPLE_COUNT_32_BIT;
-		case FoveaShaderSample_64: return VK_SAMPLE_COUNT_64_BIT;
-	}
-	return VK_SAMPLE_COUNT_1_BIT;
-}
 
 FoveaShader FoveaCreateShader(const char *name, FoveaShaderCreateInfo *createInfo){
 	PipelineBuilder builder;
@@ -124,12 +181,13 @@ FoveaShader FoveaCreateShader(const char *name, FoveaShaderCreateInfo *createInf
 	builder->multisampleInfo.rasterizationSamples = FoveaSampleToVkSample(createInfo->sample);
 
 	builder.setRenderPass(getInstance().renderer.getSwapChain().getRenderPass());
+	builder.setPushConstant(createInfo->pushConstantSize, FoveaShaderTypeToPipelineStage(createInfo->type));
 
-	return {getInstance().pipelineLibrary.push(&builder, name)};
+	return static_cast<FoveaShader>(getInstance().pipelineLibrary.push(&builder, name));
 }
 
 void FoveaDestroyShader(FoveaShader shader){
-	getInstance().pipelineLibrary.erase(shader.id);
+	getInstance().pipelineLibrary.erase(shader);
 }
 
 FoveaShader FoveaGetShaderFromName(const char *name){
@@ -137,8 +195,57 @@ FoveaShader FoveaGetShaderFromName(const char *name){
 }
 
 void FoveaUseShader(FoveaShader shader){
-	auto pipeline = getInstance().pipelineLibrary.get(shader.id);
+	auto pipeline = getInstance().pipelineLibrary.get(shader);
 	pipeline->bind(frameCommandBuffer());
+}
 
-	vkCmdDraw(frameCommandBuffer(), 3, 1, 0, 0);
+void FoveaSetShaderPushConstant(FoveaShader shader, void *data){
+	getInstance().pipelineLibrary.get(shader)->bindPushConstant(frameCommandBuffer(), data);
+}
+
+FoveaRenderTarget FoveaCreateRenderTarget(const char *name, FoveaRenderTargetCreateInfo *createInfo){
+	RenderTargetBuilder builder;
+
+	FramebufferAttachments attachments;
+
+	attachments.attachments.resize(createInfo->colorAttachmentCount);
+
+	for (uint32_t i=0; i<createInfo->colorAttachmentCount; i++){
+		auto &attachment = attachments.attachments[i];
+		auto &info = createInfo->colorAttachments[i];
+
+		attachment.format = FoveaImageFormatToVkFormat(info.format);
+		attachment.tiling = FoveaImageTilingToVulkanImageTiling(info.tiling);
+		attachment.samples = FoveaSampleToVkSample(info.sample);
+	}
+
+	builder->setAttachments(attachments);
+	builder->setExtent(FoveaUIVec2ToVkExtent(createInfo->size));
+
+	for (uint32_t i=0; i<createInfo->colorAttachmentCount; i++){
+		builder.setAttachmentClearColor(i, FoveaColorToRenderTargetClearColor(createInfo->colorAttachments[i].clearColor));
+	}
+
+	if (createInfo->depthStencilEnabled == Fovea_True){
+		builder->enableDepthAttachment(FoveaImageFormatToVkFormat(createInfo->depthFormat));
+		builder.setDepthStencilClearColor(createInfo->depthClearValue, createInfo->stencilClearValue);
+	}
+
+	return static_cast<FoveaRenderTarget>(getInstance().renderTargetLibrary.push(&builder, name));
+}
+
+void FoveaDestroyRenderTarget(FoveaRenderTarget renderTarget){
+	getInstance().renderTargetLibrary.erase(renderTarget);
+}
+
+FoveaRenderTarget getRenderTargetFromName(const char *name){
+	return getInstance().renderTargetLibrary.getIDFromName(name);
+}
+
+void FoveaBeginRenderTarget(FoveaRenderTarget renderTarget){
+	getInstance().renderTargetLibrary.get(renderTarget)->beginRenderPass(frameCommandBuffer());
+}
+
+void FoveaEndRenderTarget(FoveaRenderTarget renderTarget){
+	getInstance().renderTargetLibrary.get(renderTarget)->endRenderPass(frameCommandBuffer());
 }

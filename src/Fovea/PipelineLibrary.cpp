@@ -48,6 +48,13 @@ namespace Fovea{
 
 	void PipelineLibrary::erase(ID id){
 		auto it = pipelines.begin() + id;
+
+		for (auto &n : nameToIndexMap){
+			if (n.second == id){
+				nameToIndexMap.erase(n.first);
+			}
+		}
+
 		delete *it;
 		pipelines.erase(it);
 	}

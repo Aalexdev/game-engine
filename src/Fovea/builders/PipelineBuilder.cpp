@@ -94,4 +94,10 @@ namespace Fovea{
 	void PipelineBuilder::setSubpass(uint32_t subpass){
 		config.subpass = subpass;
 	}
+
+	void PipelineBuilder::setPushConstant(size_t size, int stages){
+		pushConstant.size = size;
+		pushConstant.stages = stages;
+		pushConstant.binding = 0;
+	}
 }

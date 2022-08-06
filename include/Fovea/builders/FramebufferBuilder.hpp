@@ -37,6 +37,8 @@ namespace Fovea{
 
 	class FramebufferBuilder{
 		friend class Framebuffer;
+		friend class RenderTarget;
+		friend class RenderTargetBuilder;
 		public:
 			FramebufferBuilder() = default;
 

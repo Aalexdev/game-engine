@@ -52,8 +52,8 @@ namespace Fovea{
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 	}
 
-	void Pipeline::bindPushConstant(){
-		
+	void Pipeline::bindPushConstant(VkCommandBuffer commandBuffer, void *data){
+		vkCmdPushConstants(commandBuffer, layout, pushConstantStages, 0, pushConstantSize, data);
 	}
 
 	void Pipeline::createGraphicPipeline(PipelineBuilder &builder){
@@ -136,6 +136,9 @@ namespace Fovea{
 		range.offset = 0;
 		range.size = builder.pushConstant.size;
 		range.stageFlags = stageToVkStages(builder.pushConstant.stages);
+
+		pushConstantSize = builder.pushConstant.size;
+		pushConstantStages = range.stageFlags;
 
 		VkPipelineLayoutCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

@@ -7,6 +7,7 @@
 #include "Renderer.hpp"
 #include "Pipeline.hpp"
 #include "PipelineLibrary.hpp"
+#include "RenderTargetLibrary.hpp"
 
 namespace Fovea{
 
@@ -22,6 +23,7 @@ namespace Fovea{
 		CommandPool renderCommandPool;
 		Renderer renderer;
 		PipelineLibrary pipelineLibrary;
+		RenderTargetLibrary renderTargetLibrary;
 
 		WaitIdle wait;
 	};

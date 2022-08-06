@@ -4,6 +4,7 @@
 
 namespace Fovea{
 	class Framebuffer{
+		friend class RenderTarget;
 		public:
 			Framebuffer() = default;
 			Framebuffer(FramebufferBuilder &builder);
@@ -20,9 +21,10 @@ namespace Fovea{
 			VkImageView getDepthAttachmentImageView();
 			VkFormat getDepthAttachmentFormat();
 			VkFramebuffer getFramebuffer();
+			VkExtent2D getExtent();
 		
 		private:
-			VkImage createColorAttachmentImage(FramebufferBuilder &builder, FramebufferAttachments::Attachment &attachment);
+			VkImage createColorAttachmentImage(FramebufferBuilder &builder, FramebufferAttachments::Attachment &attachment, VkDeviceMemory *imageMemory);
 			VkImageView createColorAttachmentImageView(FramebufferBuilder &builder, uint8_t attachmentIndex);
 
 			VkImage createDepthAttachmentImage(FramebufferBuilder &builder);
@@ -48,6 +50,7 @@ namespace Fovea{
 				VkFormat format;
 				CustomableMember<VkImage> image = VK_NULL_HANDLE;
 				CustomableMember<VkImageView> imageView = VK_NULL_HANDLE;
+				VkDeviceMemory imageMemory;
 			};
 
 			CustomableMember<VkRenderPass> renderPass = VK_NULL_HANDLE;

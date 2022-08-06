@@ -14,33 +14,35 @@ namespace Fovea{
 	}
 
 	void Framebuffer::destroy(){
+		VkDevice device = getInstance().logicalDevice.getDevice();
 		for (auto &color : colorAttachments){
 			if (!color.image.custom){
-				vkDestroyImage(getInstance().logicalDevice.getDevice(), color.image, nullptr);
+				vkDestroyImage(device, color.image, nullptr);
+				vkFreeMemory(device, color.imageMemory, nullptr);
 			}
 
 			if (!color.imageView.custom){
-				vkDestroyImageView(getInstance().logicalDevice.getDevice(), color.imageView, nullptr);
+				vkDestroyImageView(device, color.imageView, nullptr);
 			}
 		}
 
 		if (depthAttachmentEnabled){
 			if (!depthImage.custom){
-				vkDestroyImage(getInstance().logicalDevice.getDevice(), depthImage, nullptr);
+				vkDestroyImage(device, depthImage, nullptr);
 			}
 
-			vkFreeMemory(getInstance().logicalDevice.getDevice(), depthImageMemory, nullptr);
+			vkFreeMemory(device, depthImageMemory, nullptr);
 
 			if (!depthImageView.custom){
-				vkDestroyImageView(getInstance().logicalDevice.getDevice(), depthImageView, nullptr);
+				vkDestroyImageView(device, depthImageView, nullptr);
 			}
 		}
 
 		if (!renderPass.custom){
-			vkDestroyRenderPass(getInstance().logicalDevice.getDevice(), renderPass, nullptr);
+			vkDestroyRenderPass(device, renderPass, nullptr);
 		}
 
-		vkDestroyFramebuffer(getInstance().logicalDevice.getDevice(), framebuffer, nullptr);
+		vkDestroyFramebuffer(device, framebuffer, nullptr);
 	}
 
 	void Framebuffer::initialize(FramebufferBuilder &builder){
@@ -54,7 +56,7 @@ namespace Fovea{
 			attachment.format = build.format;
 
 			if (build.image == VK_NULL_HANDLE){
-				attachment.image = createColorAttachmentImage(builder, build);
+				attachment.image = createColorAttachmentImage(builder, build, &attachment.imageMemory);
 			} else {
 				attachment.image.custom = true;
 				attachment.image = build.image;
@@ -99,7 +101,7 @@ namespace Fovea{
 		framebuffer = createFramebuffer(builder);
 	}
 
-	VkImage Framebuffer::createColorAttachmentImage(FramebufferBuilder &builder, FramebufferAttachments::Attachment &attachment){
+	VkImage Framebuffer::createColorAttachmentImage(FramebufferBuilder &builder, FramebufferAttachments::Attachment &attachment, VkDeviceMemory *imageMemory){
 		VkImageCreateInfo createInfo = {};
 
 		uint32_t queueFamily = getInstance().physicalDevice.getFamily(PhysicalDeviceFamily::FAMILY_GRAPHIC).family;
@@ -121,13 +123,10 @@ namespace Fovea{
 		createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		createInfo.queueFamilyIndexCount = 1;
 		createInfo.pQueueFamilyIndices = &queueFamily;
-		createInfo.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
 		VkImage image = VK_NULL_HANDLE;
-		if (vkCreateImage(getInstance().logicalDevice.getDevice(), &createInfo, nullptr, &image) != VK_SUCCESS){
-			throw std::runtime_error("failed to create color attachment image");
-		}
-
+		getInstance().logicalDevice.createImageWithInfo(createInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image, *imageMemory);
 		return image;
 	}
 
@@ -186,7 +185,6 @@ namespace Fovea{
 	}
 
 	VkImageView Framebuffer::createDepthAttachmentImageView(FramebufferBuilder &builder){
-		
 		VkImageSubresourceRange subResourceRange = {};
 		subResourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 		subResourceRange.baseMipLevel = 0;
@@ -363,4 +361,9 @@ namespace Fovea{
 	VkFormat Framebuffer::getDepthAttachmentFormat(){
 		return depthFormat;
 	}
+
+	VkExtent2D Framebuffer::getExtent(){
+		return extent;
+	}
+
 }

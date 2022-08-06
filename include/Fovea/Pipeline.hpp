@@ -14,7 +14,7 @@ namespace Fovea{
 			void initialize(PipelineBuilder *builder);
 			const PipelineConfigInfo& getConfig();
 			void bind(VkCommandBuffer commandBuffer);
-			void bindPushConstant(); 
+			void bindPushConstant(VkCommandBuffer, void* data); 
 
 		private:
 			struct ShaderModule{
@@ -29,11 +29,12 @@ namespace Fovea{
 
 			VkPipeline pipeline = VK_NULL_HANDLE;
 			VkPipelineLayout layout = VK_NULL_HANDLE;
+			uint32_t pushConstantSize = 0;
+			VkShaderStageFlags pushConstantStages;
 
 			PipelineConfigInfo config;
 
 			std::vector<ShaderModule> shaderModule;
-			void *pushConstantData = nullptr;
 
 	};
 }

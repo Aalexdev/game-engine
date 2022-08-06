@@ -59,10 +59,10 @@ namespace Fovea{
 
 			template<typename T>
 			void setPushConstant(int stages = PipelineStage::VERTEX | PipelineStage::FRAGMENT){
-				pushConstant.size = sizeof(T);
-				pushConstant.stages = stages;
-				pushConstant.binding = 0;
+				setPushConstant(sizeof(T), stages);
 			}
+			
+			void setPushConstant(size_t size, int stages);
 
 			void setRenderPass(VkRenderPass renderPass);
 			void setSubpass(uint32_t subpass);
