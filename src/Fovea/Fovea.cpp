@@ -1,5 +1,5 @@
 #include "Fovea/core.hpp"
-#include "Fovea/Fovea.hpp"
+#include "Fovea/Fovea.h"
 
 #include "Fovea/Pipeline.hpp"
 #include "Fovea/RenderTarget.hpp"
@@ -130,7 +130,7 @@ void FoveaInitialize(void* window){
 	initializeRenderer();
 }
 
-void FoveaSetClearColor(const FoveaColor &color){
+void FoveaSetClearColor(const FoveaColor color){
 	getInstance().renderer.setClearColor(color.r, color.g, color.b, color.a);
 }
 

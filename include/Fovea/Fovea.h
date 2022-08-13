@@ -135,11 +135,12 @@ typedef struct FoveaRenderTargetCreateInfo{
 
 void FoveaInitialize(void *window);
 
-void FoveaSetClearColor(const FoveaColor &color);
+void FoveaSetClearColor(const FoveaColor color);
 
 void FoveaOnWindowResized(uint32_t width, uint32_t height);
 
 void FoveaBeginFrame();
+
 void FoveaEndFrame();
 
 // =================== shaders ====================
@@ -161,9 +162,11 @@ void FoveaSetShaderPushConstant(FoveaShader shader, void *data);
 FoveaRenderTarget FoveaCreateRenderTarget(const char *name, FoveaRenderTargetCreateInfo *createInfo);
 
 void FoveaDestroyRenderTarget(FoveaRenderTarget renderTarget);
+
 FoveaRenderTarget getRenderTargetFromName(const char *name);
 
 void FoveaBeginRenderTarget(FoveaRenderTarget renderTarget);
+
 void FoveaEndRenderTarget(FoveaRenderTarget renderTarget);
 
 	
