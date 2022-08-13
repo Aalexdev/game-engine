@@ -21,9 +21,11 @@
 #endif
 
 #define FOVEA_NONE (uint64_t)-1
+#define FOVEA_WHOLE_SIZE (~0ULL)
 
 typedef uint64_t FoveaShader;
 typedef uint64_t FoveaRenderTarget;
+typedef uint64_t FoveaBuffer;
 
 typedef enum FoveaBool{
 	Fovea_False = 0,
@@ -133,15 +135,17 @@ typedef struct FoveaRenderTargetCreateInfo{
 	FoveaUIVec2 size;
 } FoveaRenderTargetCreateInfo;
 
+// ========================= base functions =========================
+
 void FoveaInitialize(void *window);
 
 void FoveaSetClearColor(const FoveaColor color);
 
 void FoveaOnWindowResized(uint32_t width, uint32_t height);
 
-void FoveaBeginFrame();
+void FoveaBeginFrame(void);
 
-void FoveaEndFrame();
+void FoveaEndFrame(void);
 
 // =================== shaders ====================
 
@@ -169,7 +173,6 @@ void FoveaBeginRenderTarget(FoveaRenderTarget renderTarget);
 
 void FoveaEndRenderTarget(FoveaRenderTarget renderTarget);
 
-	
 #ifdef __cplusplus
 	}
 #endif
