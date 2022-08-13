@@ -1,4 +1,4 @@
-#include "core.hpp"
+#include "Fovea/core.hpp"
 #include "Fovea/SingleTimeCommand.hpp"
 
 #include <stdexcept>
