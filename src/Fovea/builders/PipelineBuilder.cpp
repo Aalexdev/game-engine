@@ -100,4 +100,8 @@ namespace Fovea{
 		pushConstant.stages = stages;
 		pushConstant.binding = 0;
 	}
+
+	void PipelineBuilder::setBase(Pipeline* base){
+		this->base = base;
+	}
 }

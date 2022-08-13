@@ -164,12 +164,13 @@ void FoveaEndFrame(){
 	renderer.endFrame();
 }
 
-void FoveaDefaultCreateInfo(FoveaShaderCreateInfo *createInfo){
+void FoveaDefaultShaderCreateInfo(FoveaShaderCreateInfo *createInfo){
 	createInfo->sample = FoveaSample_1;
 	createInfo->type = FoveaShaderType_Graphic;
 	createInfo->pushConstantSize = 0;
+	createInfo->base = FOVEA_NONE;
+	createInfo->target = FOVEA_NONE;
 }
-
 
 FoveaShader FoveaCreateShader(const char *name, FoveaShaderCreateInfo *createInfo){
 	PipelineBuilder builder;
@@ -180,8 +181,17 @@ FoveaShader FoveaCreateShader(const char *name, FoveaShaderCreateInfo *createInf
 	if (createInfo->computeFilepath != nullptr) builder.setShaderStage(PipelineStage::COMPUTE, createInfo->computeFilepath);
 	builder->multisampleInfo.rasterizationSamples = FoveaSampleToVkSample(createInfo->sample);
 
-	builder.setRenderPass(getInstance().renderer.getSwapChain().getRenderPass());
+	if (createInfo->target != FOVEA_NONE){
+		builder.setRenderPass(getInstance().renderTargetLibrary.get(createInfo->target)->getRenderPass());
+	} else {
+		builder.setRenderPass(getInstance().renderer.getSwapChain().getRenderPass());
+	}
+	
 	builder.setPushConstant(createInfo->pushConstantSize, FoveaShaderTypeToPipelineStage(createInfo->type));
+
+	if (createInfo->base != FOVEA_NONE){
+		builder.setBase(getInstance().pipelineLibrary.get(createInfo->base));
+	}
 
 	return static_cast<FoveaShader>(getInstance().pipelineLibrary.push(&builder, name));
 }

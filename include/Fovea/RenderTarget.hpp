@@ -17,10 +17,9 @@ namespace Fovea{
 			~RenderTarget();
 
 			void initialize(RenderTargetBuilder &builder);
-
 			void beginRenderPass(VkCommandBuffer commandBuffer);
-
 			void endRenderPass(VkCommandBuffer commandBuffer);
+			VkRenderPass getRenderPass();
 		
 		private:
 			void createRenderPass(RenderTargetBuilder &builder);

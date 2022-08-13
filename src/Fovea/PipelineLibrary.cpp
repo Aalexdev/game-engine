@@ -30,6 +30,11 @@ namespace Fovea{
 			return invalidID;
 		}
 
+		if (pipeline->refCount == nullptr){
+			refCounts.push_back(1);
+			pipeline->refCount = &refCounts.back();
+		}
+
 		ID id = pipelines.size();
 		pipelines.push_back(pipeline);
 		return id;
@@ -49,11 +54,29 @@ namespace Fovea{
 	void PipelineLibrary::erase(ID id){
 		auto it = pipelines.begin() + id;
 
-		for (auto &n : nameToIndexMap){
-			if (n.second == id){
-				nameToIndexMap.erase(n.first);
+		{
+			for (auto &n : nameToIndexMap){
+				if (n.second == id){
+					nameToIndexMap.erase(n.first);
+				}
 			}
 		}
+
+		// {
+		// 	auto pipeline = *it;
+
+		// 	if (*pipeline->refCount == 1){
+		// 		auto refIt = refCounts.begin();
+
+		// 		while (refIt != refCounts.end()){
+		// 			if (&*refIt == pipeline->refCount){
+		// 				refCounts.erase(refIt);
+		// 				break;
+		// 			}
+		// 			it++;
+		// 		}
+		// 	}
+		// }
 
 		delete *it;
 		pipelines.erase(it);

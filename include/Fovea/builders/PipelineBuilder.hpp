@@ -49,6 +49,8 @@ namespace Fovea{
 		UNSGINED_INT_VEC4 = VK_FORMAT_R32G32B32A32_UINT,
 	};
 
+	class Pipeline;
+
 	class PipelineBuilder{
 		friend class Pipeline;
 		public:
@@ -66,6 +68,8 @@ namespace Fovea{
 
 			void setRenderPass(VkRenderPass renderPass);
 			void setSubpass(uint32_t subpass);
+
+			void setBase(Pipeline* base);
 			
 		private:
 			struct ShaderStage{
@@ -84,5 +88,6 @@ namespace Fovea{
 
 			PipelineConfigInfo config;
 			PushConstant pushConstant;
+			Pipeline* base = nullptr;
 	};
 }

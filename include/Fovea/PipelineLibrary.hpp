@@ -25,5 +25,6 @@ namespace Fovea{
 		private:
 			std::vector<Pipeline*> pipelines;
 			std::unordered_map<std::string, ID> nameToIndexMap;
+			std::vector<size_t> refCounts;
 	};
 }

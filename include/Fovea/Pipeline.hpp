@@ -4,9 +4,10 @@
 
 namespace Fovea{
 	class Pipeline{
+		friend class PipelineLibrary;
 		public:
 			Pipeline() = default;
-			Pipeline(const Pipeline &) = default;
+			Pipeline(const Pipeline &) = delete;
 
 			Pipeline(PipelineBuilder *builder);
 			~Pipeline();
@@ -33,8 +34,8 @@ namespace Fovea{
 			VkShaderStageFlags pushConstantStages;
 
 			PipelineConfigInfo config;
+			std::vector<ShaderModule> shaderModules;
 
-			std::vector<ShaderModule> shaderModule;
-
+			size_t *refCount = nullptr;
 	};
 }

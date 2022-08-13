@@ -20,6 +20,8 @@
 	extern "C"{
 #endif
 
+#define FOVEA_NONE (uint64_t)-1
+
 typedef uint64_t FoveaShader;
 typedef uint64_t FoveaRenderTarget;
 
@@ -105,6 +107,8 @@ typedef struct FoveaShaderCreateInfo{
 	FoveaSample sample;
 	FoveaShaderType type;
 	uint32_t pushConstantSize;
+	FoveaRenderTarget target;
+	FoveaShader base;
 
 	const char* vertexFilepath;
 	const char* fragmentFilepath;
@@ -140,7 +144,7 @@ void FoveaEndFrame();
 
 // =================== shaders ====================
 
-void FoveaDefaultCreateInfo(FoveaShaderCreateInfo *createInfo);
+void FoveaDefaultShaderCreateInfo(FoveaShaderCreateInfo *createInfo);
 
 FoveaShader FoveaGetShaderFromName(const char *name);
 

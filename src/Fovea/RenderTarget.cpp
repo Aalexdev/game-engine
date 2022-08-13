@@ -158,4 +158,8 @@ namespace Fovea{
 			throw std::runtime_error("failed to create render target render pass");
 		}
 	}
+
+	VkRenderPass RenderTarget::getRenderPass(){
+		return renderPass;
+	}
 }
