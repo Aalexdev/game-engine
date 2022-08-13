@@ -6,11 +6,7 @@ namespace Fovea{
 	}
 
 	PipelineLibrary::~PipelineLibrary(){
-		for (auto &p : pipelines){
-			delete p;
-		}
-
-		pipelines.clear();
+		clear();
 	}
 
 	PipelineLibrary::ID PipelineLibrary::push(PipelineBuilder *builder, const char *name){
@@ -35,8 +31,23 @@ namespace Fovea{
 			pipeline->refCount = &refCounts.back();
 		}
 
-		ID id = pipelines.size();
-		pipelines.push_back(pipeline);
+		ID id = 0;
+		
+		if (holes == 0){
+			id = pipelines.size();
+			pipelines.push_back(pipeline);
+			return id;
+		}
+
+		for (; id<pipelines.size(); id++){
+			if (pipelines[id] == nullptr){
+				pipelines[id] = pipeline;
+				break;
+			}
+		}
+
+		holes--;
+
 		return id;
 	}
 
@@ -52,7 +63,6 @@ namespace Fovea{
 	}
 
 	void PipelineLibrary::erase(ID id){
-		auto it = pipelines.begin() + id;
 
 		{
 			for (auto &n : nameToIndexMap){
@@ -62,23 +72,35 @@ namespace Fovea{
 			}
 		}
 
-		// {
-		// 	auto pipeline = *it;
+		{
+			auto pipeline = pipelines[id];
 
-		// 	if (*pipeline->refCount == 1){
-		// 		auto refIt = refCounts.begin();
+			if (*pipeline->refCount == 1){
+				auto it = refCounts.begin();
 
-		// 		while (refIt != refCounts.end()){
-		// 			if (&*refIt == pipeline->refCount){
-		// 				refCounts.erase(refIt);
-		// 				break;
-		// 			}
-		// 			it++;
-		// 		}
-		// 	}
-		// }
+				while (it != refCounts.end()){
+					if (&*it == pipeline->refCount){
+						refCounts.erase(it);
+						break;
+					}
+					it++;
+				}
+			}
+		}
+
+		auto it = pipelines.begin() + id;
 
 		delete *it;
-		pipelines.erase(it);
+		pipelines[id] = nullptr;
+		holes++;
+	}
+
+	void PipelineLibrary::clear(){
+		for (auto &p : pipelines){
+			delete p;
+		}
+
+		pipelines.clear();
+		holes=0;
 	}
 }

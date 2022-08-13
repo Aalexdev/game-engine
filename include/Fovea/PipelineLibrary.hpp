@@ -21,10 +21,13 @@ namespace Fovea{
 
 			ID getIDFromName(const std::string &name);
 			Pipeline* get(ID id);
+
+			void clear();
 			
 		private:
 			std::vector<Pipeline*> pipelines;
 			std::unordered_map<std::string, ID> nameToIndexMap;
 			std::vector<size_t> refCounts;
+			uint32_t holes = 0;
 	};
 }

@@ -7,11 +7,7 @@ namespace Fovea{
 	}
 
 	RenderTargetLibrary::~RenderTargetLibrary(){
-		for (auto &r : renderTargets){
-			delete r;
-		}
-
-		renderTargets.clear();
+		clear();
 	}
 
 	RenderTargetLibrary::ID RenderTargetLibrary::push(RenderTargetBuilder *builder, const char *name){
@@ -30,8 +26,22 @@ namespace Fovea{
 			return invalidID;
 		}
 
-		ID id = renderTargets.size();
-		renderTargets.push_back(target);
+		ID id = 0;
+		if (holes == 0){
+			id = renderTargets.size();
+			renderTargets.push_back(target);
+			return id;
+		}
+
+		for (; id<renderTargets.size(); id++){
+			if (renderTargets[id] == nullptr){
+				renderTargets[id] = target;
+				break;
+			}
+		}
+
+		holes--;
+		
 		return id;
 	}
 
@@ -57,5 +67,14 @@ namespace Fovea{
 	RenderTarget* RenderTargetLibrary::get(ID id){
 		if (id >= renderTargets.size()) return nullptr;
 		return renderTargets[id];
+	}
+
+	void RenderTargetLibrary::clear(){
+		for (auto &r : renderTargets){
+			delete r;
+		}
+
+		renderTargets.clear();
+		holes = 0;
 	}
 }

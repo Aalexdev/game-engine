@@ -21,9 +21,12 @@ namespace Fovea{
 
 			ID getIDFromName(const char *name);
 			RenderTarget* get(ID id);
+
+			void clear();
 		
 		private:
 			std::vector<RenderTarget*> renderTargets;
 			std::unordered_map<std::string, ID> nameToIndexMap;
+			uint32_t holes = 0;
 	};
 }
