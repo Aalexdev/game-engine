@@ -4,7 +4,9 @@
 
 namespace Fovea{
 	class DescriptorPool{
+		friend class DescriptorWriter;
 		public:
+			DescriptorPool() = default;
 			DescriptorPool(DescriptorPoolBuilder &builder){
 				initialize(builder);
 			}

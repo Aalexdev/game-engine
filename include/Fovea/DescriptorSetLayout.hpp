@@ -5,13 +5,15 @@
 
 namespace Fovea{
 	class DescriptorSetLayout{
+		friend class DescriptorWriter;
 		public:
+			DescriptorSetLayout() = default;
 			DescriptorSetLayout(const DescriptorSetLayoutBuilder &builder){
 				initialize(builder);
 			}
 			~DescriptorSetLayout();
 			void initialize(const DescriptorSetLayoutBuilder &builder);
-			
+
 			VkDescriptorSetLayout getDescriptorSetLayout();
 
 		private:
