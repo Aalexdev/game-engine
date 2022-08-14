@@ -6,7 +6,7 @@
 
 using namespace Fovea;
 
-VkFormat FoveaImageFormatToVkFormat(FoveaImageFormat format){
+static inline VkFormat FoveaImageFormatToVkFormat(FoveaImageFormat format){
 	switch (format){
 		case FoveaImageFormat_R8: return VK_FORMAT_R8_UINT;
 		case FoveaImageFormat_R8G8: return VK_FORMAT_R8G8_UINT;
@@ -35,7 +35,7 @@ VkFormat FoveaImageFormatToVkFormat(FoveaImageFormat format){
 	return VK_FORMAT_R8G8B8_UINT;
 }
 
-VkImageTiling FoveaImageTilingToVulkanImageTiling(FoveaImageTiling tiling){
+static inline VkImageTiling FoveaImageTilingToVulkanImageTiling(FoveaImageTiling tiling){
 	switch (tiling){
 		case FoveaImageTiling_Linear: VK_IMAGE_TILING_LINEAR;
 		case FoveaImageTiling_Nearest: VK_IMAGE_TILING_OPTIMAL;
@@ -43,7 +43,7 @@ VkImageTiling FoveaImageTilingToVulkanImageTiling(FoveaImageTiling tiling){
 	return VK_IMAGE_TILING_LINEAR;
 }
 
-VkSampleCountFlagBits FoveaSampleToVkSample(FoveaSample sample){
+static inline VkSampleCountFlagBits FoveaSampleToVkSample(FoveaSample sample){
 	switch (sample){
 		case FoveaSample_1: return VK_SAMPLE_COUNT_1_BIT;
 		case FoveaSample_2: return VK_SAMPLE_COUNT_2_BIT;
@@ -56,7 +56,7 @@ VkSampleCountFlagBits FoveaSampleToVkSample(FoveaSample sample){
 	return VK_SAMPLE_COUNT_1_BIT;
 }
 
-int FoveaShaderTypeToPipelineStage(FoveaShaderType type){
+static inline int FoveaShaderTypeToPipelineStage(FoveaShaderType type){
 	switch (type){
 		case FoveaShaderType_Graphic: return VK_SHADER_STAGE_ALL_GRAPHICS;
 		case FoveaShaderType_Compute: return VK_SHADER_STAGE_COMPUTE_BIT;
@@ -64,11 +64,11 @@ int FoveaShaderTypeToPipelineStage(FoveaShaderType type){
 	return 0;
 }
 
-RenderTarget::ClearColor FoveaColorToRenderTargetClearColor(FoveaColor color){
+static inline RenderTarget::ClearColor FoveaColorToRenderTargetClearColor(FoveaColor color){
 	return {color.r, color.g, color.b, color.a};
 }
 
-VkExtent2D FoveaUIVec2ToVkExtent(FoveaUIVec2 vec){
+static inline VkExtent2D FoveaUIVec2ToVkExtent(FoveaUIVec2 vec){
 	return {vec.width, vec.height};
 }
 
@@ -118,9 +118,6 @@ void initializeRenderer(){
 
 	renderer.setClearColor(0.1, 0.1, 0.1, 1.0);
 }
-struct PushConstant{
-	int a;
-};
 
 void FoveaInitialize(void* window){
 	initializeInstance(window);
@@ -258,4 +255,8 @@ void FoveaBeginRenderTarget(FoveaRenderTarget renderTarget){
 
 void FoveaEndRenderTarget(FoveaRenderTarget renderTarget){
 	getInstance().renderTargetLibrary.get(renderTarget)->endRenderPass(frameCommandBuffer());
+}
+
+void FoveaResizeRenderTarget(FoveaRenderTarget renderTarget, FoveaUIVec2 size){
+	getInstance().renderTargetLibrary.get(renderTarget)->resize(FoveaUIVec2ToVkExtent(size));
 }

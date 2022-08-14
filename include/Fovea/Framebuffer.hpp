@@ -22,6 +22,8 @@ namespace Fovea{
 			VkFormat getDepthAttachmentFormat();
 			VkFramebuffer getFramebuffer();
 			VkExtent2D getExtent();
+
+			void resize(VkExtent2D extent);
 		
 		private:
 			VkImage createColorAttachmentImage(FramebufferBuilder &builder, FramebufferAttachments::Attachment &attachment, VkDeviceMemory *imageMemory);
@@ -48,6 +50,8 @@ namespace Fovea{
 
 			struct ColorAttachment{
 				VkFormat format;
+				VkSampleCountFlagBits samples;
+				VkImageTiling tiling;
 				CustomableMember<VkImage> image = VK_NULL_HANDLE;
 				CustomableMember<VkImageView> imageView = VK_NULL_HANDLE;
 				VkDeviceMemory imageMemory;

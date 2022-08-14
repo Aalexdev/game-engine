@@ -101,6 +101,32 @@ namespace Fovea{
 		framebuffer = createFramebuffer(builder);
 	}
 
+	void Framebuffer::resize(VkExtent2D extent){
+		this->extent = extent;
+
+		FramebufferBuilder builder;
+
+		FramebufferAttachments attachments;
+		attachments.attachments.reserve(colorAttachments.size());
+
+		for (size_t i=0; i<colorAttachments.size(); i++){
+			auto& ba = attachments.attachments[i];
+			auto& ca = colorAttachments[i];
+
+			ba.format = ca.format;
+			ba.samples = ca.samples;
+			ba.tiling = ca.tiling;
+		}
+
+		builder.setAttachments(attachments);
+		builder.setExtent(extent);
+
+		builder.enableDepthAttachment(depthFormat, depthAttachmentEnabled);
+
+		destroy();
+		initialize(builder);
+	}
+
 	VkImage Framebuffer::createColorAttachmentImage(FramebufferBuilder &builder, FramebufferAttachments::Attachment &attachment, VkDeviceMemory *imageMemory){
 		VkImageCreateInfo createInfo = {};
 

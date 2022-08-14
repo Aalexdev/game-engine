@@ -25,7 +25,6 @@
 
 typedef uint64_t FoveaShader;
 typedef uint64_t FoveaRenderTarget;
-typedef uint64_t FoveaBuffer;
 
 typedef enum FoveaBool{
 	Fovea_False = 0,
@@ -172,6 +171,8 @@ FoveaRenderTarget getRenderTargetFromName(const char *name);
 void FoveaBeginRenderTarget(FoveaRenderTarget renderTarget);
 
 void FoveaEndRenderTarget(FoveaRenderTarget renderTarget);
+
+void FoveaResizeRenderTarget(FoveaRenderTarget renderTarget, FoveaUIVec2 size);
 
 #ifdef __cplusplus
 	}

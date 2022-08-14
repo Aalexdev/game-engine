@@ -162,4 +162,9 @@ namespace Fovea{
 	VkRenderPass RenderTarget::getRenderPass(){
 		return renderPass;
 	}
+
+	void RenderTarget::resize(VkExtent2D extent){
+		framebuffer->resize(extent);
+	}
+
 }
