@@ -104,4 +104,8 @@ namespace Fovea{
 	void PipelineBuilder::setBase(Pipeline* base){
 		this->base = base;
 	}
+
+	void PipelineBuilder::pushSetLayout(DescriptorSetLayout* layout){
+		setLayouts.push_back(layout);
+	}
 }

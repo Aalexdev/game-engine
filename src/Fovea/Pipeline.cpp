@@ -1,5 +1,6 @@
 #include "Fovea/Pipeline.hpp"
 #include "Fovea/core.hpp"
+#include "Fovea/DescriptorSetLayout.hpp"
 
 #include <fstream>
 #include <stdexcept>
@@ -174,9 +175,18 @@ namespace Fovea{
 			createInfo.pPushConstantRanges = nullptr;
 		}
 
-		// TODO
-		createInfo.setLayoutCount = 0;
-		createInfo.pSetLayouts = nullptr;
+		std::vector<VkDescriptorSetLayout> layouts(builder.setLayouts.size());
+		for (int i=0; i<layouts.size(); i++){
+			layouts[i] = builder.setLayouts[i]->getDescriptorSetLayout();
+		}
+		
+		if (layouts.empty()){
+			createInfo.setLayoutCount = 0;
+			createInfo.pSetLayouts = nullptr;
+		} else {
+			createInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
+			createInfo.pSetLayouts = layouts.data();
+		}
 
 		createInfo.flags = 0;
 

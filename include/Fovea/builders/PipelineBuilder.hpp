@@ -50,6 +50,7 @@ namespace Fovea{
 	};
 
 	class Pipeline;
+	class DescriptorSetLayout;
 
 	class PipelineBuilder{
 		friend class Pipeline;
@@ -70,6 +71,8 @@ namespace Fovea{
 			void setSubpass(uint32_t subpass);
 
 			void setBase(Pipeline* base);
+
+			void pushSetLayout(DescriptorSetLayout* layout);
 			
 		private:
 			struct ShaderStage{
@@ -89,5 +92,6 @@ namespace Fovea{
 			PipelineConfigInfo config;
 			PushConstant pushConstant;
 			Pipeline* base = nullptr;
+			std::vector<DescriptorSetLayout*> setLayouts{};
 	};
 }
