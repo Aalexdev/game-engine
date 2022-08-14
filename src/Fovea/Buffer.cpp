@@ -10,16 +10,18 @@ namespace Fovea{
 		return instanceSize;
 	}
 
-	void Buffer::alloc(VkDeviceSize instanceSize, uint32_t instanceCount, VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryProperties, VkDeviceSize minOffsetAlignement){
-		this->instanceSize = instanceSize;
-		this->instanceCount = instanceCount;
+	void Buffer::alloc(VkDeviceSize bufferSize, VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryProperties){
 		this->usageFlags = usageFlags;
 		this->memoryPropertyFlags = memoryProperties;
-		
-		alignmentSize = getAlignment(instanceSize, minOffsetAlignement);
-		bufferSize = alignmentSize * instanceCount;
+		this->bufferSize = bufferSize;
 
 		getInstance().logicalDevice.createBuffer(bufferSize, usageFlags, memoryPropertyFlags, buffer, memory);
+	}
+
+	void Buffer::setInstanceProperties(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignement){
+		this->instanceSize = instanceSize;
+		alignmentSize = getAlignment(instanceSize, minOffsetAlignement);
+		instanceCount = bufferSize / alignmentSize;
 	}
 
 	Buffer::~Buffer(){

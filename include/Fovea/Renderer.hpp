@@ -45,7 +45,7 @@ namespace Fovea{
 			void setViewPortSize(const float &width, const float &height) {viewport.width = width; viewport.height = height;}
 
 			void windowResized(uint32_t width, uint32_t height);
-
+			
 
 		private:
 			void createCommandBuffers();

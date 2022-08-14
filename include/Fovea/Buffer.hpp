@@ -12,7 +12,9 @@ namespace Fovea{
 			Buffer(const Buffer &) = delete;
 			Buffer &operator=(const Buffer &) = delete;
 
-			void alloc(VkDeviceSize instanceSize, uint32_t instanceCount, VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryProperties, VkDeviceSize minOffsetAlignement = 1);
+			void alloc(VkDeviceSize bufferSize, VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryProperties);
+
+			void setInstanceProperties(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignement);
 
 			VkResult map(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
 			void unmap();
