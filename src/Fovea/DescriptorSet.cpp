@@ -8,9 +8,9 @@
 namespace Fovea{
 
 	DescriptorSet::~DescriptorSet(){
-		delete sets;
-		delete buffers;
-		if (buffer) delete buffer;
+		delete[] sets;
+		delete[] buffers;
+		if (buffer) delete[] buffer;
 	}
 
 	void DescriptorSet::initialize(DescriptorSetBuilder &builder){
@@ -66,9 +66,12 @@ namespace Fovea{
 		}
 
 		if (offset){
-			buffer = new Buffer();
-			buffer->alloc(offset, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-			buffer->map();
+			buffer = new Buffer[descriptorSetCount];
+
+			for (uint32_t i=0; i<descriptorSetCount; i++){
+				buffer[i].alloc(offset, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+				buffer[i].map();
+			}
 
 			offset = 0;
 			for (uint32_t i=0; i<builder.descriptors.size(); i++){
@@ -76,7 +79,6 @@ namespace Fovea{
 
 				if (d.type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER){
 					VkDescriptorBufferInfo info = {};
-					info.buffer = buffer->getBuffer();
 					info.offset = offset;
 					info.range = d.bufferSize;
 					
@@ -92,12 +94,17 @@ namespace Fovea{
 		for (uint32_t i=0; i<descriptorSetCount; i++){
 			DescriptorWriter writer(layout, pool);
 			
-			auto &d = builder.descriptors[i];
+			for (auto &d : builder.descriptors){
 
-			switch (d.type){
-				case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER: writer.writeBuffer(d.binding, &d.bufferInfo); break;
-				case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE: writer.writeImages(d.binding, d.imageCount, d.imageInfos); break;
-				default: throw std::runtime_error("invalid descriptor type"); break;
+				switch (d.type){
+					case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:{
+						d.bufferInfo.buffer = buffer[i].getBuffer();
+						writer.writeBuffer(d.binding, &d.bufferInfo); 
+						break;
+					}
+					case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE: writer.writeImages(d.binding, d.imageCount, d.imageInfos); break;
+					default: throw std::runtime_error("invalid descriptor type"); break;
+				}
 			}
 
 			writer.build(sets[i]);

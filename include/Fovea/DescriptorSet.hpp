@@ -33,7 +33,7 @@ namespace Fovea{
 			DescriptorPool pool;
 			DescriptorSetLayout layout;
 			BufferRange* buffers;
-			Buffer* buffer;
+			Buffer* buffer = nullptr;
 			VkDescriptorSet* sets = nullptr;
 			uint32_t descriptorSetCount = 0;
 	};

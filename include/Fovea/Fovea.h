@@ -25,6 +25,7 @@
 
 typedef uint64_t FoveaShader;
 typedef uint64_t FoveaRenderTarget;
+typedef uint64_t FoveaDescriptorSet;
 
 typedef enum FoveaBool{
 	Fovea_False = 0,
@@ -92,6 +93,18 @@ typedef enum FoveaShaderType{
 	FoveaShaderType_Compute
 } FoveaShaderType;
 
+typedef enum FoveaShaderStage{
+	FoveaShaderStage_Vertex = 1 << 0,
+	FoveaShaderStage_Geometry = 1 << 1,
+	FoveaShaderStage_Fragment = 1 << 2,
+	FoveaShaderStage_Compute = 1 << 3,
+} FoveaShaderStage;
+
+typedef enum FoveaDescriptorType{
+	FoveaDescriptorType_Texture,
+	FoveaDescriptorType_Buffer,
+} FoveaDescriptorType;
+
 typedef struct FoveaColor{
 	float r;
 	float g;
@@ -142,6 +155,21 @@ typedef struct FoveaRenderTargetCreateInfo{
 	FoveaUIVec2 size;
 } FoveaRenderTargetCreateInfo;
 
+typedef struct FoveaDescriptorInfo{
+	uint32_t binding;
+	int stage;
+	FoveaDescriptorType type;
+	
+	uint32_t bufferSize;
+
+} FoveaDescriptorInfo;
+
+typedef struct FoveaDescriptorSetCreateInfo{
+	FoveaDescriptorInfo* descriptors;
+	uint32_t descriptorCount;
+	uint32_t setCount;
+} FoveaDescriptorSetCreateInfo;
+
 // ========================= base functions =========================
 
 void FoveaInitialize(void *window);
@@ -191,6 +219,10 @@ void FoveaBeginRenderTarget(FoveaRenderTarget renderTarget);
 void FoveaEndRenderTarget(FoveaRenderTarget renderTarget);
 
 void FoveaResizeRenderTarget(FoveaRenderTarget renderTarget, FoveaUIVec2 size);
+
+// ========================= descriptor set =========================
+
+FoveaDescriptorSet FoveaCreateDescriptorSet(const char* name, FoveaDescriptorSetCreateInfo* createInfo);
 
 #ifdef __cplusplus
 	}

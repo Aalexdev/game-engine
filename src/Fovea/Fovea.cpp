@@ -79,6 +79,23 @@ static inline int FoveaShaderTypeToPipelineStage(FoveaShaderType type){
 	return 0;
 }
 
+static inline VkDescriptorType FoveaDescriptorTypeToVkDescriptorType(FoveaDescriptorType type){
+	switch (type){
+		case FoveaDescriptorType_Buffer: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		case FoveaDescriptorType_Texture: return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+	}
+	return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+}
+
+static inline VkPipelineStageFlags FoveaShaderStagePipelineStageFlags(int stages){
+	VkPipelineStageFlags vkStage = 0;
+	if (stages & FoveaShaderStage_Compute) vkStage |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+	if (stages & FoveaShaderStage_Fragment) vkStage |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+	if (stages & FoveaShaderStage_Geometry) vkStage |= VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT;
+	if (stages & FoveaShaderStage_Vertex) vkStage |= VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
+	return vkStage;
+}
+
 static inline RenderTarget::ClearColor FoveaColorToRenderTargetClearColor(FoveaColor color){
 	return {color.r, color.g, color.b, color.a};
 }
@@ -309,3 +326,23 @@ void FoveaResizeRenderTarget(FoveaRenderTarget renderTarget, FoveaUIVec2 size){
 	getInstance().renderTargetLibrary.get(renderTarget)->resize(FoveaUIVec2ToVkExtent(size));
 }
 
+FoveaDescriptorSet FoveaCreateDescriptorSet(const char* name, FoveaDescriptorSetCreateInfo* createInfo){
+	DescriptorSetBuilder builder;
+
+	builder.setDescriptorSetCount(createInfo->setCount);
+	
+	std::vector<DescriptorSetBuilder::Descriptor> descriptors(createInfo->descriptorCount);
+	for (uint32_t i=0; i<createInfo->descriptorCount; i++){
+		auto &d = descriptors[i];
+		auto &db = createInfo->descriptors[i];
+
+		d.binding = db.binding;
+		d.bufferSize = db.bufferSize;
+		d.type = FoveaDescriptorTypeToVkDescriptorType(db.type);
+		d.stage = FoveaShaderStagePipelineStageFlags(db.stage);
+	}
+
+	builder.setDescriptors(descriptors);
+
+	return getInstance().descriptorSetLibrary.push(&builder, name);
+}
