@@ -51,13 +51,15 @@ namespace Fovea{
 
 		uint32_t* ptr = reinterpret_cast<uint32_t*>(staginBuffer.getMappedMemory());
 
+		uint32_t offset = 0;
 		for (uint32_t i=0; i<count; i+=6){
-			ptr[i+0] = i+0;
-			ptr[i+1] = i+1;
-			ptr[i+2] = i+2;
-			ptr[i+3] = i+0;
-			ptr[i+4] = i+2;
-			ptr[i+5] = i+3;
+			ptr[i+0] = offset+0;
+			ptr[i+1] = offset+1;
+			ptr[i+2] = offset+2;
+			ptr[i+3] = offset+2;
+			ptr[i+4] = offset+3;
+			ptr[i+5] = offset+0;
+			offset+=4;
 		}
 
 		staginBuffer.flush();
