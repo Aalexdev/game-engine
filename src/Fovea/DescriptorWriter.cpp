@@ -43,6 +43,23 @@ namespace Fovea{
 		writes.push_back(write);
 	}
 
+	void DescriptorWriter::writeImages(uint32_t binding, uint32_t imageCount, VkDescriptorImageInfo *imageInfos){
+		assert(setLayout->bindings.count(binding) == 1 && "layout does not contain specified binding");
+ 
+		auto &bindingDescription = setLayout->bindings[binding];
+
+		assert(bindingDescription.descriptorCount == 1 && "binding single descriptor info, but binding expects multiple");
+
+		VkWriteDescriptorSet write{};
+		write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		write.descriptorType = bindingDescription.descriptorType;
+		write.dstBinding = binding;
+		write.pImageInfo = imageInfos;
+		write.descriptorCount = imageCount;
+
+		writes.push_back(write);
+	}
+
 	bool DescriptorWriter::build(VkDescriptorSet &set){
 		bool success = pool->allocateDescriptor(setLayout->getDescriptorSetLayout(), set);
 

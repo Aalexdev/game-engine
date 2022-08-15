@@ -1,9 +1,6 @@
 #include "Fovea/core.hpp"
 #include "Fovea/Fovea.h"
 
-#include "Fovea/Pipeline.hpp"
-#include "Fovea/RenderTarget.hpp"
-
 using namespace Fovea;
 
 static inline VkFormat FoveaFormatToVkFormat(FoveaFormat format){

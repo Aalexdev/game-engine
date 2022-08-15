@@ -19,6 +19,7 @@ namespace Fovea{
 		
 			void writeBuffer(uint32_t binding, VkDescriptorBufferInfo *bufferInfo);
 			void writeImage(uint32_t binding, VkDescriptorImageInfo *imageInfo);
+			void writeImages(uint32_t binding, uint32_t imageCount, VkDescriptorImageInfo *imageInfos);
 			
 			bool build(VkDescriptorSet &set);
 			void overwrite(VkDescriptorSet &set);
