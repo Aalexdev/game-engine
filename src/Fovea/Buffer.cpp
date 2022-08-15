@@ -3,7 +3,7 @@
 
 namespace Fovea{
 
-	static VkDeviceSize getAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment){
+	static inline VkDeviceSize getAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment){
 		if (minOffsetAlignment > 0) {
 			return (instanceSize + minOffsetAlignment - 1) & ~(minOffsetAlignment - 1);
 		}

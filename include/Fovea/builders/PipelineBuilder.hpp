@@ -54,7 +54,7 @@ namespace Fovea{
 	};
 
 	class Pipeline;
-	class DescriptorSetLayout;
+	class DescriptorSet;
 
 	class PipelineBuilder{
 		friend class Pipeline;
@@ -76,7 +76,7 @@ namespace Fovea{
 
 			void setBase(Pipeline* base);
 
-			void pushSetLayout(DescriptorSetLayout* layout);
+			void pushSet(DescriptorSet* sets);
 
 
 			void setVertexDescription(const PipelineVertexDescription &description);
@@ -99,7 +99,7 @@ namespace Fovea{
 			PipelineConfigInfo config;
 			PushConstant pushConstant;
 			Pipeline* base = nullptr;
-			std::vector<DescriptorSetLayout*> setLayouts{};
+			std::vector<DescriptorSet*> sets{};
 
 			bool hasVertexDescription = false;
 			PipelineVertexDescription vertexDescription;

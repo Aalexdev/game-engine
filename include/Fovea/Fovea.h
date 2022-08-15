@@ -131,6 +131,8 @@ typedef struct FoveaShaderCreateInfo{
 	uint32_t vertexInputSize;
 	FoveaShaderVertexAttribute* vertexAttributes;
 	uint32_t vertexAttributsCount;
+	FoveaDescriptorSet* descriptorSets;
+	uint32_t descriptorSetCount;
 
 	const char* vertexFilepath;
 	const char* fragmentFilepath;
@@ -223,6 +225,12 @@ void FoveaResizeRenderTarget(FoveaRenderTarget renderTarget, FoveaUIVec2 size);
 // ========================= descriptor set =========================
 
 FoveaDescriptorSet FoveaCreateDescriptorSet(const char* name, FoveaDescriptorSetCreateInfo* createInfo);
+
+void destroyDescriptorSet(FoveaDescriptorSet descriptorSet);
+
+FoveaDescriptorSet FoveaGetDescriptorSetFromName(const char* name);
+
+void FoveaWriteToDescriptorSetBuffer(FoveaDescriptorSet descriptorSet, uint32_t setIndex, uint32_t binding, void* data);
 
 #ifdef __cplusplus
 	}

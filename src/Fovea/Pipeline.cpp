@@ -64,6 +64,7 @@ namespace Fovea{
 
 	void Pipeline::bind(VkCommandBuffer commandBuffer){
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, static_cast<uint32_t>(sets.size()), sets.data(), 0, nullptr);
 	}
 
 	void Pipeline::bindPushConstant(VkCommandBuffer commandBuffer, void *data){
@@ -136,7 +137,7 @@ namespace Fovea{
 		}
 	}
 
-	VkShaderStageFlags stageToVkStages(int stages){
+	static inline VkShaderStageFlags stageToVkStages(int stages){
 		VkShaderStageFlags vkStages = 0;
 
 		if (stages & PipelineStage::VERTEX){
@@ -183,9 +184,9 @@ namespace Fovea{
 			createInfo.pPushConstantRanges = nullptr;
 		}
 
-		std::vector<VkDescriptorSetLayout> layouts(builder.setLayouts.size());
+		std::vector<VkDescriptorSetLayout> layouts(builder.sets.size());
 		for (int i=0; i<layouts.size(); i++){
-			layouts[i] = builder.setLayouts[i]->getDescriptorSetLayout();
+			layouts[i] = builder.sets[i]->getLayout().getDescriptorSetLayout();
 		}
 		
 		if (layouts.empty()){
@@ -194,6 +195,11 @@ namespace Fovea{
 		} else {
 			createInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
 			createInfo.pSetLayouts = layouts.data();
+
+			sets.resize(builder.sets.size());
+			for (size_t i=0; i<sets.size(); i++){
+				sets[i] = builder.sets[i]->getSet(0);
+			}
 		}
 
 		createInfo.flags = 0;
@@ -203,7 +209,7 @@ namespace Fovea{
 		}
 	}
 
-	VkShaderStageFlagBits pipelineStageToVkStage(PipelineStage stage){
+	static inline VkShaderStageFlagBits pipelineStageToVkStage(PipelineStage stage){
 		switch (stage){
 			case PipelineStage::VERTEX: return VK_SHADER_STAGE_VERTEX_BIT;
 			case PipelineStage::GEOMETRY: return VK_SHADER_STAGE_GEOMETRY_BIT;

@@ -7,6 +7,13 @@
 
 namespace Fovea{
 
+	static inline VkDeviceSize getAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment){
+		if (minOffsetAlignment > 0) {
+			return (instanceSize + minOffsetAlignment - 1) & ~(minOffsetAlignment - 1);
+		}
+		return instanceSize;
+	}
+
 	DescriptorSet::~DescriptorSet(){
 		delete[] sets;
 		delete[] buffers;
@@ -59,9 +66,11 @@ namespace Fovea{
 
 			if (d.type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER){
 				buffers[i].size = d.bufferSize;
+				buffers[i].alignement = getAlignment(d.bufferSize, getInstance().physicalDevice.getProperties().limits.minUniformBufferOffsetAlignment);
+
 				buffers[i].offset = offset;
 
-				offset += d.bufferSize;
+				offset += buffers[i].alignement;
 			}
 		}
 
@@ -109,5 +118,38 @@ namespace Fovea{
 
 			writer.build(sets[i]);
 		}
+	}
+
+	DescriptorSetLayout& DescriptorSet::getLayout(){
+		return layout;
+	}
+
+	DescriptorPool& DescriptorSet::getPool(){
+		return pool;
+	}
+
+	void* DescriptorSet::getBuffer(uint32_t setIndex, uint32_t binding){
+		auto range = buffers[binding];
+		auto &b = buffer[setIndex];
+		char *ptr = reinterpret_cast<char*>(b.getMappedMemory());
+		ptr += range.offset;
+		return ptr;
+	}
+
+	void DescriptorSet::writeBuffer(uint32_t setIndex, uint32_t binding, void* data){
+		auto range = buffers[binding];
+		auto &b = buffer[setIndex];
+		char *ptr = reinterpret_cast<char*>(b.getMappedMemory());
+		ptr += range.offset;
+		memcpy(ptr, data, range.size);
+		b.flush(range.alignement, range.offset);
+	}
+
+	VkDescriptorSet* DescriptorSet::getSets(){
+		return sets;
+	}
+
+	VkDescriptorSet DescriptorSet::getSet(uint32_t index){
+		return sets[index];
 	}
 }

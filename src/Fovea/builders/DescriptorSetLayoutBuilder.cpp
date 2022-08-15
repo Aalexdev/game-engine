@@ -11,7 +11,7 @@ namespace Fovea{
 		layout.descriptorCount = count;
 		layout.descriptorType = descriptorType;
 		layout.stageFlags = shaderStages;
-
+		
 		bindings[binding] = layout;
 	}
 }

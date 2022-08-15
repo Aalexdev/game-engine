@@ -18,6 +18,15 @@ namespace Fovea{
 			~DescriptorSet();
 
 			void initialize(DescriptorSetBuilder &builder);
+
+			DescriptorSetLayout& getLayout();
+			DescriptorPool& getPool();
+			VkDescriptorSet* getSets();
+			VkDescriptorSet getSet(uint32_t index);
+
+			void* getBuffer(uint32_t setIndex, uint32_t binding);
+			void writeBuffer(uint32_t setIndex, uint32_t binding, void* data);
+			
 		
 		private:
 			void createPool(DescriptorSetBuilder &builder);
@@ -28,6 +37,7 @@ namespace Fovea{
 			struct BufferRange{
 				uint32_t offset;
 				uint32_t size;
+				uint32_t alignement;
 			};
 
 			DescriptorPool pool;

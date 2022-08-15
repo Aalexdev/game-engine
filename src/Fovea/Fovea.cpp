@@ -89,10 +89,10 @@ static inline VkDescriptorType FoveaDescriptorTypeToVkDescriptorType(FoveaDescri
 
 static inline VkPipelineStageFlags FoveaShaderStagePipelineStageFlags(int stages){
 	VkPipelineStageFlags vkStage = 0;
-	if (stages & FoveaShaderStage_Compute) vkStage |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-	if (stages & FoveaShaderStage_Fragment) vkStage |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-	if (stages & FoveaShaderStage_Geometry) vkStage |= VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT;
-	if (stages & FoveaShaderStage_Vertex) vkStage |= VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
+	if (stages & FoveaShaderStage_Compute) vkStage |= VK_SHADER_STAGE_COMPUTE_BIT;
+	if (stages & FoveaShaderStage_Fragment) vkStage |= VK_SHADER_STAGE_FRAGMENT_BIT;
+	if (stages & FoveaShaderStage_Geometry) vkStage |= VK_SHADER_STAGE_GEOMETRY_BIT;
+	if (stages & FoveaShaderStage_Vertex) vkStage |= VK_SHADER_STAGE_VERTEX_BIT;
 	return vkStage;
 }
 
@@ -210,6 +210,8 @@ void FoveaDefaultShaderCreateInfo(FoveaShaderCreateInfo *createInfo){
 	createInfo->vertexAttributsCount = 0;
 	createInfo->vertexAttributes = nullptr;
 	createInfo->vertexInputSize = 0;
+	createInfo->descriptorSetCount = 0;
+	createInfo->descriptorSets = nullptr;
 }
 
 FoveaShader FoveaCreateShader(const char *name, FoveaShaderCreateInfo *createInfo){
@@ -252,6 +254,11 @@ FoveaShader FoveaCreateShader(const char *name, FoveaShaderCreateInfo *createInf
 		vertexDescription.bindingDescription.stride = createInfo->vertexInputSize;
 
 		builder.setVertexDescription(vertexDescription);
+	}
+
+	for (uint32_t i=0; i<createInfo->descriptorSetCount; i++){
+		auto d = getInstance().descriptorSetLibrary.get(createInfo->descriptorSets[i]);
+		builder.pushSet(d);
 	}
 
 	return static_cast<FoveaShader>(getInstance().pipelineLibrary.push(&builder, name));
@@ -345,4 +352,16 @@ FoveaDescriptorSet FoveaCreateDescriptorSet(const char* name, FoveaDescriptorSet
 	builder.setDescriptors(descriptors);
 
 	return getInstance().descriptorSetLibrary.push(&builder, name);
+}
+
+void destroyDescriptorSet(FoveaDescriptorSet descriptorSet){
+	getInstance().descriptorSetLibrary.erase(descriptorSet);
+}
+
+FoveaDescriptorSet FoveaGetDescriptorSetFromName(const char* name){
+	return getInstance().descriptorSetLibrary.getIDFromName(name);
+}
+
+void FoveaWriteToDescriptorSetBuffer(FoveaDescriptorSet descriptorSet, uint32_t setIndex, uint32_t binding, void* data){
+	getInstance().descriptorSetLibrary.get(descriptorSet)->writeBuffer(setIndex, binding, data);
 }
