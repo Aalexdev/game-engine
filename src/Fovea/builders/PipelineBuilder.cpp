@@ -108,4 +108,9 @@ namespace Fovea{
 	void PipelineBuilder::pushSetLayout(DescriptorSetLayout* layout){
 		setLayouts.push_back(layout);
 	}
+
+	void PipelineBuilder::setVertexDescription(const PipelineVertexDescription &description){
+		vertexDescription = description;
+		hasVertexDescription = true;
+	}
 }

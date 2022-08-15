@@ -25,6 +25,8 @@ namespace Fovea{
 		PipelineLibrary pipelineLibrary;
 		RenderTargetLibrary renderTargetLibrary;
 
+		VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
+
 		WaitIdle wait;
 	};
 

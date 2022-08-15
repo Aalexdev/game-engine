@@ -31,7 +31,7 @@ typedef enum FoveaBool{
 	Fovea_True = 1,
 } FoveaBool;
 
-typedef enum FoveaFormats{
+typedef enum FoveaFormat{
 	FoveaFormat_Float,
 	FoveaFormat_Float_vec2,
 	FoveaFormat_Float_vec3,
@@ -44,7 +44,7 @@ typedef enum FoveaFormats{
 	FoveaFormat_Uint_vec2,
 	FoveaFormat_Uint_vec3,
 	FoveaFormat_Uint_vec4,
-} FoveaFormats;
+} FoveaFormat;
 
 typedef enum FoveaImageFormat{
 	FoveaImageFormat_R8,
@@ -104,12 +104,20 @@ typedef struct FoveaUIVec2{
 	uint32_t height;
 } FoveaUIVec2;
 
+typedef struct FoveaShaderVertexAttribute{
+	FoveaFormat format;
+	uint32_t offset;
+} FoveaShaderVertexAttribute;
+
 typedef struct FoveaShaderCreateInfo{
 	FoveaSample sample;
 	FoveaShaderType type;
 	uint32_t pushConstantSize;
 	FoveaRenderTarget target;
 	FoveaShader base;
+	uint32_t vertexInputSize;
+	FoveaShaderVertexAttribute* vertexAttributes;
+	uint32_t vertexAttributsCount;
 
 	const char* vertexFilepath;
 	const char* fragmentFilepath;
@@ -145,6 +153,16 @@ void FoveaOnWindowResized(uint32_t width, uint32_t height);
 void FoveaBeginFrame(void);
 
 void FoveaEndFrame(void);
+
+void FoveaRenderQuad(void *v0, void *v1, void *v2, void *v3);
+
+void FoveaFlushRenderer(void);
+
+void FoveaBeginSwapChainRenderPass(void);
+
+void FoveaEndSwapChainRenderPass(void);
+
+void FoveaSetRenderInstanceSize(uint32_t size);
 
 // =================== shaders ====================
 

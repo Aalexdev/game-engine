@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Fovea/SwapChain.hpp"
+#include "SwapChain.hpp"
+#include "Buffer.hpp"
 #include "../vulkan/vulkan.h"
 
 #include <memory>
@@ -12,7 +13,7 @@ namespace Fovea{
 		public:
 			~Renderer();
 
-			void initialize();
+			void initialize(size_t vertexBufferSize = 5000);
 
 			VkRenderPass getSwapChainRenderPass() const {return swapChain->getRenderPass();}
 
@@ -45,12 +46,22 @@ namespace Fovea{
 			void setViewPortSize(const float &width, const float &height) {viewport.width = width; viewport.height = height;}
 
 			void windowResized(uint32_t width, uint32_t height);
-			
 
+			void resizeVertexBuffer(size_t size);
+
+			void setInstanceSize(size_t size, size_t minAlignementOffset);
+
+			void drawQuad(void *v0, void *v1, void *v2, void *v3);
+
+			void flush();
+			
 		private:
 			void createCommandBuffers();
 			void freeCommandBuffers();
 			void recreateSwapChain();
+			void createVertexBuffer(uint32_t count);
+			void createIndexBuffer(uint32_t count);
+			void copyStaginBuffers();
 
 			std::unique_ptr<SwapChain> swapChain = nullptr;
 			std::vector<VkCommandBuffer> commandBuffers;
@@ -64,5 +75,18 @@ namespace Fovea{
 			VkViewport viewport;
 			VkRect2D scissor;
 			VkExtent2D windowExtent = {1080, 720};
+
+			Buffer staginVertexBuffer;
+			Buffer vertexBuffer;
+			Buffer indexBuffer;
+
+			size_t alignementSize = 10;
+			size_t instanceSize = 10;
+			uint32_t indexCount = 0;
+			uint32_t maxIndices = 0;
+			size_t usedVertexSize = 0;
+			size_t maxVertexSize = 0;
+
+			uint32_t drawCalls = 0;
 	};
 }

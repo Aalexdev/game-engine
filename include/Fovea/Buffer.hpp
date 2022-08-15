@@ -37,6 +37,7 @@ namespace Fovea{
 			VkDeviceSize getBufferSize() const;
 
 		private:
+			void destroy();
 			uint32_t instanceCount;
 			VkDeviceSize instanceSize;
 

@@ -1,5 +1,6 @@
 #include "Fovea/Renderer.hpp"
 #include "Fovea/core.hpp"
+#include "Fovea/SingleTimeCommand.hpp"
 
 #include <stdexcept>
 
@@ -9,7 +10,7 @@ namespace Fovea{
 		freeCommandBuffers();
 	}
 
-	void Renderer::initialize(){
+	void Renderer::initialize(size_t vertexBufferSize){
 		recreateSwapChain();
 		viewport.x = 0.f;
 		viewport.y = 0.f;
@@ -22,6 +23,54 @@ namespace Fovea{
 		scissor.extent = {1, 1};
 
 		createCommandBuffers();
+		resizeVertexBuffer(vertexBufferSize);
+	}
+
+	void Renderer::resizeVertexBuffer(size_t size){
+		createVertexBuffer(size * 6);
+		createIndexBuffer(size * 4);
+
+		maxIndices = size * 4;
+	}
+
+	void Renderer::createVertexBuffer(uint32_t count){
+		staginVertexBuffer.alloc(alignementSize * count, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+		vertexBuffer.alloc(alignementSize * count, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+		staginVertexBuffer.map();
+		maxVertexSize = vertexBuffer.getBufferSize();
+	}
+
+	void Renderer::createIndexBuffer(uint32_t count){
+		size_t size = count * sizeof(uint32_t);
+
+		Buffer staginBuffer;
+		staginBuffer.alloc(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+
+		staginBuffer.map();
+
+		uint32_t* ptr = reinterpret_cast<uint32_t*>(staginBuffer.getMappedMemory());
+
+		for (uint32_t i=0; i<count; i+=6){
+			ptr[i+0] = i+0;
+			ptr[i+1] = i+1;
+			ptr[i+2] = i+2;
+			ptr[i+3] = i+0;
+			ptr[i+4] = i+2;
+			ptr[i+5] = i+3;
+		}
+
+		staginBuffer.flush();
+		staginBuffer.unmap();
+
+		VkBufferCopy copy;
+		copy.srcOffset = 0;
+		copy.dstOffset = 0;
+		copy.size = size;
+
+		indexBuffer.alloc(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+		SingleTimeCommand::copyBuffer(staginBuffer.getBuffer(), indexBuffer.getBuffer(), copy);
 	}
 
 	VkCommandBuffer Renderer::beginFrame(){
@@ -46,6 +95,11 @@ namespace Fovea{
 		if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
 			throw std::runtime_error("failed to begin recording command buffer!");
 		}
+
+		drawCalls=0;
+		indexCount = 0;
+		usedVertexSize = 0;
+
 		return commandBuffer;
 	}
 
@@ -173,4 +227,63 @@ namespace Fovea{
 		windowExtent = {width, height};
 	}
 
+	void Renderer::setInstanceSize(size_t size, size_t minAlignementOffset){
+		flush();
+		staginVertexBuffer.setInstanceProperties(size, minAlignementOffset);
+		vertexBuffer.setInstanceProperties(size, minAlignementOffset);
+
+		alignementSize = staginVertexBuffer.getAlignmentSize();
+		instanceSize = size;
+	}
+
+	void Renderer::flush(){
+		if (indexCount == 0) return;
+		copyStaginBuffers();
+
+		VkCommandBuffer commandBuffer = getInstance().commandBuffer;
+		vkCmdBindIndexBuffer(commandBuffer, indexBuffer.getBuffer(), 0, VK_INDEX_TYPE_UINT32);
+
+		VkBuffer buffer = vertexBuffer.getBuffer();
+		VkDeviceSize offset = 0;
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &buffer, &offset);
+	
+		vkCmdDrawIndexed(commandBuffer, indexCount, indexCount / 6, 0, 0, 0);
+
+		indexCount = 0;
+		usedVertexSize = 0;
+		drawCalls++;
+	}
+
+	void Renderer::copyStaginBuffers(){
+
+		VkCommandBuffer commandBuffer = getInstance().commandBuffer;
+
+		VkBufferCopy copy = {};
+		copy.srcOffset = 0;
+		copy.dstOffset = 0;
+		copy.size = usedVertexSize;
+
+		staginVertexBuffer.flush();
+		SingleTimeCommand::copyBuffer(staginVertexBuffer.getBuffer(), vertexBuffer.getBuffer(), copy);
+	}
+
+	void Renderer::drawQuad(void *v0, void *v1, void *v2, void *v3){
+		if (usedVertexSize + alignementSize * 4 >= maxVertexSize || indexCount + 6 >= maxIndices) flush();
+		
+		char* ptr = reinterpret_cast<char*>(staginVertexBuffer.getMappedMemory()) + usedVertexSize;
+
+		memcpy(ptr, v0, instanceSize);
+		ptr += alignementSize;
+
+		memcpy(ptr, v1, instanceSize);
+		ptr += alignementSize;
+
+		memcpy(ptr, v2, instanceSize);
+		ptr += alignementSize;
+		
+		memcpy(ptr, v3, instanceSize);
+
+		usedVertexSize += alignementSize * 4; 
+		indexCount += 6;
+	}
 }

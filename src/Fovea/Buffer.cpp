@@ -15,6 +15,10 @@ namespace Fovea{
 		this->memoryPropertyFlags = memoryProperties;
 		this->bufferSize = bufferSize;
 
+		if (buffer != VK_NULL_HANDLE){
+			destroy();
+		}
+
 		getInstance().logicalDevice.createBuffer(bufferSize, usageFlags, memoryPropertyFlags, buffer, memory);
 	}
 
@@ -25,6 +29,10 @@ namespace Fovea{
 	}
 
 	Buffer::~Buffer(){
+		destroy();
+	}
+
+	void Buffer::destroy(){
 		VkDevice device = getInstance().logicalDevice.getDevice();
 
 		unmap();

@@ -90,11 +90,19 @@ namespace Fovea{
 
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-		vertexInputInfo.vertexAttributeDescriptionCount = 0;
-		vertexInputInfo.pVertexAttributeDescriptions = nullptr;
+		if (builder.hasVertexDescription){
+			vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(builder.vertexDescription.attributeDescriptions.size());
+			vertexInputInfo.pVertexAttributeDescriptions = builder.vertexDescription.attributeDescriptions.data();
 
-		vertexInputInfo.vertexBindingDescriptionCount = 0;
-		vertexInputInfo.pVertexBindingDescriptions = nullptr;
+			vertexInputInfo.vertexBindingDescriptionCount = 1;
+			vertexInputInfo.pVertexBindingDescriptions = &builder.vertexDescription.bindingDescription;
+		} else {
+			vertexInputInfo.vertexAttributeDescriptionCount = 0;
+			vertexInputInfo.pVertexAttributeDescriptions = nullptr;
+
+			vertexInputInfo.vertexBindingDescriptionCount = 0;
+			vertexInputInfo.pVertexBindingDescriptions = nullptr;
+		}
 
 		VkGraphicsPipelineCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;

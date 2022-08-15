@@ -6,6 +6,24 @@
 
 using namespace Fovea;
 
+static inline VkFormat FoveaFormatToVkFormat(FoveaFormat format){
+	switch (format){
+		case FoveaFormat_Float: return VK_FORMAT_R32_SFLOAT;
+		case FoveaFormat_Float_vec2: return VK_FORMAT_R32G32_SFLOAT;
+		case FoveaFormat_Float_vec3: return VK_FORMAT_R32G32B32_SFLOAT;
+		case FoveaFormat_Float_vec4: return VK_FORMAT_R32G32B32A32_SFLOAT;
+		case FoveaFormat_Int: return VK_FORMAT_R32_SINT;
+		case FoveaFormat_Int_vec2: return VK_FORMAT_R32G32_SINT;
+		case FoveaFormat_Int_vec3: return VK_FORMAT_R32G32B32_SINT;
+		case FoveaFormat_Int_vec4: return VK_FORMAT_R32G32B32A32_SINT;
+		case FoveaFormat_Uint: return VK_FORMAT_R32_UINT;
+		case FoveaFormat_Uint_vec2: return VK_FORMAT_R32G32_UINT;
+		case FoveaFormat_Uint_vec3: return VK_FORMAT_R32G32B32_UINT;
+		case FoveaFormat_Uint_vec4: return VK_FORMAT_R32G32B32A32_UINT;
+	}
+	return VK_FORMAT_R32_SFLOAT;
+}
+
 static inline VkFormat FoveaImageFormatToVkFormat(FoveaImageFormat format){
 	switch (format){
 		case FoveaImageFormat_R8: return VK_FORMAT_R8_UINT;
@@ -114,7 +132,7 @@ void initializeRenderCommandPool(){
 void initializeRenderer(){
 	Renderer &renderer = getInstance().renderer;
 
-	renderer.initialize();
+	renderer.initialize(5000);
 
 	renderer.setClearColor(0.1, 0.1, 0.1, 1.0);
 }
@@ -135,30 +153,38 @@ void FoveaOnWindowResized(uint32_t width, uint32_t height){
 	getInstance().renderer.windowResized(width, height);
 }
 
-VkCommandBuffer& frameCommandBuffer(){
-	static VkCommandBuffer commandBuffer;
-	return commandBuffer;
+static inline VkCommandBuffer& frameCommandBuffer(){
+	return getInstance().commandBuffer;
 }
 
-void FoveaBeginFrame(){
+void FoveaBeginFrame(void){
 	frameCommandBuffer() = getInstance().renderer.beginFrame();
 }
 
-void FoveaEndFrame(){
-	Renderer &renderer = getInstance().renderer;
-	{
-		VkCommandBuffer& commandBuffer = frameCommandBuffer();
-		renderer.beginSwapChainRenderPass(commandBuffer);
+void FoveaBeginSwapChainRenderPass(void){
+	VkCommandBuffer& commandBuffer = frameCommandBuffer();
+	getInstance().renderer.beginSwapChainRenderPass(commandBuffer);
+}
 
-		auto pipeline = getInstance().pipelineLibrary.get(0);
-		pipeline->bind(frameCommandBuffer());
+void FoveaEndSwapChainRenderPass(void){
+	FoveaFlushRenderer();
+	getInstance().renderer.endSwapChainRenderPass(frameCommandBuffer());
+}
 
-		vkCmdDraw(frameCommandBuffer(), 3, 1, 0, 0);
+void FoveaEndFrame(void){
+	getInstance().renderer.endFrame();
+}
 
-		renderer.endSwapChainRenderPass(commandBuffer);
-	}
+void FoveaRenderQuad(void *v0, void *v1, void *v2, void *v3){
+	getInstance().renderer.drawQuad(v0, v1, v2, v3);
+}
 
-	renderer.endFrame();
+void FoveaFlushRenderer(void){
+	getInstance().renderer.flush();
+}
+
+void FoveaSetRenderInstanceSize(uint32_t size){
+	getInstance().renderer.setInstanceSize(size, 0);
 }
 
 void FoveaDefaultShaderCreateInfo(FoveaShaderCreateInfo *createInfo){
@@ -167,6 +193,9 @@ void FoveaDefaultShaderCreateInfo(FoveaShaderCreateInfo *createInfo){
 	createInfo->pushConstantSize = 0;
 	createInfo->base = FOVEA_NONE;
 	createInfo->target = FOVEA_NONE;
+	createInfo->vertexAttributsCount = 0;
+	createInfo->vertexAttributes = nullptr;
+	createInfo->vertexInputSize = 0;
 }
 
 FoveaShader FoveaCreateShader(const char *name, FoveaShaderCreateInfo *createInfo){
@@ -190,6 +219,27 @@ FoveaShader FoveaCreateShader(const char *name, FoveaShaderCreateInfo *createInf
 		builder.setBase(getInstance().pipelineLibrary.get(createInfo->base));
 	}
 
+	PipelineVertexDescription vertexDescription;
+
+	if (createInfo->vertexInputSize > 0){
+		vertexDescription.attributeDescriptions.resize(createInfo->vertexAttributsCount);
+		for (int i=0; i<createInfo->vertexAttributsCount; i++){
+			auto &des = vertexDescription.attributeDescriptions[i];
+			auto &bui = createInfo->vertexAttributes[i];
+
+			des.binding = 0;
+			des.location = i;
+			des.format = FoveaFormatToVkFormat(bui.format);
+			des.offset = des.offset;
+		}
+
+		vertexDescription.bindingDescription.binding = 0;
+		vertexDescription.bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+		vertexDescription.bindingDescription.stride = createInfo->vertexInputSize;
+
+		builder.setVertexDescription(vertexDescription);
+	}
+
 	return static_cast<FoveaShader>(getInstance().pipelineLibrary.push(&builder, name));
 }
 
@@ -202,6 +252,7 @@ FoveaShader FoveaGetShaderFromName(const char *name){
 }
 
 void FoveaUseShader(FoveaShader shader){
+	FoveaFlushRenderer();
 	auto pipeline = getInstance().pipelineLibrary.get(shader);
 	pipeline->bind(frameCommandBuffer());
 }
@@ -260,3 +311,4 @@ void FoveaEndRenderTarget(FoveaRenderTarget renderTarget){
 void FoveaResizeRenderTarget(FoveaRenderTarget renderTarget, FoveaUIVec2 size){
 	getInstance().renderTargetLibrary.get(renderTarget)->resize(FoveaUIVec2ToVkExtent(size));
 }
+

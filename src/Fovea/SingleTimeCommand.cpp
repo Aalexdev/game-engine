@@ -65,6 +65,11 @@ namespace Fovea{
 		vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 	}
 
+	void SingleTimeCommand::copyBuffer(VkBuffer src, VkBuffer dst, VkBufferCopy copy){
+		SingleTimeCommand commandBuffer;
+		vkCmdCopyBuffer(commandBuffer, src, dst, 1, &copy);
+	}
+
 	void SingleTimeCommand::begin(){
 		VkCommandBufferAllocateInfo info = {};
 		info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -97,4 +102,13 @@ namespace Fovea{
 
 		vkFreeCommandBuffers(device.getDevice(), getInstance().renderCommandPool.getCommandPool(), 1, &commandBuffer);
 	}
+
+	SingleTimeCommand::SingleTimeCommand(){
+		begin();
+	}
+
+	SingleTimeCommand::~SingleTimeCommand(){
+		end();
+	}
+
 }

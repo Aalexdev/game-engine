@@ -7,7 +7,6 @@
 #include <filesystem>
 
 namespace Fovea{
-
 	struct PipelineConfigInfo{
 		PipelineConfigInfo(){defaultPipelineConfigInfo(*this);}
 		static void defaultPipelineConfigInfo(PipelineConfigInfo &configInfo);
@@ -49,6 +48,11 @@ namespace Fovea{
 		UNSGINED_INT_VEC4 = VK_FORMAT_R32G32B32A32_UINT,
 	};
 
+	struct PipelineVertexDescription{
+		VkVertexInputBindingDescription bindingDescription;
+		std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
+	};
+
 	class Pipeline;
 	class DescriptorSetLayout;
 
@@ -73,6 +77,9 @@ namespace Fovea{
 			void setBase(Pipeline* base);
 
 			void pushSetLayout(DescriptorSetLayout* layout);
+
+
+			void setVertexDescription(const PipelineVertexDescription &description);
 			
 		private:
 			struct ShaderStage{
@@ -93,5 +100,8 @@ namespace Fovea{
 			PushConstant pushConstant;
 			Pipeline* base = nullptr;
 			std::vector<DescriptorSetLayout*> setLayouts{};
+
+			bool hasVertexDescription = false;
+			PipelineVertexDescription vertexDescription;
 	};
 }
