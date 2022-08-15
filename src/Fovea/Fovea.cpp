@@ -50,12 +50,49 @@ static inline VkFormat FoveaImageFormatToVkFormat(FoveaImageFormat format){
 	return VK_FORMAT_R8G8B8_UINT;
 }
 
+static inline uint32_t FoveaImageFormatToPixelSize(FoveaImageFormat format){
+	switch (format){
+		case FoveaImageFormat_R8: return 1;
+		case FoveaImageFormat_R8G8: return 2;
+		case FoveaImageFormat_R8G8B8: return 3;
+		case FoveaImageFormat_R8G8B8A8: return 4;
+		case FoveaImageFormat_R16: return 2;
+		case FoveaImageFormat_R16G16: return 4;
+		case FoveaImageFormat_R16G16B16: return 6;
+		case FoveaImageFormat_R16G16B16A16: return 8;
+		case FoveaImageFormat_R32: return 4;
+		case FoveaImageFormat_R32G32: return 8;
+		case FoveaImageFormat_R32G32B32: return 16;
+		case FoveaImageFormat_R32G32B32A32: return 32;
+		case FoveaImageFormat_R64: return 8;
+		case FoveaImageFormat_R64G64: return 16;
+		case FoveaImageFormat_R64G64B64: return 32;
+		case FoveaImageFormat_R64G64B64A64: return 64;
+		case FoveaImageFormat_R4G4: return 1;
+		case FoveaImageFormat_R4G4B4A4: return 2;
+		case FoveaImageFormat_R5G5B5A1: return 2;
+		case FoveaImageFormat_R5B6G5: return 2;
+		case FoveaImageFormat_D32: return 4;
+		case FoveaImageFormat_D32_S8: return 5;
+		case FoveaImageFormat_D24_S8: return 4;
+	}
+	return 0;
+}
+
 static inline VkImageTiling FoveaImageTilingToVulkanImageTiling(FoveaImageTiling tiling){
 	switch (tiling){
-		case FoveaImageTiling_Linear: VK_IMAGE_TILING_LINEAR;
-		case FoveaImageTiling_Nearest: VK_IMAGE_TILING_OPTIMAL;
+		case FoveaImageTiling_Linear: return VK_IMAGE_TILING_LINEAR;
+		case FoveaImageTiling_Nearest: return VK_IMAGE_TILING_OPTIMAL;
 	}
 	return VK_IMAGE_TILING_LINEAR;
+}
+
+static inline VkFilter FoveaImageTilingToVulkanFilter(FoveaImageTiling tiling){
+	switch (tiling){
+		case FoveaImageTiling_Linear: return VK_FILTER_LINEAR;
+		case FoveaImageTiling_Nearest: return VK_FILTER_NEAREST;
+	}
+	return VK_FILTER_LINEAR;
 }
 
 static inline VkSampleCountFlagBits FoveaSampleToVkSample(FoveaSample sample){
@@ -85,6 +122,16 @@ static inline VkDescriptorType FoveaDescriptorTypeToVkDescriptorType(FoveaDescri
 		case FoveaDescriptorType_Texture: return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 	}
 	return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+}
+
+static inline VkSamplerAddressMode FoveaTextureAddressModeToVkSamplerAddressMode(FoveaTextureAddressMode mode){
+	switch (mode){
+		case FoveaTextureAddressMode_ClampToBorder: return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+		case FoveaTextureAddressMode_ClampToEdge: return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		case FoveaTextureAddressMode_MirroredRepeat: return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+		case FoveaTextureAddressMode_Repeat:  return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	}
+	return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
 }
 
 static inline VkPipelineStageFlags FoveaShaderStagePipelineStageFlags(int stages){
@@ -269,7 +316,7 @@ void FoveaDestroyShader(FoveaShader shader){
 }
 
 FoveaShader FoveaGetShaderFromName(const char *name){
-	return {getInstance().pipelineLibrary.getIDFromName(name)};
+	return getInstance().pipelineLibrary.getIDFromName(name);
 }
 
 void FoveaUseShader(FoveaShader shader){
@@ -317,7 +364,7 @@ void FoveaDestroyRenderTarget(FoveaRenderTarget renderTarget){
 	getInstance().renderTargetLibrary.erase(renderTarget);
 }
 
-FoveaRenderTarget getRenderTargetFromName(const char *name){
+FoveaRenderTarget FoveaGetRenderTargetFromName(const char *name){
 	return getInstance().renderTargetLibrary.getIDFromName(name);
 }
 
@@ -354,7 +401,7 @@ FoveaDescriptorSet FoveaCreateDescriptorSet(const char* name, FoveaDescriptorSet
 	return getInstance().descriptorSetLibrary.push(&builder, name);
 }
 
-void destroyDescriptorSet(FoveaDescriptorSet descriptorSet){
+void FoveaDestroyDescriptorSet(FoveaDescriptorSet descriptorSet){
 	getInstance().descriptorSetLibrary.erase(descriptorSet);
 }
 
@@ -364,4 +411,60 @@ FoveaDescriptorSet FoveaGetDescriptorSetFromName(const char* name){
 
 void FoveaWriteToDescriptorSetBuffer(FoveaDescriptorSet descriptorSet, uint32_t setIndex, uint32_t binding, void* data){
 	getInstance().descriptorSetLibrary.get(descriptorSet)->writeBuffer(setIndex, binding, data);
+}
+
+static inline TextureBuilder FoveaTextureCreateInfoToTextureBuilder(FoveaTextureCreateInfo *info){
+	TextureBuilder builder;
+	
+	builder.magFilter = FoveaImageTilingToVulkanFilter(info->magFilter);
+	builder.minFilter = FoveaImageTilingToVulkanFilter(info->minFilter);
+	builder.addressModeU = FoveaTextureAddressModeToVkSamplerAddressMode(info->addressModeX);
+	builder.addressModeV = FoveaTextureAddressModeToVkSamplerAddressMode(info->addressModeY);
+	builder.anisotropy = info->anisotropy;
+	builder.normalizeCoords = info->normalizedCoords;
+	builder.tiling = FoveaImageTilingToVulkanImageTiling(info->tiling);
+	builder.samples = FoveaSampleToVkSample(info->samples);
+	return builder;
+}
+
+FoveaTextureCreateInfo FoveaDefaultTextureCreateInfo(void){
+	FoveaTextureCreateInfo info;
+	info.magFilter = FoveaImageTiling_Nearest;
+	info.minFilter = FoveaImageTiling_Nearest;
+	info.addressModeX = FoveaTextureAddressMode_ClampToBorder;
+	info.addressModeY = FoveaTextureAddressMode_ClampToBorder;
+	info.anisotropy = Fovea_False;
+	info.normalizedCoords = Fovea_True;
+	info.tiling = FoveaImageTiling_Nearest;
+	info.samples = FoveaSample_1;
+	return info;
+}
+
+FoveaTexture FoveaCreateTextureFromRenderTarget(FoveaRenderTarget renderTarget, uint32_t attachment, FoveaTextureCreateInfo* createInfo){
+	auto framebuffer = getInstance().renderTargetLibrary.get(renderTarget)->getFramebuffer();
+	TextureBuilder builder = FoveaTextureCreateInfoToTextureBuilder(createInfo);
+	
+	Texture *texture = new Texture(*framebuffer, attachment, builder);
+
+	return getInstance().textureLibrary.push(texture);
+}
+
+FoveaTexture FoveaCreateTextureFromPath(const char* path, FoveaTextureCreateInfo* createInfo){
+	TextureBuilder builder = FoveaTextureCreateInfoToTextureBuilder(createInfo);
+	
+	Texture *texture = new Texture(path, builder);
+
+	return getInstance().textureLibrary.push(texture);
+}
+
+FoveaTexture FoveaCreateTextureFromData(FoveaImageFormat format, FoveaUIVec2 size, void* data, FoveaTextureCreateInfo* createInfo){
+	TextureBuilder builder = FoveaTextureCreateInfoToTextureBuilder(createInfo);
+	
+	Texture *texture = new Texture(FoveaImageFormatToVkFormat(format), FoveaUIVec2ToVkExtent(size), data, FoveaImageFormatToPixelSize(format), builder);
+
+	return getInstance().textureLibrary.push(texture);
+}
+
+void FoveaDestroyTexture(FoveaTexture texture){
+	getInstance().textureLibrary.erase(texture);
 }

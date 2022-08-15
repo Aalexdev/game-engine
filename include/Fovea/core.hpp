@@ -9,6 +9,7 @@
 #include "PipelineLibrary.hpp"
 #include "RenderTargetLibrary.hpp"
 #include "DescriptorSetLibrary.hpp"
+#include "TextureLibrary.hpp"
 
 namespace Fovea{
 
@@ -26,6 +27,7 @@ namespace Fovea{
 		PipelineLibrary pipelineLibrary;
 		RenderTargetLibrary renderTargetLibrary;
 		DescriptorSetLibrary descriptorSetLibrary;
+		TextureLibrary textureLibrary;
 
 		VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
 

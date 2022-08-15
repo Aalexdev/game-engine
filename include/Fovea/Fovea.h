@@ -22,10 +22,12 @@
 
 #define FOVEA_NONE (uint64_t)-1
 #define FOVEA_WHOLE_SIZE (~0ULL)
+#define FOVEA_DEPTH_ATTACHMENT (uint32_t)-1
 
 typedef uint64_t FoveaShader;
 typedef uint64_t FoveaRenderTarget;
 typedef uint64_t FoveaDescriptorSet;
+typedef uint64_t FoveaTexture;
 
 typedef enum FoveaBool{
 	Fovea_False = 0,
@@ -100,6 +102,13 @@ typedef enum FoveaShaderStage{
 	FoveaShaderStage_Compute = 1 << 3,
 } FoveaShaderStage;
 
+typedef enum FoveaTextureAddressMode{
+	FoveaTextureAddressMode_Repeat,
+	FoveaTextureAddressMode_MirroredRepeat,
+	FoveaTextureAddressMode_ClampToEdge,
+	FoveaTextureAddressMode_ClampToBorder,
+} FoveaTextureAddressMode;
+
 typedef enum FoveaDescriptorType{
 	FoveaDescriptorType_Texture,
 	FoveaDescriptorType_Buffer,
@@ -172,6 +181,19 @@ typedef struct FoveaDescriptorSetCreateInfo{
 	uint32_t setCount;
 } FoveaDescriptorSetCreateInfo;
 
+typedef struct FoveaTextureCreateInfo{
+	FoveaImageTiling magFilter;
+	FoveaImageTiling minFilter;
+	FoveaTextureAddressMode addressModeX;
+	FoveaTextureAddressMode addressModeY;
+	FoveaBool anisotropy;
+	FoveaBool normalizedCoords;
+
+	FoveaImageTiling tiling;
+	FoveaSample samples;
+
+} FoveaTextureCreateInfo;
+
 // ========================= base functions =========================
 
 void FoveaInitialize(void *window);
@@ -214,7 +236,7 @@ FoveaRenderTarget FoveaCreateRenderTarget(const char *name, FoveaRenderTargetCre
 
 void FoveaDestroyRenderTarget(FoveaRenderTarget renderTarget);
 
-FoveaRenderTarget getRenderTargetFromName(const char *name);
+FoveaRenderTarget FoveaGetRenderTargetFromName(const char *name);
 
 void FoveaBeginRenderTarget(FoveaRenderTarget renderTarget);
 
@@ -226,11 +248,23 @@ void FoveaResizeRenderTarget(FoveaRenderTarget renderTarget, FoveaUIVec2 size);
 
 FoveaDescriptorSet FoveaCreateDescriptorSet(const char* name, FoveaDescriptorSetCreateInfo* createInfo);
 
-void destroyDescriptorSet(FoveaDescriptorSet descriptorSet);
+void FoveaDestroyDescriptorSet(FoveaDescriptorSet descriptorSet);
 
 FoveaDescriptorSet FoveaGetDescriptorSetFromName(const char* name);
 
 void FoveaWriteToDescriptorSetBuffer(FoveaDescriptorSet descriptorSet, uint32_t setIndex, uint32_t binding, void* data);
+
+// ========================= descriptor set =========================
+
+FoveaTextureCreateInfo FoveaDefaultTextureCreateInfo(void);
+
+FoveaTexture FoveaCreateTextureFromRenderTarget(FoveaRenderTarget renderTarget, uint32_t attachment, FoveaTextureCreateInfo* createInfo);
+
+FoveaTexture FoveaCreateTextureFromPath(const char* path, FoveaTextureCreateInfo* createInfo);
+
+FoveaTexture FoveaCreateTextureFromData(FoveaImageFormat format, FoveaUIVec2 size, void* data, FoveaTextureCreateInfo* createInfo);
+
+void FoveaDestroyTexture(FoveaTexture texture);
 
 #ifdef __cplusplus
 	}

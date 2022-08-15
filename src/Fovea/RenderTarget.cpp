@@ -167,4 +167,8 @@ namespace Fovea{
 		framebuffer->resize(extent);
 	}
 
+	Framebuffer* RenderTarget::getFramebuffer(){
+		return framebuffer;
+	}
+	
 }

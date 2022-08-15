@@ -20,6 +20,7 @@ namespace Fovea{
 			void beginRenderPass(VkCommandBuffer commandBuffer);
 			void endRenderPass(VkCommandBuffer commandBuffer);
 			VkRenderPass getRenderPass();
+			Framebuffer* getFramebuffer();
 
 			void resize(VkExtent2D extent);
 		
