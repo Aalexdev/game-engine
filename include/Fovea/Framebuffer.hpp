@@ -5,6 +5,7 @@
 namespace Fovea{
 	class Framebuffer{
 		friend class RenderTarget;
+		friend class Texture;
 		public:
 			Framebuffer() = default;
 			Framebuffer(FramebufferBuilder &builder);
