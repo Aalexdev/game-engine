@@ -170,13 +170,8 @@ typedef struct FoveaDescriptorInfo{
 	uint32_t binding;
 	int stage;
 	FoveaDescriptorType type;
-
-	// if this is a buffer uniform
+	
 	uint32_t bufferSize;
-
-	// if the is a texture uniform
-	FoveaTexture* textures;
-	uint32_t textureCount;
 
 } FoveaDescriptorInfo;
 
