@@ -34,8 +34,8 @@ namespace Fovea{
 	}
 
 	void Renderer::createVertexBuffer(uint32_t count){
-		staginVertexBuffer.alloc(alignementSize * count, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-		vertexBuffer.alloc(alignementSize * count, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+		staginVertexBuffer.alloc(alignementSize * count, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+		// vertexBuffer.alloc(alignementSize * count, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 		staginVertexBuffer.map();
 		maxVertexSize = vertexBuffer.getBufferSize();
@@ -232,7 +232,7 @@ namespace Fovea{
 	void Renderer::setInstanceSize(size_t size, size_t minAlignementOffset){
 		flush();
 		staginVertexBuffer.setInstanceProperties(size, minAlignementOffset);
-		vertexBuffer.setInstanceProperties(size, minAlignementOffset);
+		// vertexBuffer.setInstanceProperties(size, minAlignementOffset);
 
 		alignementSize = staginVertexBuffer.getAlignmentSize();
 		instanceSize = size;
@@ -245,7 +245,7 @@ namespace Fovea{
 		VkCommandBuffer commandBuffer = getInstance().commandBuffer;
 		vkCmdBindIndexBuffer(commandBuffer, indexBuffer.getBuffer(), 0, VK_INDEX_TYPE_UINT32);
 
-		VkBuffer buffer = vertexBuffer.getBuffer();
+		VkBuffer buffer = staginVertexBuffer.getBuffer();
 		VkDeviceSize offset = 0;
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &buffer, &offset);
 	
@@ -266,14 +266,14 @@ namespace Fovea{
 		copy.size = usedVertexSize;
 
 		staginVertexBuffer.flush();
-		SingleTimeCommand::copyBuffer(staginVertexBuffer.getBuffer(), vertexBuffer.getBuffer(), copy);
+		// SingleTimeCommand::copyBuffer(staginVertexBuffer.getBuffer(), vertexBuffer.getBuffer(), copy);
 	}
 
 	void Renderer::drawQuad(void *v0, void *v1, void *v2, void *v3){
 		if (usedVertexSize + alignementSize * 4 >= maxVertexSize || indexCount + 6 >= maxIndices) flush();
 		
 		char* ptr = reinterpret_cast<char*>(staginVertexBuffer.getMappedMemory()) + usedVertexSize;
-
+		
 		memcpy(ptr, v0, instanceSize);
 		ptr += alignementSize;
 

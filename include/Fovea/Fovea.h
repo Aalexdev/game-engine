@@ -35,64 +35,64 @@ typedef enum FoveaBool{
 } FoveaBool;
 
 typedef enum FoveaFormat{
-	FoveaFormat_Float = 0,
-	FoveaFormat_Float_vec2 = 1,
-	FoveaFormat_Float_vec3 = 2,
-	FoveaFormat_Float_vec4 = 3,
-	FoveaFormat_Int = 4,
-	FoveaFormat_Int_vec2 = 5,
-	FoveaFormat_Int_vec3 = 6,
-	FoveaFormat_Int_vec4 = 7,
-	FoveaFormat_Uint = 8,
-	FoveaFormat_Uint_vec2 = 9,
-	FoveaFormat_Uint_vec3 = 10,
-	FoveaFormat_Uint_vec4 = 11,
+	FoveaFormat_Float,
+	FoveaFormat_Float_vec2,
+	FoveaFormat_Float_vec3,
+	FoveaFormat_Float_vec4,
+	FoveaFormat_Int,
+	FoveaFormat_Int_vec2,
+	FoveaFormat_Int_vec3,
+	FoveaFormat_Int_vec4,
+	FoveaFormat_Uint,
+	FoveaFormat_Uint_vec2,
+	FoveaFormat_Uint_vec3,
+	FoveaFormat_Uint_vec4,
 } FoveaFormat;
 
 typedef enum FoveaImageFormat{
-	FoveaImageFormat_R8 = 0,
-	FoveaImageFormat_R8G8 = 1,
-	FoveaImageFormat_R8G8B8 = 2,
-	FoveaImageFormat_R8G8B8A8 = 3,
-	FoveaImageFormat_R16 = 4,
-	FoveaImageFormat_R16G16 = 5,
-	FoveaImageFormat_R16G16B16 = 6,
-	FoveaImageFormat_R16G16B16A16 = 7,
-	FoveaImageFormat_R32 = 8,
-	FoveaImageFormat_R32G32 = 9,
-	FoveaImageFormat_R32G32B32 = 10,
-	FoveaImageFormat_R32G32B32A32 = 11,
-	FoveaImageFormat_R64 = 12,
-	FoveaImageFormat_R64G64 = 13,
-	FoveaImageFormat_R64G64B64 = 14,
-	FoveaImageFormat_R64G64B64A64 = 15,
-	FoveaImageFormat_R4G4 = 16,
-	FoveaImageFormat_R4G4B4A4 = 17,
-	FoveaImageFormat_R5G5B5A1 = 18,
-	FoveaImageFormat_R5B6G5 = 19,
-	FoveaImageFormat_D32 = 20,
-	FoveaImageFormat_D32_S8 = 21,
-	FoveaImageFormat_D24_S8 = 22,
+	FoveaImageFormat_R8,
+	FoveaImageFormat_R8G8,
+	FoveaImageFormat_R8G8B8,
+	FoveaImageFormat_R8G8B8A8,
+	FoveaImageFormat_R16,
+	FoveaImageFormat_R16G16,
+	FoveaImageFormat_R16G16B16,
+	FoveaImageFormat_R16G16B16A16,
+	FoveaImageFormat_R32,
+	FoveaImageFormat_R32G32,
+	FoveaImageFormat_R32G32B32,
+	FoveaImageFormat_R32G32B32A32,
+	FoveaImageFormat_R64,
+	FoveaImageFormat_R64G64,
+	FoveaImageFormat_R64G64B64,
+	FoveaImageFormat_R64G64B64A64,
+	FoveaImageFormat_R4G4,
+	FoveaImageFormat_R4G4B4A4,
+	FoveaImageFormat_R5G5B5A1,
+	FoveaImageFormat_R5B6G5,
+	FoveaImageFormat_D32,
+	FoveaImageFormat_D32_S8,
+	FoveaImageFormat_D24_S8,
 } FoveaImageFormat;
 
 typedef enum FoveaImageTiling{
-	FoveaImageTiling_Linear = 0,
-	FoveaImageTiling_Nearest = 1,
+	FoveaImageTiling_Linear,
+	FoveaImageTiling_Nearest,
 } FoveaImageTiling;
 
 typedef enum FoveaSample{
-	FoveaSample_1 = 0,
-	FoveaSample_2 = 1,
-	FoveaSample_4 = 2,
-	FoveaSample_8 = 3,
-	FoveaSample_16 = 4,
-	FoveaSample_32 = 5,
-	FoveaSample_64 = 6,
+	FoveaSample_1,
+	FoveaSample_2,
+	FoveaSample_4,
+	FoveaSample_8,
+	FoveaSample_16,
+	FoveaSample_32,
+	FoveaSample_64,
 } FoveaSample;
 
 typedef enum FoveaShaderType{
-	FoveaShaderType_Graphic = 0,
-	FoveaShaderType_Compute = 1,
+	FoveaShaderType_Graphic,
+	FoveaShaderType_Compute
 } FoveaShaderType;
 
 typedef enum FoveaShaderStage{
@@ -103,15 +103,15 @@ typedef enum FoveaShaderStage{
 } FoveaShaderStage;
 
 typedef enum FoveaTextureAddressMode{
-	FoveaTextureAddressMode_Repeat = 0,
-	FoveaTextureAddressMode_MirroredRepeat = 1,
-	FoveaTextureAddressMode_ClampToEdge = 2,
-	FoveaTextureAddressMode_ClampToBorder = 3,
+	FoveaTextureAddressMode_Repeat,
+	FoveaTextureAddressMode_MirroredRepeat,
+	FoveaTextureAddressMode_ClampToEdge,
+	FoveaTextureAddressMode_ClampToBorder,
 } FoveaTextureAddressMode;
 
 typedef enum FoveaDescriptorType{
-	FoveaDescriptorType_Texture = 0,
-	FoveaDescriptorType_Buffer = 1,
+	FoveaDescriptorType_Texture,
+	FoveaDescriptorType_Buffer,
 } FoveaDescriptorType;
 
 typedef struct FoveaColor{
@@ -170,10 +170,13 @@ typedef struct FoveaDescriptorInfo{
 	uint32_t binding;
 	int stage;
 	FoveaDescriptorType type;
-	
+
+	// if this is a buffer uniform
 	uint32_t bufferSize;
-	uint32_t textureCount;
+
+	// if the is a texture uniform
 	FoveaTexture* textures;
+	uint32_t textureCount;
 
 } FoveaDescriptorInfo;
 
@@ -222,7 +225,9 @@ void FoveaSetRenderInstanceSize(uint32_t size);
 
 void FoveaDefaultShaderCreateInfo(FoveaShaderCreateInfo *createInfo);
 
-FoveaShader FoveaCreateShader(FoveaShaderCreateInfo *createInfo);
+FoveaShader FoveaGetShaderFromName(const char *name);
+
+FoveaShader FoveaCreateShader(const char *name, FoveaShaderCreateInfo *createInfo);
 
 void FoveaDestroyShader(FoveaShader shader);
 
@@ -232,9 +237,11 @@ void FoveaSetShaderPushConstant(FoveaShader shader, void *data);
 
 // ========================= render target =========================
 
-FoveaRenderTarget FoveaCreateRenderTarget(FoveaRenderTargetCreateInfo *createInfo);
+FoveaRenderTarget FoveaCreateRenderTarget(const char *name, FoveaRenderTargetCreateInfo *createInfo);
 
 void FoveaDestroyRenderTarget(FoveaRenderTarget renderTarget);
+
+FoveaRenderTarget FoveaGetRenderTargetFromName(const char *name);
 
 void FoveaBeginRenderTarget(FoveaRenderTarget renderTarget);
 
@@ -244,9 +251,11 @@ void FoveaResizeRenderTarget(FoveaRenderTarget renderTarget, FoveaUIVec2 size);
 
 // ========================= descriptor set =========================
 
-FoveaDescriptorSet FoveaCreateDescriptorSet(FoveaDescriptorSetCreateInfo* createInfo);
+FoveaDescriptorSet FoveaCreateDescriptorSet(const char* name, FoveaDescriptorSetCreateInfo* createInfo);
 
 void FoveaDestroyDescriptorSet(FoveaDescriptorSet descriptorSet);
+
+FoveaDescriptorSet FoveaGetDescriptorSetFromName(const char* name);
 
 void FoveaWriteToDescriptorSetBuffer(FoveaDescriptorSet descriptorSet, uint32_t setIndex, uint32_t binding, void* data);
 
