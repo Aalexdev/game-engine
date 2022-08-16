@@ -14,7 +14,7 @@ namespace Fovea{
 
 			void initialize(PipelineBuilder *builder);
 			const PipelineConfigInfo& getConfig();
-			void bind(VkCommandBuffer commandBuffer);
+			void bind(VkCommandBuffer commandBuffer, uint32_t setsIndex[]);
 			void bindPushConstant(VkCommandBuffer, void* data); 
 
 		private:
@@ -35,7 +35,7 @@ namespace Fovea{
 
 			PipelineConfigInfo config;
 			std::vector<ShaderModule> shaderModules;
-			std::vector<VkDescriptorSet> sets;
+			std::vector<DescriptorSet*> sets;
 
 			size_t *refCount = nullptr;
 	};

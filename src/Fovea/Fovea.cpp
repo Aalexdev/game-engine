@@ -320,10 +320,10 @@ void FoveaDestroyShader(FoveaShader shader){
 	getInstance().pipelineLibrary.erase(shader);
 }
 
-void FoveaUseShader(FoveaShader shader){
+void FoveaUseShader(FoveaShader shader, uint32_t setsIndex[]){
 	FoveaFlushRenderer();
 	auto pipeline = getInstance().pipelineLibrary.get(shader);
-	pipeline->bind(frameCommandBuffer());
+	pipeline->bind(frameCommandBuffer(), setsIndex);
 }
 
 void FoveaSetShaderPushConstant(FoveaShader shader, void *data){
@@ -450,6 +450,11 @@ void FoveaWriteToDescriptorSetBuffer(FoveaDescriptorSet descriptorSet, uint32_t 
 	getInstance().descriptorSetLibrary.get(descriptorSet)->writeBuffer(setIndex, binding, data);
 }
 
+void FoveaSetDescriptorSetTexture(FoveaDescriptorSet descriptorSet, FoveaTexture texture, uint32_t setIndex, uint32_t binding, uint32_t textureIndex){
+	auto t = getInstance().textureLibrary.get(texture);
+	getInstance().descriptorSetLibrary.get(descriptorSet)->setDescriptorImage(setIndex, binding, textureIndex, t->getDescriptorInfo());
+}
+
 FoveaDescriptorSet FoveaReserveDescriptorSet(void){
 	return getInstance().descriptorSetLibrary.reserve();
 }
@@ -531,4 +536,8 @@ void FoveaLoadReservedTextureFromData(FoveaTexture texture, FoveaImageFormat for
 	Texture *t = new Texture(FoveaImageFormatToVkFormat(format), FoveaUIVec2ToVkExtent(size), data, FoveaImageFormatToPixelSize(format), builder);
 
 	getInstance().textureLibrary.set(texture, t);
+}
+
+void FoveaSetDescriptorSetTexture(FoveaDescriptorSet descriptorSet, uint32_t setIndex, uint32_t binding, uint32_t textureIndex){
+
 }

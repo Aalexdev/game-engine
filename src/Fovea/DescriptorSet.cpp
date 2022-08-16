@@ -30,6 +30,8 @@ namespace Fovea{
 		createSetLayout(builder);
 		createBuffers(builder);
 		createDescriptorSets(builder);
+
+		this->builder = builder;
 	}
 
 	void DescriptorSet::createPool(DescriptorSetBuilder &builder){
@@ -43,7 +45,7 @@ namespace Fovea{
 		}
 
 		for (auto &t : typeToCount){
-			poolBuilder.addPoolSize(t.first, t.second);
+			poolBuilder.addPoolSize(t.first, t.second * builder.descriptorSetCount);
 		}
 
 		pool.initialize(poolBuilder);
@@ -99,7 +101,6 @@ namespace Fovea{
 	}
 
 	void DescriptorSet::createDescriptorSets(DescriptorSetBuilder &builder){
-
 		for (uint32_t i=0; i<descriptorSetCount; i++){
 			DescriptorWriter writer(layout, pool);
 			
@@ -118,6 +119,17 @@ namespace Fovea{
 
 			writer.build(sets[i]);
 		}
+	}
+
+	void DescriptorSet::setDescriptorImage(uint32_t setIndex, uint32_t binding, uint32_t index, VkDescriptorImageInfo info){
+		builder.descriptors[binding].imageInfos[index] = info;
+
+		DescriptorWriter writer(layout, pool);
+
+		auto &d = builder.descriptors[binding];
+		writer.writeImages(d.binding, d.imageCount, d.imageInfos.data());
+
+		writer.overwrite(sets[setIndex]);
 	}
 
 	DescriptorSetLayout& DescriptorSet::getLayout(){

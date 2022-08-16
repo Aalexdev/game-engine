@@ -26,7 +26,8 @@ namespace Fovea{
 
 			void* getBuffer(uint32_t setIndex, uint32_t binding);
 			void writeBuffer(uint32_t setIndex, uint32_t binding, void* data);
-			
+
+			void setDescriptorImage(uint32_t setIndex, uint32_t binding, uint32_t index, VkDescriptorImageInfo info);
 		
 		private:
 			void createPool(DescriptorSetBuilder &builder);
@@ -39,6 +40,9 @@ namespace Fovea{
 				uint32_t size;
 				uint32_t alignement;
 			};
+
+			// store the builder for when the user want to overwrite a texture
+			DescriptorSetBuilder builder;
 
 			DescriptorPool pool;
 			DescriptorSetLayout layout;

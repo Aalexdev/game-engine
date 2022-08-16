@@ -62,9 +62,15 @@ namespace Fovea{
 		return config;
 	}
 
-	void Pipeline::bind(VkCommandBuffer commandBuffer){
+	void Pipeline::bind(VkCommandBuffer commandBuffer, uint32_t setsIndex[]){
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, static_cast<uint32_t>(sets.size()), sets.data(), 0, nullptr);
+		std::vector<VkDescriptorSet> descriptorSets(sets.size());
+
+		for (uint32_t i=0; i<sets.size(); i++){
+			descriptorSets[i] = sets[i]->getSet(setsIndex[i]);
+		}
+
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, static_cast<uint32_t>(sets.size()), descriptorSets.data(), 0, nullptr);
 	}
 
 	void Pipeline::bindPushConstant(VkCommandBuffer commandBuffer, void *data){
@@ -198,7 +204,7 @@ namespace Fovea{
 
 			sets.resize(builder.sets.size());
 			for (size_t i=0; i<sets.size(); i++){
-				sets[i] = builder.sets[i]->getSet(0);
+				sets[i] = builder.sets[i];
 			}
 		}
 

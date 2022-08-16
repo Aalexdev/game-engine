@@ -226,7 +226,7 @@ FoveaShader FoveaCreateShader(FoveaShaderCreateInfo *createInfo);
 
 void FoveaDestroyShader(FoveaShader shader);
 
-void FoveaUseShader(FoveaShader shader);
+void FoveaUseShader(FoveaShader shader, uint32_t setsIndex[]);
 
 void FoveaSetShaderPushConstant(FoveaShader shader, void *data);
 
@@ -257,6 +257,8 @@ FoveaDescriptorSet FoveaCreateDescriptorSet(FoveaDescriptorSetCreateInfo* create
 void FoveaDestroyDescriptorSet(FoveaDescriptorSet descriptorSet);
 
 void FoveaWriteToDescriptorSetBuffer(FoveaDescriptorSet descriptorSet, uint32_t setIndex, uint32_t binding, void* data);
+
+void FoveaSetDescriptorSetTexture(FoveaDescriptorSet descriptorSet, FoveaTexture texture, uint32_t setIndex, uint32_t binding, uint32_t textureIndex);
 
 FoveaDescriptorSet FoveaReserveDescriptorSet(void);
 
