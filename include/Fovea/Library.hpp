@@ -15,6 +15,29 @@ namespace Fovea{
 				clear();
 			}
 
+			ID reserve(){
+				if (holes == 0){
+					ID id = ts.back();
+					ts.push_back(reinterpret_cast<T*>(0x1));
+					return id;
+				}
+
+				ID id = 0;
+				for (; id<ts.size(); id++){
+					if (ts[id] == nullptr){
+						ts[id] = reinterpret_cast<T*>(0x1);
+						break;
+					}
+				}
+
+				holes--;
+				return id;
+			}
+
+			void set(ID id, T* t){
+				ts[id] = t;
+			}
+
 			ID push(T *t){
 				if (holes == 0){
 					ID id = ts.size();
@@ -26,6 +49,7 @@ namespace Fovea{
 				for (; id<ts.size(); id++){
 					if (ts[id] == nullptr){
 						ts[id] = t;
+						break;
 					}
 				}
 
@@ -34,7 +58,7 @@ namespace Fovea{
 			}
 
 			void erase(ID id){
-				delete ts[id];
+				if (ts[id] != reinterpret_cast<T*>(0x1)) delete ts[id];
 				ts[id] = nullptr;
 			}
 
@@ -44,7 +68,7 @@ namespace Fovea{
 
 			void clear(){
 				for (ID id=0; id<ts.size(); id++){
-					if (ts[id]) delete ts[id];
+					if (ts[id] && ts[id] != reinterpret_cast<T*>(0x1)) delete ts[id];
 				}
 				ts.clear();
 				holes = 0;

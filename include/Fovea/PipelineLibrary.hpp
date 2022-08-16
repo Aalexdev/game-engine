@@ -14,6 +14,8 @@ namespace Fovea{
 
 			~PipelineLibrary();
 
+			ID reserve();
+			void set(ID id, Pipeline* pipeline);
 			ID push(Pipeline *pipeline);
 			void erase(ID id);
 			Pipeline* get(ID id);
