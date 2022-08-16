@@ -23,22 +23,22 @@ static inline VkFormat FoveaFormatToVkFormat(FoveaFormat format){
 
 static inline VkFormat FoveaImageFormatToVkFormat(FoveaImageFormat format){
 	switch (format){
-		case FoveaImageFormat_R8: return VK_FORMAT_R8_UINT;
-		case FoveaImageFormat_R8G8: return VK_FORMAT_R8G8_UINT;
-		case FoveaImageFormat_R8G8B8: return VK_FORMAT_R8G8B8_UINT;
-		case FoveaImageFormat_R8G8B8A8: return VK_FORMAT_R8G8B8A8_UINT;
-		case FoveaImageFormat_R16: return VK_FORMAT_R16_UINT;
-		case FoveaImageFormat_R16G16: return VK_FORMAT_R16G16_UINT;
-		case FoveaImageFormat_R16G16B16: return VK_FORMAT_R16G16B16_UINT;
-		case FoveaImageFormat_R16G16B16A16: return VK_FORMAT_R16G16B16A16_UINT;
-		case FoveaImageFormat_R32: return VK_FORMAT_R32_UINT;
-		case FoveaImageFormat_R32G32: return VK_FORMAT_R32G32_UINT;
-		case FoveaImageFormat_R32G32B32: return VK_FORMAT_R32G32B32_UINT;
-		case FoveaImageFormat_R32G32B32A32: return VK_FORMAT_R32G32B32A32_UINT;
-		case FoveaImageFormat_R64: return VK_FORMAT_R64_UINT;
-		case FoveaImageFormat_R64G64: return VK_FORMAT_R64G64_UINT;
-		case FoveaImageFormat_R64G64B64: return VK_FORMAT_R64G64B64_UINT;
-		case FoveaImageFormat_R64G64B64A64: return VK_FORMAT_R64G64B64A64_UINT;
+		case FoveaImageFormat_R8: return VK_FORMAT_R8_UNORM;
+		case FoveaImageFormat_R8G8: return VK_FORMAT_R8G8_UNORM;
+		case FoveaImageFormat_R8G8B8: return VK_FORMAT_R8G8B8_UNORM;
+		case FoveaImageFormat_R8G8B8A8: return VK_FORMAT_R8G8B8A8_UNORM;
+		case FoveaImageFormat_R16: return VK_FORMAT_R16_SFLOAT;
+		case FoveaImageFormat_R16G16: return VK_FORMAT_R16G16_SFLOAT;
+		case FoveaImageFormat_R16G16B16: return VK_FORMAT_R16G16B16_SFLOAT;
+		case FoveaImageFormat_R16G16B16A16: return VK_FORMAT_R16G16B16A16_SFLOAT;
+		case FoveaImageFormat_R32: return VK_FORMAT_R32_SFLOAT;
+		case FoveaImageFormat_R32G32: return VK_FORMAT_R32G32_SFLOAT;
+		case FoveaImageFormat_R32G32B32: return VK_FORMAT_R32G32B32_SFLOAT;
+		case FoveaImageFormat_R32G32B32A32: return VK_FORMAT_R32G32B32A32_SFLOAT;
+		case FoveaImageFormat_R64: return VK_FORMAT_R64_SFLOAT;
+		case FoveaImageFormat_R64G64: return VK_FORMAT_R64G64_SFLOAT;
+		case FoveaImageFormat_R64G64B64: return VK_FORMAT_R64G64B64_SFLOAT;
+		case FoveaImageFormat_R64G64B64A64: return VK_FORMAT_R64G64B64A64_SFLOAT;
 		case FoveaImageFormat_R4G4: return VK_FORMAT_R4G4_UNORM_PACK8;
 		case FoveaImageFormat_R4G4B4A4: return VK_FORMAT_R4G4B4A4_UNORM_PACK16;
 		case FoveaImageFormat_R5G5B5A1: return VK_FORMAT_R5G5B5A1_UNORM_PACK16;
@@ -119,7 +119,7 @@ static inline int FoveaShaderTypeToPipelineStage(FoveaShaderType type){
 static inline VkDescriptorType FoveaDescriptorTypeToVkDescriptorType(FoveaDescriptorType type){
 	switch (type){
 		case FoveaDescriptorType_Buffer: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		case FoveaDescriptorType_Texture: return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		case FoveaDescriptorType_Texture: return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 	}
 	return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 }
@@ -293,7 +293,7 @@ FoveaShader FoveaCreateShader(const char *name, FoveaShaderCreateInfo *createInf
 			des.binding = 0;
 			des.location = i;
 			des.format = FoveaFormatToVkFormat(bui.format);
-			des.offset = des.offset;
+			des.offset = bui.offset;
 		}
 
 		vertexDescription.bindingDescription.binding = 0;
@@ -390,8 +390,16 @@ FoveaDescriptorSet FoveaCreateDescriptorSet(const char* name, FoveaDescriptorSet
 		auto &d = descriptors[i];
 		auto &db = createInfo->descriptors[i];
 
+		std::vector<VkDescriptorImageInfo> info(db.textureCount);
+		for (uint32_t k=0; k<db.textureCount; k++){
+			auto descriptorInfo = getInstance().textureLibrary.get(db.textures[k])->getDescriptorInfo();
+			info[k] = descriptorInfo;
+		}
+
 		d.binding = db.binding;
 		d.bufferSize = db.bufferSize;
+		d.imageCount = db.textureCount;
+		d.imageInfos = info;
 		d.type = FoveaDescriptorTypeToVkDescriptorType(db.type);
 		d.stage = FoveaShaderStagePipelineStageFlags(db.stage);
 	}

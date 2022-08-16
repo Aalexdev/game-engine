@@ -28,6 +28,13 @@ namespace Fovea{
 
 			~Texture();
 
+			VkDescriptorImageInfo getDescriptorInfo();
+
+			VkImage getImage();
+			VkDeviceMemory getImageMemory();
+			VkImageView getImageView();
+			VkSampler getSampler();
+
 		private:
 			void createFromData(void* data, uint32_t pixelSize, TextureBuilder& builedr);
 
@@ -57,3 +64,5 @@ namespace Fovea{
 			VkSampler imageSampler = VK_NULL_HANDLE;
 	};
 }
+
+// Validation Error: [ UNASSIGNED-CoreValidation-Shader-InputNotProduced ] Object 0: handle = 0xa808d50000000033, type = VK_OBJECT_TYPE_SHADER_MODULE; | MessageID = 0x23e43bb7 | Vertex shader consumes input at location 2 but not provided

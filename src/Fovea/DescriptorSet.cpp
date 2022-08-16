@@ -39,7 +39,7 @@ namespace Fovea{
 
 		std::unordered_map<VkDescriptorType, uint32_t> typeToCount;
 		for (auto &d : builder.descriptors){
-			typeToCount[d.type] += d.type == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE ? d.imageCount : 1;
+			typeToCount[d.type] += d.type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ? d.imageCount : 1;
 		}
 
 		for (auto &t : typeToCount){
@@ -53,7 +53,7 @@ namespace Fovea{
 		DescriptorSetLayoutBuilder layoutBuilder;
 
 		for (auto &d : builder.descriptors){
-			layoutBuilder.AddBinding(d.binding, d.type, d.stage, d.type == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE ? d.imageCount : 1);
+			layoutBuilder.AddBinding(d.binding, d.type, d.stage, d.type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ? d.imageCount : 1);
 		}
 
 		layout.initialize(layoutBuilder);
@@ -93,7 +93,7 @@ namespace Fovea{
 					
 					d.bufferInfo = info;
 					offset += d.bufferSize;
-				}
+				} 
 			}
 		}
 	}
@@ -111,7 +111,7 @@ namespace Fovea{
 						writer.writeBuffer(d.binding, &d.bufferInfo); 
 						break;
 					}
-					case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE: writer.writeImages(d.binding, d.imageCount, d.imageInfos); break;
+					case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER: writer.writeImages(d.binding, d.imageCount, d.imageInfos.data()); break;
 					default: throw std::runtime_error("invalid descriptor type"); break;
 				}
 			}

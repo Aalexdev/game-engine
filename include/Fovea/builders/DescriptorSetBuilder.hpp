@@ -14,7 +14,7 @@ namespace Fovea{
 				uint32_t binding;
 				VkDescriptorType type;
 				VkPipelineStageFlags stage;
-				VkDescriptorImageInfo* imageInfos;
+				std::vector<VkDescriptorImageInfo> imageInfos;
 				uint32_t imageCount;
 				uint32_t bufferSize;
 

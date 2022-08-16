@@ -34,10 +34,10 @@ namespace Fovea{
 
 	static inline VkFormat channelCountToVkFormat(int channel){
 		switch (channel){
-			case 1: return VK_FORMAT_R8_UINT;
-			case 2: return VK_FORMAT_R8G8_UINT;
-			case 3: return VK_FORMAT_R8G8B8_UINT;
-			case 4: return VK_FORMAT_R8G8B8A8_UINT;
+			case 1: return VK_FORMAT_R8_UNORM;
+			case 2: return VK_FORMAT_R8G8_UNORM;
+			case 3: return VK_FORMAT_R8G8B8_UNORM;
+			case 4: return VK_FORMAT_R8G8B8A8_UNORM;
 		}
 		return VK_FORMAT_R8_UINT;
 	}
@@ -154,4 +154,27 @@ namespace Fovea{
 		createImageSampler(builder);
 	}
 
+	VkDescriptorImageInfo Texture::getDescriptorInfo(){
+		VkDescriptorImageInfo imageInfo = {};
+		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		imageInfo.imageView = imageView;
+		imageInfo.sampler = imageSampler;
+		return imageInfo;
+	}
+
+	VkImage Texture::getImage(){
+		return image;
+	}
+
+	VkDeviceMemory Texture::getImageMemory(){
+		return imageMemory;
+	}
+
+	VkImageView Texture::getImageView(){
+		return imageView;
+	}
+
+	VkSampler Texture::getSampler(){
+		return imageSampler;
+	}
 }
