@@ -26,6 +26,6 @@ namespace Fovea{
 			std::vector<Pipeline*> pipelines;
 			std::vector<size_t> refCounts;
 			uint32_t holes = 0;
-			uint32_t refHoles;
+			uint32_t refHoles = 0;
 	};
 }

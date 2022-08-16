@@ -261,7 +261,7 @@ void FoveaDefaultShaderCreateInfo(FoveaShaderCreateInfo *createInfo){
 	createInfo->descriptorSets = nullptr;
 }
 
-FoveaShader FoveaCreateShader(FoveaShaderCreateInfo *createInfo){
+PipelineBuilder FoveaCreatePipelineBuilderFromShaderCreateInfo(FoveaShaderCreateInfo *createInfo){
 	PipelineBuilder builder;
 
 	if (createInfo->vertexFilepath != nullptr) builder.setShaderStage(PipelineStage::VERTEX, createInfo->vertexFilepath);
@@ -307,9 +307,12 @@ FoveaShader FoveaCreateShader(FoveaShaderCreateInfo *createInfo){
 		auto d = getInstance().descriptorSetLibrary.get(createInfo->descriptorSets[i]);
 		builder.pushSet(d);
 	}
+	return builder;
+}
 
+FoveaShader FoveaCreateShader(FoveaShaderCreateInfo *createInfo){
+	PipelineBuilder builder = FoveaCreatePipelineBuilderFromShaderCreateInfo(createInfo);
 	Pipeline* pipeline = new Pipeline(&builder);
-
 	return static_cast<FoveaShader>(getInstance().pipelineLibrary.push(pipeline));
 }
 
@@ -327,7 +330,17 @@ void FoveaSetShaderPushConstant(FoveaShader shader, void *data){
 	getInstance().pipelineLibrary.get(shader)->bindPushConstant(frameCommandBuffer(), data);
 }
 
-FoveaRenderTarget FoveaCreateRenderTarget(FoveaRenderTargetCreateInfo *createInfo){
+FoveaShader FoveaReserveShader(void){
+	return getInstance().pipelineLibrary.reserve();
+}
+
+void FoveaLoadResevedShader(FoveaShader shader, FoveaShaderCreateInfo *createInfo){
+	PipelineBuilder builder = FoveaCreatePipelineBuilderFromShaderCreateInfo(createInfo);
+	Pipeline* pipeline = new Pipeline(&builder);
+	getInstance().pipelineLibrary.set(shader, pipeline);
+}
+
+RenderTargetBuilder RenderTargetBuilderFromFoveaRenderTargetCreateInfo(FoveaRenderTargetCreateInfo *createInfo){
 	RenderTargetBuilder builder;
 
 	FramebufferAttachments attachments;
@@ -354,10 +367,19 @@ FoveaRenderTarget FoveaCreateRenderTarget(FoveaRenderTargetCreateInfo *createInf
 		builder->enableDepthAttachment(FoveaImageFormatToVkFormat(createInfo->depthFormat));
 		builder.setDepthStencilClearColor(createInfo->depthClearValue, createInfo->stencilClearValue);
 	}
+	return builder;
+}
 
+FoveaRenderTarget FoveaCreateRenderTarget(FoveaRenderTargetCreateInfo *createInfo){
+	RenderTargetBuilder builder = RenderTargetBuilderFromFoveaRenderTargetCreateInfo(createInfo);
 	RenderTarget* renderTarget = new RenderTarget(builder);
-
 	return static_cast<FoveaRenderTarget>(getInstance().renderTargetLibrary.push(renderTarget));
+}
+
+void FoveaLoadReservedRenderTarget(FoveaRenderTarget renderTarget, FoveaRenderTargetCreateInfo* createInfo){
+	RenderTargetBuilder builder = RenderTargetBuilderFromFoveaRenderTargetCreateInfo(createInfo);
+	RenderTarget* target = new RenderTarget(builder);
+	getInstance().renderTargetLibrary.set(renderTarget, target);
 }
 
 void FoveaDestroyRenderTarget(FoveaRenderTarget renderTarget){
@@ -376,7 +398,7 @@ void FoveaResizeRenderTarget(FoveaRenderTarget renderTarget, FoveaUIVec2 size){
 	getInstance().renderTargetLibrary.get(renderTarget)->resize(FoveaUIVec2ToVkExtent(size));
 }
 
-FoveaDescriptorSet FoveaCreateDescriptorSet(FoveaDescriptorSetCreateInfo* createInfo){
+DescriptorSetBuilder DescriptorSetBuilderFromFoveaDescriptorSetCreateInfo(FoveaDescriptorSetCreateInfo *createInfo){
 	DescriptorSetBuilder builder;
 
 	builder.setDescriptorSetCount(createInfo->setCount);
@@ -401,10 +423,23 @@ FoveaDescriptorSet FoveaCreateDescriptorSet(FoveaDescriptorSetCreateInfo* create
 	}
 
 	builder.setDescriptors(descriptors);
+	return builder;
+}
 
+FoveaDescriptorSet FoveaCreateDescriptorSet(FoveaDescriptorSetCreateInfo* createInfo){
+	DescriptorSetBuilder builder = DescriptorSetBuilderFromFoveaDescriptorSetCreateInfo(createInfo);
 	DescriptorSet* descriptorSet = new DescriptorSet(builder);
+	return static_cast<FoveaDescriptorSet>(getInstance().descriptorSetLibrary.push(descriptorSet));
+}
 
-	return getInstance().descriptorSetLibrary.push(descriptorSet);
+void FoveaLoadReservedDescriptorSet(FoveaDescriptorSet descriptorSet, FoveaDescriptorSetCreateInfo* createInfo){
+	DescriptorSetBuilder builder = DescriptorSetBuilderFromFoveaDescriptorSetCreateInfo(createInfo);
+	DescriptorSet* descriptor = new DescriptorSet(builder);
+	getInstance().descriptorSetLibrary.set(descriptorSet, descriptor);
+}
+
+FoveaRenderTarget FoveaReserveRenderTarget(void){
+	return getInstance().renderTargetLibrary.reserve();
 }
 
 void FoveaDestroyDescriptorSet(FoveaDescriptorSet descriptorSet){
@@ -413,6 +448,10 @@ void FoveaDestroyDescriptorSet(FoveaDescriptorSet descriptorSet){
 
 void FoveaWriteToDescriptorSetBuffer(FoveaDescriptorSet descriptorSet, uint32_t setIndex, uint32_t binding, void* data){
 	getInstance().descriptorSetLibrary.get(descriptorSet)->writeBuffer(setIndex, binding, data);
+}
+
+FoveaDescriptorSet FoveaReserveDescriptorSet(void){
+	return getInstance().descriptorSetLibrary.reserve();
 }
 
 static inline TextureBuilder FoveaTextureCreateInfoToTextureBuilder(FoveaTextureCreateInfo *info){
@@ -445,7 +484,6 @@ FoveaTextureCreateInfo FoveaDefaultTextureCreateInfo(void){
 FoveaTexture FoveaCreateTextureFromRenderTarget(FoveaRenderTarget renderTarget, uint32_t attachment, FoveaTextureCreateInfo* createInfo){
 	auto framebuffer = getInstance().renderTargetLibrary.get(renderTarget)->getFramebuffer();
 	TextureBuilder builder = FoveaTextureCreateInfoToTextureBuilder(createInfo);
-	
 	Texture *texture = new Texture(*framebuffer, attachment, builder);
 
 	return getInstance().textureLibrary.push(texture);
@@ -453,7 +491,6 @@ FoveaTexture FoveaCreateTextureFromRenderTarget(FoveaRenderTarget renderTarget, 
 
 FoveaTexture FoveaCreateTextureFromPath(const char* path, FoveaTextureCreateInfo* createInfo){
 	TextureBuilder builder = FoveaTextureCreateInfoToTextureBuilder(createInfo);
-	
 	Texture *texture = new Texture(path, builder);
 
 	return getInstance().textureLibrary.push(texture);
@@ -461,7 +498,6 @@ FoveaTexture FoveaCreateTextureFromPath(const char* path, FoveaTextureCreateInfo
 
 FoveaTexture FoveaCreateTextureFromData(FoveaImageFormat format, FoveaUIVec2 size, void* data, FoveaTextureCreateInfo* createInfo){
 	TextureBuilder builder = FoveaTextureCreateInfoToTextureBuilder(createInfo);
-	
 	Texture *texture = new Texture(FoveaImageFormatToVkFormat(format), FoveaUIVec2ToVkExtent(size), data, FoveaImageFormatToPixelSize(format), builder);
 
 	return getInstance().textureLibrary.push(texture);
@@ -469,4 +505,30 @@ FoveaTexture FoveaCreateTextureFromData(FoveaImageFormat format, FoveaUIVec2 siz
 
 void FoveaDestroyTexture(FoveaTexture texture){
 	getInstance().textureLibrary.erase(texture);
+}
+
+FoveaTexture FoveaReserveTexture(void){
+	return getInstance().textureLibrary.reserve();
+}
+
+void FoveaLoadReservedTextureFromRenderTarget(FoveaTexture texture, FoveaRenderTarget renderTarget, uint32_t attachment, FoveaTextureCreateInfo* createInfo){
+	auto framebuffer = getInstance().renderTargetLibrary.get(renderTarget)->getFramebuffer();
+	TextureBuilder builder = FoveaTextureCreateInfoToTextureBuilder(createInfo);
+	
+	Texture *t = new Texture(*framebuffer, attachment, builder);
+	getInstance().textureLibrary.set(texture, t);
+}
+
+void FoveaLoadReservedTextureFromPath(FoveaTexture texture, const char* path, FoveaTextureCreateInfo* createInfo){
+	TextureBuilder builder = FoveaTextureCreateInfoToTextureBuilder(createInfo);
+	Texture *t = new Texture(path, builder);
+
+	getInstance().textureLibrary.set(texture, t);
+}
+
+void FoveaLoadReservedTextureFromData(FoveaTexture texture, FoveaImageFormat format, FoveaUIVec2 size, void* data, FoveaTextureCreateInfo* createInfo){
+	TextureBuilder builder = FoveaTextureCreateInfoToTextureBuilder(createInfo);
+	Texture *t = new Texture(FoveaImageFormatToVkFormat(format), FoveaUIVec2ToVkExtent(size), data, FoveaImageFormatToPixelSize(format), builder);
+
+	getInstance().textureLibrary.set(texture, t);
 }

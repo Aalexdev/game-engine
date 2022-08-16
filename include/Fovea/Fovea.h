@@ -230,6 +230,10 @@ void FoveaUseShader(FoveaShader shader);
 
 void FoveaSetShaderPushConstant(FoveaShader shader, void *data);
 
+FoveaShader FoveaReserveShader(void);
+
+void FoveaLoadResevedShader(FoveaShader shader, FoveaShaderCreateInfo *createInfo);
+
 // ========================= render target =========================
 
 FoveaRenderTarget FoveaCreateRenderTarget(FoveaRenderTargetCreateInfo *createInfo);
@@ -242,6 +246,10 @@ void FoveaEndRenderTarget(FoveaRenderTarget renderTarget);
 
 void FoveaResizeRenderTarget(FoveaRenderTarget renderTarget, FoveaUIVec2 size);
 
+FoveaRenderTarget FoveaReserveRenderTarget(void);
+
+void FoveaLoadReservedRenderTarget(FoveaRenderTarget renderTarget, FoveaRenderTargetCreateInfo* createInfo);
+
 // ========================= descriptor set =========================
 
 FoveaDescriptorSet FoveaCreateDescriptorSet(FoveaDescriptorSetCreateInfo* createInfo);
@@ -249,6 +257,10 @@ FoveaDescriptorSet FoveaCreateDescriptorSet(FoveaDescriptorSetCreateInfo* create
 void FoveaDestroyDescriptorSet(FoveaDescriptorSet descriptorSet);
 
 void FoveaWriteToDescriptorSetBuffer(FoveaDescriptorSet descriptorSet, uint32_t setIndex, uint32_t binding, void* data);
+
+FoveaDescriptorSet FoveaReserveDescriptorSet(void);
+
+void FoveaLoadReservedDescriptorSet(FoveaDescriptorSet descriptorSet, FoveaDescriptorSetCreateInfo* createInfo);
 
 // ========================= descriptor set =========================
 
@@ -261,6 +273,15 @@ FoveaTexture FoveaCreateTextureFromPath(const char* path, FoveaTextureCreateInfo
 FoveaTexture FoveaCreateTextureFromData(FoveaImageFormat format, FoveaUIVec2 size, void* data, FoveaTextureCreateInfo* createInfo);
 
 void FoveaDestroyTexture(FoveaTexture texture);
+
+FoveaTexture FoveaReserveTexture(void);
+
+void FoveaLoadReservedTextureFromRenderTarget(FoveaTexture texture, FoveaRenderTarget renderTarget, uint32_t attachment, FoveaTextureCreateInfo* createInfo);
+
+void FoveaLoadReservedTextureFromPath(FoveaTexture texture, const char* path, FoveaTextureCreateInfo* createInfo);
+
+void FoveaLoadReservedTextureFromData(FoveaTexture texture, FoveaImageFormat format, FoveaUIVec2 size, void* data, FoveaTextureCreateInfo* createInfo);
+
 
 #ifdef __cplusplus
 	}

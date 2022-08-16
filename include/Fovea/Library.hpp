@@ -17,7 +17,7 @@ namespace Fovea{
 
 			ID reserve(){
 				if (holes == 0){
-					ID id = ts.back();
+					ID id = ts.size();
 					ts.push_back(reinterpret_cast<T*>(0x1));
 					return id;
 				}
