@@ -1,60 +1,43 @@
 #include "Fovea/PipelineLibrary.hpp"
 
 namespace Fovea{
-	void PipelineLibrary::initialize(){
-
-	}
 
 	PipelineLibrary::~PipelineLibrary(){
 		clear();
 	}
 
-	PipelineLibrary::ID PipelineLibrary::push(PipelineBuilder *builder, const char *name){
-
-		{
-			ID id = getIDFromName(name);
-			if (id != invalidID) return id;
-		}
-
-		Pipeline* pipeline = new Pipeline;
-
-		try {
-			pipeline->initialize(builder);
-		} catch (const std::exception &e){
-			fprintf(stderr, "std exception catch : \n\twhat() : %s\n", e.what());
-			delete pipeline;
-			return invalidID;
-		}
+	PipelineLibrary::ID PipelineLibrary::push(Pipeline *pipeline){
 
 		if (pipeline->refCount == nullptr){
-			refCounts.push_back(1);
-			pipeline->refCount = &refCounts.back();
+			if (refHoles == 0){
+				refCounts.push_back(1);
+				pipeline->refCount = &refCounts.back();
+			} else {
+				for (size_t ref = 0; ref < refCounts.size(); ref++){
+					if (refCounts[ref] == 0){
+						pipeline->refCount = &refCounts[ref];
+					}
+				}
+				refHoles--;
+			}
 		}
 
-		ID id = 0;
-		
 		if (holes == 0){
-			id = pipelines.size();
+			ID id = pipelines.size();
 			pipelines.push_back(pipeline);
 			return id;
 		}
+		
 
+		ID id = 0;
 		for (; id<pipelines.size(); id++){
 			if (pipelines[id] == nullptr){
 				pipelines[id] = pipeline;
-				break;
 			}
 		}
 
 		holes--;
-
 		return id;
-	}
-
-	PipelineLibrary::ID PipelineLibrary::getIDFromName(const std::string &name){
-		auto it = nameToIndexMap.find(name);
-		if (it == nameToIndexMap.end()) return invalidID;
-		return it->second;
 	}
 	
 	Pipeline* PipelineLibrary::get(ID id){
@@ -63,34 +46,13 @@ namespace Fovea{
 	}
 
 	void PipelineLibrary::erase(ID id){
+		Pipeline* pipeline = get(id);
 
-		{
-			for (auto &n : nameToIndexMap){
-				if (n.second == id){
-					nameToIndexMap.erase(n.first);
-				}
-			}
+		if (*pipeline->refCount == 1){
+			refHoles++;
 		}
 
-		{
-			auto pipeline = pipelines[id];
-
-			if (*pipeline->refCount == 1){
-				auto it = refCounts.begin();
-
-				while (it != refCounts.end()){
-					if (&*it == pipeline->refCount){
-						refCounts.erase(it);
-						break;
-					}
-					it++;
-				}
-			}
-		}
-
-		auto it = pipelines.begin() + id;
-
-		delete *it;
+		delete pipeline;
 		pipelines[id] = nullptr;
 		holes++;
 	}

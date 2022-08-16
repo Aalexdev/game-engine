@@ -34,10 +34,10 @@ namespace Fovea{
 
 	static inline VkFormat channelCountToVkFormat(int channel){
 		switch (channel){
-			case 1: return VK_FORMAT_R8_UNORM;
-			case 2: return VK_FORMAT_R8G8_UNORM;
-			case 3: return VK_FORMAT_R8G8B8_UNORM;
-			case 4: return VK_FORMAT_R8G8B8A8_UNORM;
+			case 1: return VK_FORMAT_R8_SRGB;
+			case 2: return VK_FORMAT_R8G8_SRGB;
+			case 3: return VK_FORMAT_R8G8B8_SRGB;
+			case 4: return VK_FORMAT_R8G8B8A8_SRGB;
 		}
 		return VK_FORMAT_R8_UINT;
 	}

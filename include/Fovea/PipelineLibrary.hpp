@@ -14,20 +14,16 @@ namespace Fovea{
 
 			~PipelineLibrary();
 
-			void initialize();
-
-			ID push(PipelineBuilder *builder, const char *name);
+			ID push(Pipeline *pipeline);
 			void erase(ID id);
-
-			ID getIDFromName(const std::string &name);
 			Pipeline* get(ID id);
 
 			void clear();
 			
 		private:
 			std::vector<Pipeline*> pipelines;
-			std::unordered_map<std::string, ID> nameToIndexMap;
 			std::vector<size_t> refCounts;
 			uint32_t holes = 0;
+			uint32_t refHoles;
 	};
 }

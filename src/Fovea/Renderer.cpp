@@ -193,7 +193,7 @@ namespace Fovea{
 		VkExtent2D extent = windowExtent;
 
 		// while(extent.width == 0 || extent.height == 0){
-		// 	extent = device.getInstance().getWindow().getExtent();
+		// 	extent ice.getInstance().getWindow().getExtent();
 		// 	glfwWaitEvents();
 		// }
 		vkDeviceWaitIdle(device);

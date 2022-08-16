@@ -23,10 +23,10 @@ static inline VkFormat FoveaFormatToVkFormat(FoveaFormat format){
 
 static inline VkFormat FoveaImageFormatToVkFormat(FoveaImageFormat format){
 	switch (format){
-		case FoveaImageFormat_R8: return VK_FORMAT_R8_UNORM;
-		case FoveaImageFormat_R8G8: return VK_FORMAT_R8G8_UNORM;
-		case FoveaImageFormat_R8G8B8: return VK_FORMAT_R8G8B8_UNORM;
-		case FoveaImageFormat_R8G8B8A8: return VK_FORMAT_R8G8B8A8_UNORM;
+		case FoveaImageFormat_R8: return VK_FORMAT_R8_SNORM;
+		case FoveaImageFormat_R8G8: return VK_FORMAT_R8G8_SNORM;
+		case FoveaImageFormat_R8G8B8: return VK_FORMAT_R8G8B8_SNORM;
+		case FoveaImageFormat_R8G8B8A8: return VK_FORMAT_R8G8B8A8_SNORM;
 		case FoveaImageFormat_R16: return VK_FORMAT_R16_SFLOAT;
 		case FoveaImageFormat_R16G16: return VK_FORMAT_R16G16_SFLOAT;
 		case FoveaImageFormat_R16G16B16: return VK_FORMAT_R16G16B16_SFLOAT;
@@ -261,7 +261,7 @@ void FoveaDefaultShaderCreateInfo(FoveaShaderCreateInfo *createInfo){
 	createInfo->descriptorSets = nullptr;
 }
 
-FoveaShader FoveaCreateShader(const char *name, FoveaShaderCreateInfo *createInfo){
+FoveaShader FoveaCreateShader(FoveaShaderCreateInfo *createInfo){
 	PipelineBuilder builder;
 
 	if (createInfo->vertexFilepath != nullptr) builder.setShaderStage(PipelineStage::VERTEX, createInfo->vertexFilepath);
@@ -308,15 +308,13 @@ FoveaShader FoveaCreateShader(const char *name, FoveaShaderCreateInfo *createInf
 		builder.pushSet(d);
 	}
 
-	return static_cast<FoveaShader>(getInstance().pipelineLibrary.push(&builder, name));
+	Pipeline* pipeline = new Pipeline(&builder);
+
+	return static_cast<FoveaShader>(getInstance().pipelineLibrary.push(pipeline));
 }
 
 void FoveaDestroyShader(FoveaShader shader){
 	getInstance().pipelineLibrary.erase(shader);
-}
-
-FoveaShader FoveaGetShaderFromName(const char *name){
-	return getInstance().pipelineLibrary.getIDFromName(name);
 }
 
 void FoveaUseShader(FoveaShader shader){
@@ -329,7 +327,7 @@ void FoveaSetShaderPushConstant(FoveaShader shader, void *data){
 	getInstance().pipelineLibrary.get(shader)->bindPushConstant(frameCommandBuffer(), data);
 }
 
-FoveaRenderTarget FoveaCreateRenderTarget(const char *name, FoveaRenderTargetCreateInfo *createInfo){
+FoveaRenderTarget FoveaCreateRenderTarget(FoveaRenderTargetCreateInfo *createInfo){
 	RenderTargetBuilder builder;
 
 	FramebufferAttachments attachments;
@@ -357,15 +355,13 @@ FoveaRenderTarget FoveaCreateRenderTarget(const char *name, FoveaRenderTargetCre
 		builder.setDepthStencilClearColor(createInfo->depthClearValue, createInfo->stencilClearValue);
 	}
 
-	return static_cast<FoveaRenderTarget>(getInstance().renderTargetLibrary.push(&builder, name));
+	RenderTarget* renderTarget = new RenderTarget(builder);
+
+	return static_cast<FoveaRenderTarget>(getInstance().renderTargetLibrary.push(renderTarget));
 }
 
 void FoveaDestroyRenderTarget(FoveaRenderTarget renderTarget){
 	getInstance().renderTargetLibrary.erase(renderTarget);
-}
-
-FoveaRenderTarget FoveaGetRenderTargetFromName(const char *name){
-	return getInstance().renderTargetLibrary.getIDFromName(name);
 }
 
 void FoveaBeginRenderTarget(FoveaRenderTarget renderTarget){
@@ -380,7 +376,7 @@ void FoveaResizeRenderTarget(FoveaRenderTarget renderTarget, FoveaUIVec2 size){
 	getInstance().renderTargetLibrary.get(renderTarget)->resize(FoveaUIVec2ToVkExtent(size));
 }
 
-FoveaDescriptorSet FoveaCreateDescriptorSet(const char* name, FoveaDescriptorSetCreateInfo* createInfo){
+FoveaDescriptorSet FoveaCreateDescriptorSet(FoveaDescriptorSetCreateInfo* createInfo){
 	DescriptorSetBuilder builder;
 
 	builder.setDescriptorSetCount(createInfo->setCount);
@@ -406,15 +402,13 @@ FoveaDescriptorSet FoveaCreateDescriptorSet(const char* name, FoveaDescriptorSet
 
 	builder.setDescriptors(descriptors);
 
-	return getInstance().descriptorSetLibrary.push(&builder, name);
+	DescriptorSet* descriptorSet = new DescriptorSet(builder);
+
+	return getInstance().descriptorSetLibrary.push(descriptorSet);
 }
 
 void FoveaDestroyDescriptorSet(FoveaDescriptorSet descriptorSet){
 	getInstance().descriptorSetLibrary.erase(descriptorSet);
-}
-
-FoveaDescriptorSet FoveaGetDescriptorSetFromName(const char* name){
-	return getInstance().descriptorSetLibrary.getIDFromName(name);
 }
 
 void FoveaWriteToDescriptorSetBuffer(FoveaDescriptorSet descriptorSet, uint32_t setIndex, uint32_t binding, void* data){
