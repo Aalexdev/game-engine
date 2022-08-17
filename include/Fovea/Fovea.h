@@ -114,6 +114,12 @@ typedef enum FoveaDescriptorType{
 	FoveaDescriptorType_Buffer = 1,
 } FoveaDescriptorType;
 
+typedef enum FoveaTopology{
+	FoveaTopology_Quad = 0,
+	FoveaTopology_Trigone = 1,
+	FoveaTopology_Line = 2,
+} FoveaTopology;
+
 typedef struct FoveaColor{
 	float r;
 	float g;
@@ -217,6 +223,18 @@ void FoveaRenderScene(void);
 void FoveaSetSceneData(uint32_t offset, uint32_t count, void* data);
 
 void FoveaFlushSceneData(uint32_t offset, uint32_t count);
+
+void FoveaSetGeneralUsageVertexSize(uint32_t size);
+
+void FoveaSetGeneralUsage(void *v, uint32_t vertexCount);
+
+void FoveaSetGeneralUsageData(uint32_t offset, uint32_t count, void *data);
+
+void FoveaFlushGeneralUsageData(uint32_t offset, uint32_t count);
+
+void FoveaRenderGeneralUsageData(void);
+
+void FoveaSetGeneralUsageTopology(FoveaTopology typology);
 
 void FoveaBeginSwapChainRenderPass(void);
 

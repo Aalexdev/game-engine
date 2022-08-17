@@ -14,7 +14,7 @@ namespace Fovea{
 		public:
 			~Renderer();
 
-			void initialize(size_t vertexBufferSize = 5000);
+			void initialize(uint32_t sceneVertexBufferSize, uint32_t generalUsageVertexBufferSize);
 
 			VkRenderPass getSwapChainRenderPass() const {return swapChain->getRenderPass();}
 
@@ -29,6 +29,12 @@ namespace Fovea{
 				assert(isFrameStarted && "Cannot get frame index whene frame not in progress");
 				return currentFrameIndex;
 			}
+
+			enum class Topology{
+				Quad = 0,
+				Trigone = 1,
+				Line = 1
+			};
 
 			SwapChain &getSwapChain() noexcept {return *swapChain;}
 
@@ -57,13 +63,26 @@ namespace Fovea{
 			void setSceneData(uint32_t offset, uint32_t count, void* data);
 
 			void flushSceneData(uint32_t offset, uint32_t count);
+
+			void setGeneralUsageVertexSize(uint32_t size, uint32_t minOffsetAlignement);
+
+			void setGeneralUsageData(void* v, uint32_t vertexCount);
+
+			void renderGeneralUsageData(VkCommandBuffer commandBuffer);
+
+			void setGeneralUsageTopology(Topology typology);
+
+			void setGeneralUsageData(uint32_t offset, uint32_t count, void* data);
+
+			void flushGeneralUsageData(uint32_t offset, uint32_t count);
 			
 		private:
 			void createCommandBuffers();
 			void freeCommandBuffers();
 			void recreateSwapChain();
-			void createVertexBuffer(uint32_t count);
-			void createIndexBuffer(uint32_t count);
+			void createSceneVertexBuffer(uint32_t count);
+			void createSceneIndexBuffer(uint32_t count);
+			void createGeneralUsageBuffers(uint32_t VbufferSize, uint32_t IBufferSize);
 
 			std::unique_ptr<SwapChain> swapChain = nullptr;
 			std::vector<VkCommandBuffer> commandBuffers;
@@ -86,5 +105,15 @@ namespace Fovea{
 			uint32_t sceneVertexBufferUsedSize = 0;
 			uint32_t sceneIndexUsed = 0;
 			uint32_t maxSceneVertexSize = 0;
+
+			Buffer generalUsageVertexBuffer;
+			Buffer generalUsageIndexBuffer;
+
+			uint32_t generalUsageVertexSize = 10;
+			uint32_t generalUsageAlignement = 10;
+			uint32_t generalUsageVertexBufferUsedSize = 0;
+			uint32_t generalUsageIndexUsed = 0;
+			uint32_t maxGeneralUsageVertexSize = 0;
+			Topology generalUsageTopology = Topology::Quad;
 	};
 }

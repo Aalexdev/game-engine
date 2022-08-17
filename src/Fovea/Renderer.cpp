@@ -10,7 +10,7 @@ namespace Fovea{
 		freeCommandBuffers();
 	}
 
-	void Renderer::initialize(size_t vertexBufferSize){
+	void Renderer::initialize(uint32_t sceneVertexBufferSize, uint32_t generalUsageVertexBufferSize){
 		recreateSwapChain();
 		viewport.x = 0.f;
 		viewport.y = 0.f;
@@ -23,11 +23,12 @@ namespace Fovea{
 		scissor.extent = {1, 1};
 
 		createCommandBuffers();
-		createVertexBuffer(vertexBufferSize * 6);
-		createIndexBuffer(vertexBufferSize * 4);
+		createSceneVertexBuffer(sceneVertexBufferSize * 6);
+		createSceneIndexBuffer(sceneVertexBufferSize * 4);
+		createGeneralUsageBuffers(generalUsageVertexBufferSize * 4, generalUsageVertexBufferSize * 6);
 	}
 
-	void Renderer::createVertexBuffer(uint32_t count){
+	void Renderer::createSceneVertexBuffer(uint32_t count){
 		sceneVertexBuffer.alloc(sceneVertexSize * count, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 		sceneVertexBuffer.map();
 		maxSceneVertexSize = sceneVertexBuffer.getBufferSize();
@@ -39,7 +40,7 @@ namespace Fovea{
 		sceneAlignement = sceneVertexBuffer.getAlignmentSize();
 	}
 
-	void Renderer::createIndexBuffer(uint32_t count){
+	void Renderer::createSceneIndexBuffer(uint32_t count){
 		size_t size = count * sizeof(uint32_t);
 
 		Buffer staginBuffer;
@@ -72,6 +73,43 @@ namespace Fovea{
 
 		SingleTimeCommand::copyBuffer(staginBuffer.getBuffer(), indexBuffer.getBuffer(), copy);
 	}
+
+	void Renderer::createGeneralUsageBuffers(uint32_t VbufferSize, uint32_t IBufferSize){
+		generalUsageVertexBuffer.alloc(VbufferSize * sizeof(float), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+		generalUsageVertexBuffer.map();
+		maxGeneralUsageVertexSize = generalUsageVertexBuffer.getBufferSize();
+		
+		Buffer staginBuffer;
+		staginBuffer.alloc(IBufferSize * sizeof(uint32_t), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+
+		staginBuffer.map();
+
+		uint32_t* ptr = reinterpret_cast<uint32_t*>(staginBuffer.getMappedMemory());
+
+		uint32_t offset = 0;
+		for (uint32_t i=0; i<IBufferSize; i+=6){
+			ptr[i+0] = offset+0;
+			ptr[i+1] = offset+1;
+			ptr[i+2] = offset+2;
+			ptr[i+3] = offset+2;
+			ptr[i+4] = offset+3;
+			ptr[i+5] = offset+0;
+			offset+=4;
+		}
+
+		staginBuffer.flush();
+		staginBuffer.unmap();
+
+		VkBufferCopy copy;
+		copy.srcOffset = 0;
+		copy.dstOffset = 0;
+		copy.size = IBufferSize * sizeof(uint32_t);
+
+		generalUsageIndexBuffer.alloc(copy.size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+		SingleTimeCommand::copyBuffer(staginBuffer.getBuffer(), generalUsageIndexBuffer.getBuffer(), copy);
+	}
+
 
 	VkCommandBuffer Renderer::beginFrame(){
 		assert(!isFrameStarted && "Can't call beginFrame while already in progress");
@@ -245,10 +283,52 @@ namespace Fovea{
 
 	void Renderer::setSceneData(uint32_t offset, uint32_t count, void* data){
 		char* ptr = static_cast<char*>(sceneVertexBuffer.getMappedMemory()) + offset;
-		memcpy(ptr, data, sceneAlignement * count);
+		memcpy(ptr, data, sceneVertexSize * count);
 	} 
 
 	void Renderer::flushSceneData(uint32_t offset, uint32_t count){
 		sceneVertexBuffer.flush(sceneAlignement * count, offset);
+	}
+
+	void Renderer::setGeneralUsageVertexSize(uint32_t size, uint32_t minOffsetAlignement){
+		generalUsageVertexBuffer.setInstanceProperties(size, minOffsetAlignement);
+		generalUsageVertexSize = size;
+		generalUsageAlignement = generalUsageVertexBuffer.getAlignmentSize();
+	}
+
+	void Renderer::setGeneralUsageData(void* v, uint32_t vertexCount){
+		void* ptr = generalUsageVertexBuffer.getMappedMemory();
+		generalUsageVertexBufferUsedSize = vertexCount * generalUsageVertexSize;
+		memcpy(ptr, v, generalUsageVertexBufferUsedSize);
+		generalUsageIndexUsed = (vertexCount / 4) * 6;
+		generalUsageVertexBuffer.flush(generalUsageAlignement * vertexCount);
+	}
+
+	void Renderer::renderGeneralUsageData(VkCommandBuffer commandBuffer){
+		if (generalUsageIndexUsed == 0) return;
+		
+		VkBuffer vertexBuffer = generalUsageVertexBuffer.getBuffer();
+		VkDeviceSize offset = 0;
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &offset);
+
+		if (generalUsageTopology == Topology::Quad){
+			vkCmdBindIndexBuffer(commandBuffer, generalUsageIndexBuffer.getBuffer(), 0, VK_INDEX_TYPE_UINT32);
+			vkCmdDrawIndexed(commandBuffer, generalUsageIndexUsed, 1, 0, 0, 0);
+		} else {
+			vkCmdDraw(commandBuffer, generalUsageVertexBufferUsedSize / generalUsageVertexSize, 1, 0, 0);
+		}
+	}
+
+	void Renderer::setGeneralUsageTopology(Topology topology){
+		generalUsageTopology = topology;
+	}
+
+	void Renderer::setGeneralUsageData(uint32_t offset, uint32_t count, void* data){
+		char* ptr = static_cast<char*>(generalUsageIndexBuffer.getMappedMemory()) + offset;
+		memcpy(ptr, data, generalUsageVertexSize * count);
+	}
+
+	void Renderer::flushGeneralUsageData(uint32_t offset, uint32_t count){
+		generalUsageIndexBuffer.flush(generalUsageAlignement * count, offset);
 	}
 }

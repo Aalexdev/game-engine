@@ -148,6 +148,15 @@ static inline VkPipelineStageFlags FoveaShaderStagePipelineStageFlags(int stages
 	return vkStage;
 }
 
+static inline Renderer::Topology FoveaTopologyToRendererTopology(FoveaTopology topology){
+	switch (topology){
+		case FoveaTopology_Quad: return Renderer::Topology::Quad;
+		case FoveaTopology_Trigone: return Renderer::Topology::Trigone;
+		case FoveaTopology_Line: return Renderer::Topology::Line;
+	}
+	return Renderer::Topology::Quad;
+}
+
 static inline RenderTarget::ClearColor FoveaColorToRenderTargetClearColor(FoveaColor color){
 	return {color.r, color.g, color.b, color.a};
 }
@@ -197,9 +206,7 @@ void initializeRenderCommandPool(){
 
 void initializeRenderer(){
 	Renderer &renderer = getInstance().renderer;
-
-	renderer.initialize(500000);
-
+	renderer.initialize(50000, 5000);
 	renderer.setClearColor(0.1, 0.1, 0.1, 1.0);
 }
 
@@ -609,4 +616,28 @@ void FoveaSetSceneData(uint32_t offset, uint32_t size, void* data){
 
 void FoveaFlushSceneData(uint32_t offset, uint32_t size){
 	getInstance().renderer.flushSceneData(offset, size);
+}
+
+void FoveaSetGeneralUsageVertexSize(uint32_t size){
+	getInstance().renderer.setGeneralUsageVertexSize(size, getInstance().physicalDevice.getProperties().limits.nonCoherentAtomSize);
+}
+
+void FoveaSetGeneralUsage(void *v, uint32_t vertexCount){
+	getInstance().renderer.setGeneralUsageData(v, vertexCount);
+}
+
+void FoveaSetGeneralUsageData(uint32_t offset, uint32_t count, void *data){
+	getInstance().renderer.setGeneralUsageData(offset, count, data);
+}
+
+void FoveaFlushGeneralUsageData(uint32_t offset, uint32_t count){
+	getInstance().renderer.flushGeneralUsageData(offset, count);
+}
+
+void FoveaRenderGeneralUsageData(void){
+	getInstance().renderer.renderGeneralUsageData(frameCommandBuffer());
+}
+
+void FoveaSetGeneralUsageTopology(FoveaTopology topology){
+	getInstance().renderer.setGeneralUsageTopology(FoveaTopologyToRendererTopology(topology));
 }
