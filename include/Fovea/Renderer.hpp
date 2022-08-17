@@ -7,6 +7,7 @@
 #include <memory>
 #include <vector>
 #include <cassert>
+#include <queue>
 
 namespace Fovea{
 	class Renderer{
@@ -47,13 +48,15 @@ namespace Fovea{
 
 			void windowResized(uint32_t width, uint32_t height);
 
-			void resizeVertexBuffer(size_t size);
+			void setScene(void* v, uint32_t vertexCount);
 
-			void setInstanceSize(size_t size, size_t minAlignementOffset);
+			void setSceneVertexSize(uint32_t size, size_t minOffsetAlignement);
 
-			void drawQuad(void *v0, void *v1, void *v2, void *v3);
+			void renderScene(VkCommandBuffer commandBuffer);
 
-			void flush();
+			void setSceneData(uint32_t offset, uint32_t count, void* data);
+
+			void flushSceneData(uint32_t offset, uint32_t count);
 			
 		private:
 			void createCommandBuffers();
@@ -61,7 +64,6 @@ namespace Fovea{
 			void recreateSwapChain();
 			void createVertexBuffer(uint32_t count);
 			void createIndexBuffer(uint32_t count);
-			void copyStaginBuffers();
 
 			std::unique_ptr<SwapChain> swapChain = nullptr;
 			std::vector<VkCommandBuffer> commandBuffers;
@@ -76,17 +78,13 @@ namespace Fovea{
 			VkRect2D scissor;
 			VkExtent2D windowExtent = {1080, 720};
 
-			Buffer staginVertexBuffer;
-			Buffer vertexBuffer;
+			Buffer sceneVertexBuffer;
 			Buffer indexBuffer;
 
-			size_t alignementSize = 10;
-			size_t instanceSize = 10;
-			uint32_t indexCount = 0;
-			uint32_t maxIndices = 0;
-			size_t usedVertexSize = 0;
-			size_t maxVertexSize = 0;
-
-			uint32_t drawCalls = 0;
+			uint32_t sceneVertexSize = 10;
+			uint32_t sceneAlignement = 10;
+			uint32_t sceneVertexBufferUsedSize = 0;
+			uint32_t sceneIndexUsed = 0;
+			uint32_t maxSceneVertexSize = 0;
 	};
 }

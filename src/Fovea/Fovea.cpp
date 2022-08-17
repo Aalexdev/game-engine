@@ -1,6 +1,11 @@
 #include "Fovea/core.hpp"
 #include "Fovea/Fovea.h"
 
+// #define STB_IMAGE_IMPLEMENTATION
+#include "stb/stb_image.h"
+
+#include <pthread.h>
+
 using namespace Fovea;
 
 static inline VkFormat FoveaFormatToVkFormat(FoveaFormat format){
@@ -23,10 +28,10 @@ static inline VkFormat FoveaFormatToVkFormat(FoveaFormat format){
 
 static inline VkFormat FoveaImageFormatToVkFormat(FoveaImageFormat format){
 	switch (format){
-		case FoveaImageFormat_R8: return VK_FORMAT_R8_SNORM;
-		case FoveaImageFormat_R8G8: return VK_FORMAT_R8G8_SNORM;
-		case FoveaImageFormat_R8G8B8: return VK_FORMAT_R8G8B8_SNORM;
-		case FoveaImageFormat_R8G8B8A8: return VK_FORMAT_R8G8B8A8_SNORM;
+		case FoveaImageFormat_R8: return VK_FORMAT_R8_SRGB;
+		case FoveaImageFormat_R8G8: return VK_FORMAT_R8G8_SRGB;
+		case FoveaImageFormat_R8G8B8: return VK_FORMAT_R8G8B8_SRGB;
+		case FoveaImageFormat_R8G8B8A8: return VK_FORMAT_R8G8B8A8_SRGB;
 		case FoveaImageFormat_R16: return VK_FORMAT_R16_SFLOAT;
 		case FoveaImageFormat_R16G16: return VK_FORMAT_R16G16_SFLOAT;
 		case FoveaImageFormat_R16G16B16: return VK_FORMAT_R16G16B16_SFLOAT;
@@ -193,7 +198,7 @@ void initializeRenderCommandPool(){
 void initializeRenderer(){
 	Renderer &renderer = getInstance().renderer;
 
-	renderer.initialize(5000);
+	renderer.initialize(500000);
 
 	renderer.setClearColor(0.1, 0.1, 0.1, 1.0);
 }
@@ -228,7 +233,6 @@ void FoveaBeginSwapChainRenderPass(void){
 }
 
 void FoveaEndSwapChainRenderPass(void){
-	FoveaFlushRenderer();
 	getInstance().renderer.endSwapChainRenderPass(frameCommandBuffer());
 }
 
@@ -236,16 +240,16 @@ void FoveaEndFrame(void){
 	getInstance().renderer.endFrame();
 }
 
-void FoveaRenderQuad(void *v0, void *v1, void *v2, void *v3){
-	getInstance().renderer.drawQuad(v0, v1, v2, v3);
+void FoveaSetScene(void *v, uint32_t vertexCount){
+	getInstance().renderer.setScene(v, vertexCount);
 }
 
-void FoveaFlushRenderer(void){
-	getInstance().renderer.flush();
+void FoveaSetSceneVertexSize(uint32_t size){
+	getInstance().renderer.setSceneVertexSize(size, getInstance().physicalDevice.getProperties().limits.nonCoherentAtomSize);
 }
 
-void FoveaSetRenderInstanceSize(uint32_t size){
-	getInstance().renderer.setInstanceSize(size, 0);
+void FoveaRenderScene(void){
+	getInstance().renderer.renderScene(frameCommandBuffer());
 }
 
 void FoveaDefaultShaderCreateInfo(FoveaShaderCreateInfo *createInfo){
@@ -321,7 +325,6 @@ void FoveaDestroyShader(FoveaShader shader){
 }
 
 void FoveaUseShader(FoveaShader shader, uint32_t setsIndex[]){
-	FoveaFlushRenderer();
 	auto pipeline = getInstance().pipelineLibrary.get(shader);
 	pipeline->bind(frameCommandBuffer(), setsIndex);
 }
@@ -538,6 +541,72 @@ void FoveaLoadReservedTextureFromData(FoveaTexture texture, FoveaImageFormat for
 	getInstance().textureLibrary.set(texture, t);
 }
 
-void FoveaSetDescriptorSetTexture(FoveaDescriptorSet descriptorSet, uint32_t setIndex, uint32_t binding, uint32_t textureIndex){
+static inline FoveaImageFormat channelCountToImageFormat(int channel){
+	printf("%d\n", channel);
+	switch (channel){
+		case 1: return FoveaImageFormat_R8;
+		case 2: return FoveaImageFormat_R8G8;
+		case 3: return FoveaImageFormat_R8G8B8;
+		case 4: return FoveaImageFormat_R8G8B8A8;
+	}
+	return FoveaImageFormat_R8G8B8;
+}
 
+
+struct LoadTextureAsyncData{
+	FoveaTexture *texture;
+	FoveaTextureCreateInfo* createInfo;
+	const char* path;
+	pthread_mutex_t *lock;
+};
+
+void* loadTextureAsync(void *ptr){
+	LoadTextureAsyncData* info = static_cast<LoadTextureAsyncData*>(ptr);
+	TextureBuilder builder = FoveaTextureCreateInfoToTextureBuilder(info->createInfo);
+	
+	int w, h, channel;
+	void* pixels = stbi_load(info->path, &w, &h, &channel, STBI_default);
+	FoveaImageFormat format = channelCountToImageFormat(channel);
+
+	pthread_mutex_lock(info->lock);
+	FoveaLoadReservedTextureFromData(*info->texture, format, {static_cast<uint32_t>(w), static_cast<uint32_t>(h)}, pixels, info->createInfo);
+	pthread_mutex_unlock(info->lock);
+
+	stbi_image_free(pixels);
+	return nullptr;
+}
+
+FoveaTexture* FoveaCreateTexturesFromPaths(const char* paths[], FoveaTextureCreateInfo* createInfos, uint32_t textureCount){
+	FoveaTexture *textures = new FoveaTexture[textureCount];
+	pthread_t *threads = new pthread_t[textureCount];
+	LoadTextureAsyncData* datas = new LoadTextureAsyncData[textureCount];
+	pthread_mutex_t lock;
+	pthread_mutex_init(&lock, nullptr);
+
+	for (uint32_t i=0; i<textureCount; i++){
+		textures[i] = getInstance().textureLibrary.reserve();
+		datas[i].createInfo = &createInfos[i];
+		datas[i].lock = &lock;
+		datas[i].path = paths[i];
+		datas[i].texture = &textures[i];
+		pthread_create(&threads[i], nullptr, &loadTextureAsync, &datas[i]);
+	}
+
+	for (uint32_t i=0; i<textureCount; i++){
+		pthread_join(threads[i], nullptr);
+	}
+
+	pthread_mutex_destroy(&lock);
+	delete[] threads;
+	delete[] datas;
+
+	return textures;
+}
+
+void FoveaSetSceneData(uint32_t offset, uint32_t size, void* data){
+	getInstance().renderer.setSceneData(offset, size, data);
+}
+
+void FoveaFlushSceneData(uint32_t offset, uint32_t size){
+	getInstance().renderer.flushSceneData(offset, size);
 }

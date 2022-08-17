@@ -208,15 +208,19 @@ void FoveaBeginFrame(void);
 
 void FoveaEndFrame(void);
 
-void FoveaRenderQuad(void *v0, void *v1, void *v2, void *v3);
+void FoveaSetScene(void *v, uint32_t vertexCount);
 
-void FoveaFlushRenderer(void);
+void FoveaSetSceneVertexSize(uint32_t size);
+
+void FoveaRenderScene(void);
+
+void FoveaSetSceneData(uint32_t offset, uint32_t count, void* data);
+
+void FoveaFlushSceneData(uint32_t offset, uint32_t count);
 
 void FoveaBeginSwapChainRenderPass(void);
 
 void FoveaEndSwapChainRenderPass(void);
-
-void FoveaSetRenderInstanceSize(uint32_t size);
 
 // =================== shaders ====================
 
@@ -272,6 +276,8 @@ FoveaTexture FoveaCreateTextureFromRenderTarget(FoveaRenderTarget renderTarget, 
 
 FoveaTexture FoveaCreateTextureFromPath(const char* path, FoveaTextureCreateInfo* createInfo);
 
+FoveaTexture* FoveaCreateTexturesFromPaths(const char* paths[], FoveaTextureCreateInfo* createInfos, uint32_t textureCount);
+
 FoveaTexture FoveaCreateTextureFromData(FoveaImageFormat format, FoveaUIVec2 size, void* data, FoveaTextureCreateInfo* createInfo);
 
 void FoveaDestroyTexture(FoveaTexture texture);
@@ -283,7 +289,6 @@ void FoveaLoadReservedTextureFromRenderTarget(FoveaTexture texture, FoveaRenderT
 void FoveaLoadReservedTextureFromPath(FoveaTexture texture, const char* path, FoveaTextureCreateInfo* createInfo);
 
 void FoveaLoadReservedTextureFromData(FoveaTexture texture, FoveaImageFormat format, FoveaUIVec2 size, void* data, FoveaTextureCreateInfo* createInfo);
-
 
 #ifdef __cplusplus
 	}

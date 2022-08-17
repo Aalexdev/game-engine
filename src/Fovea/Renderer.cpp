@@ -23,22 +23,20 @@ namespace Fovea{
 		scissor.extent = {1, 1};
 
 		createCommandBuffers();
-		resizeVertexBuffer(vertexBufferSize);
-	}
-
-	void Renderer::resizeVertexBuffer(size_t size){
-		createVertexBuffer(size * 6);
-		createIndexBuffer(size * 4);
-
-		maxIndices = size * 4;
+		createVertexBuffer(vertexBufferSize * 6);
+		createIndexBuffer(vertexBufferSize * 4);
 	}
 
 	void Renderer::createVertexBuffer(uint32_t count){
-		staginVertexBuffer.alloc(alignementSize * count, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-		// vertexBuffer.alloc(alignementSize * count, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+		sceneVertexBuffer.alloc(sceneVertexSize * count, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+		sceneVertexBuffer.map();
+		maxSceneVertexSize = sceneVertexBuffer.getBufferSize();
+	}
 
-		staginVertexBuffer.map();
-		maxVertexSize = vertexBuffer.getBufferSize();
+	void Renderer::setSceneVertexSize(uint32_t size, size_t minOffsetAlignement){
+		sceneVertexBuffer.setInstanceProperties(size, minOffsetAlignement);
+		sceneVertexSize = size;
+		sceneAlignement = sceneVertexBuffer.getAlignmentSize();
 	}
 
 	void Renderer::createIndexBuffer(uint32_t count){
@@ -97,10 +95,6 @@ namespace Fovea{
 		if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
 			throw std::runtime_error("failed to begin recording command buffer!");
 		}
-
-		drawCalls=0;
-		indexCount = 0;
-		usedVertexSize = 0;
 
 		return commandBuffer;
 	}
@@ -229,63 +223,32 @@ namespace Fovea{
 		windowExtent = {width, height};
 	}
 
-	void Renderer::setInstanceSize(size_t size, size_t minAlignementOffset){
-		flush();
-		staginVertexBuffer.setInstanceProperties(size, minAlignementOffset);
-		// vertexBuffer.setInstanceProperties(size, minAlignementOffset);
+	void Renderer::setScene(void* v, uint32_t vertexCount){
+		void* ptr = sceneVertexBuffer.getMappedMemory();
 
-		alignementSize = staginVertexBuffer.getAlignmentSize();
-		instanceSize = size;
+		sceneVertexBufferUsedSize = sceneVertexSize * vertexCount;
+		memcpy(ptr, v, sceneVertexBufferUsedSize);
+		sceneIndexUsed = (vertexCount / 4) * 6;
+		sceneVertexBuffer.flush(sceneAlignement * vertexCount);
 	}
 
-	void Renderer::flush(){
-		if (indexCount == 0) return;
-		copyStaginBuffers();
+	void Renderer::renderScene(VkCommandBuffer commandBuffer){
+		if (sceneIndexUsed == 0) return;
 
-		VkCommandBuffer commandBuffer = getInstance().commandBuffer;
 		vkCmdBindIndexBuffer(commandBuffer, indexBuffer.getBuffer(), 0, VK_INDEX_TYPE_UINT32);
-
-		VkBuffer buffer = staginVertexBuffer.getBuffer();
+		VkBuffer vertexBuffer = sceneVertexBuffer.getBuffer();
 		VkDeviceSize offset = 0;
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &buffer, &offset);
-	
-		vkCmdDrawIndexed(commandBuffer, indexCount, indexCount / 6, 0, 0, 0);
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &offset);
 
-		indexCount = 0;
-		usedVertexSize = 0;
-		drawCalls++;
+		vkCmdDrawIndexed(commandBuffer, sceneIndexUsed, 1, 0, 0, 0);
 	}
 
-	void Renderer::copyStaginBuffers(){
+	void Renderer::setSceneData(uint32_t offset, uint32_t count, void* data){
+		char* ptr = static_cast<char*>(sceneVertexBuffer.getMappedMemory()) + offset;
+		memcpy(ptr, data, sceneAlignement * count);
+	} 
 
-		VkCommandBuffer commandBuffer = getInstance().commandBuffer;
-
-		VkBufferCopy copy = {};
-		copy.srcOffset = 0;
-		copy.dstOffset = 0;
-		copy.size = usedVertexSize;
-
-		staginVertexBuffer.flush();
-		// SingleTimeCommand::copyBuffer(staginVertexBuffer.getBuffer(), vertexBuffer.getBuffer(), copy);
-	}
-
-	void Renderer::drawQuad(void *v0, void *v1, void *v2, void *v3){
-		if (usedVertexSize + alignementSize * 4 >= maxVertexSize || indexCount + 6 >= maxIndices) flush();
-		
-		char* ptr = reinterpret_cast<char*>(staginVertexBuffer.getMappedMemory()) + usedVertexSize;
-		
-		memcpy(ptr, v0, instanceSize);
-		ptr += alignementSize;
-
-		memcpy(ptr, v1, instanceSize);
-		ptr += alignementSize;
-
-		memcpy(ptr, v2, instanceSize);
-		ptr += alignementSize;
-		
-		memcpy(ptr, v3, instanceSize);
-
-		usedVertexSize += alignementSize * 4; 
-		indexCount += 6;
+	void Renderer::flushSceneData(uint32_t offset, uint32_t count){
+		sceneVertexBuffer.flush(sceneAlignement * count, offset);
 	}
 }
