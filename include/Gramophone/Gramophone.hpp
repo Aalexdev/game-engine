@@ -61,6 +61,14 @@ namespace Gramophone{
 
 	// ============== listener
 
+	void setListenerPosition(float x, float y, float z);
+
+	void setListenerOrientation(float atx, float aty, float atz, float upx, float upy, float upz);
+
+	void setListenerGain(float gain);
+
+	void setListenerPitch(float pitch);
+
 	// ============= effects
 
 	void setSoundSourceEffects(Sound sound, bool reverb, bool lowpass);

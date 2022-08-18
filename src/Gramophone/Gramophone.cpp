@@ -31,6 +31,7 @@ namespace Gramophone{
 
 	void initialize(){
 		getInstance().device.initialize();
+		getInstance().effectSlot.initialize();
 	}
 
 	Sound loadSoundEffect(const char *filepath){
@@ -108,6 +109,22 @@ namespace Gramophone{
 	void setMusicPosition(float x, float y, float z){
 		Core& instance = getInstance();
 		if (instance.musicBuffer) instance.musicBuffer->setPosition({x, y, z});
+	}
+
+	void setListenerPosition(float x, float y, float z){
+		getInstance().device.setListenerPosition({x, y, z});
+	}
+
+	void setListenerOrientation(float atx, float aty, float atz, float upx, float upy, float upz){
+		getInstance().device.setListenerOrientation({atx, aty, atz}, {upx, upy, upz});
+	}
+
+	void setListenerGain(float gain){
+		getInstance().device.setListenerGain(gain);
+	}
+
+	void setListenerPitch(float pitch){
+		getInstance().device.setListenerPitch(pitch);
 	}
 
 	void setSoundSourceEffects(Sound sound, bool reverb, bool lowpass){
