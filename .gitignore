@@ -1,0 +1,12 @@
+.vscode
+.obj
+out/
+./*.json
+*.lib
+*.a
+*.gch
+*.dll
+
+test.cpp
+test.exe
+allocationLog.txt
