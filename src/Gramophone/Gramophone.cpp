@@ -137,4 +137,7 @@ namespace Gramophone{
 		}
 	}
 
+	void setReverbType(ReverbType type){
+		getInstance().effectSlot.setReverbeType(static_cast<EffectSlot::Type>(type));
+	}
 }
