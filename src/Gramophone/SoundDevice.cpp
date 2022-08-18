@@ -14,6 +14,29 @@ namespace Gramophone{
 		alcDestroyContext(context);
 	}
 
+	void SoundDevice::setListenerPosition(const glm::vec3 &position){
+		alListener3f(AL_POSITION, position.x, position.y, position.z);
+	}
+
+	void SoundDevice::setListenerOrientation(const glm::vec3 &at, const glm::vec3 &up){
+		float arr[6];
+		arr[0] = at.x;
+		arr[1] = at.y;
+		arr[2] = at.z;
+		arr[3] = up.x;
+		arr[4] = up.y;
+		arr[5] = up.z;
+		alListenerfv(AL_ORIENTATION, arr);
+	}
+
+	void SoundDevice::setListenerGain(float gain){
+		alListenerf(AL_GAIN, gain);
+	}
+
+	void SoundDevice::setListenerPitch(float pitch){
+		alListenerf(AL_PITCH, pitch);
+	}
+
 	void SoundDevice::initialize(){
 		SoundDevice& instance = getInstance();
 		instance.device = alcOpenDevice(nullptr); // default device

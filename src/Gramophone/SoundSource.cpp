@@ -1,4 +1,5 @@
 #include "Gramophone/SoundSource.hpp"
+#include "OpenAl/EFX-Util.h"
 
 #include <stdio.h>
 

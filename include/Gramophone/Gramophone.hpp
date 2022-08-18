@@ -58,4 +58,6 @@ namespace Gramophone{
 	void setSourceLoop(Source source, bool loop);
 
 	void playSource(Source source, Sound sound);
+
+	// ============== listener
 }
