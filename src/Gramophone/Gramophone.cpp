@@ -1,6 +1,7 @@
 #include "Gramophone/SoundDevice.hpp"
 #include "Gramophone/SoundEffectLibrary.hpp"
 #include "Gramophone/SoundSourceLibrary.hpp"
+#include "Gramophone/MusicBuffer.hpp"
 
 #include "Gramophone/Gramophone.hpp"
 
@@ -14,6 +15,11 @@ namespace Gramophone{
 		SoundDevice device;
 		SoundEffectLibrary soundeffectLibrary;
 		SoundSourceLibrary soundeSourceLibrary;
+		MusicBuffer* musicBuffer = nullptr;
+
+		~Core(){
+			if (musicBuffer) delete musicBuffer;
+		}
 	};
 
 	Core& getInstance(){
@@ -75,4 +81,31 @@ namespace Gramophone{
 	void playSource(Source source, Sound sound){
 		getInstance().soundeSourceLibrary.get(source)->play(getInstance().soundeffectLibrary.get(sound));
 	}
+
+	void loadMusic(const char *filepath){
+		Core& instance = getInstance();
+		if (instance.musicBuffer) delete instance.musicBuffer;
+		instance.musicBuffer = new MusicBuffer(filepath);
+	}
+
+	void pauseMusic(){
+		Core& instance = getInstance();
+		if (instance.musicBuffer) instance.musicBuffer->pause();
+	}
+
+	void playMusic(){
+		Core& instance = getInstance();
+		if (instance.musicBuffer) instance.musicBuffer->play();
+	}
+
+	void stopMusic(){
+		Core& instance = getInstance();
+		if (instance.musicBuffer) delete instance.musicBuffer;
+	}
+
+	void setMusicPosition(float x, float y, float z){
+		Core& instance = getInstance();
+		if (instance.musicBuffer) instance.musicBuffer->setPosition({x, y, z});
+	}
+
 }

@@ -79,5 +79,4 @@ namespace Gramophone{
 			throw error.c_str();
 		}
 	}
-
 }

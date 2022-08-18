@@ -21,6 +21,18 @@ namespace Gramophone{
 
 	void initialize();
 
+	void loadMusic(const char *filepath);
+
+	void pauseMusic();
+
+	void playMusic();
+
+	void stopMusic();
+
+	void setMusicPosition(float x, float y, float z);
+
+	// sound effects
+
 	Sound loadSoundEffect(const char *filepath);
 
 	Sound reserveSoundEffect();
