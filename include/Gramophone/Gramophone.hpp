@@ -17,6 +17,7 @@
 
 namespace Gramophone{
 	using Sound = uint64_t;
+	using Source = uint64_t;
 
 	void initialize();
 
@@ -27,4 +28,22 @@ namespace Gramophone{
 	void loadResevedSoundEffect(Sound sound, const char *filepath);
 
 	void destroySoundEffect(Sound sound);
+
+	// ========================= source
+
+	Source createSoundSource(void);
+
+	void destroySoundSource(Source source);
+
+	void setSourcePitch(Source source, float pitch);
+
+	void setSourceGain(Source source, float gain);
+
+	void setSourcePosition(Source source, float x, float y, float z);
+
+	void setSourceVelocity(Source source, float x, float y, float z);
+
+	void setSourceLoop(Source source, bool loop);
+
+	void playSource(Source source, Sound sound);
 }

@@ -3,6 +3,7 @@
 #include <vector>
 
 typedef unsigned long long size_t;
+typedef unsigned int uint32_t;
 
 namespace Gramophone{
 	template<typename T>

@@ -4,6 +4,7 @@
 
 namespace Gramophone{
 	class SoundEffect{
+		friend class SoundSource;
 		public:
 			~SoundEffect();
 			SoundEffect() = default;
