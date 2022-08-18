@@ -1,6 +1,7 @@
 #include "Gramophone/SoundDevice.hpp"
 #include "OpenAl/alc.h"
 #include "OpenAl/al.h"
+#include "OpenAl/Framework.h"
 
 #include <stdio.h>
 
@@ -64,6 +65,44 @@ namespace Gramophone{
 		}
 
 		printf("Opened : %s\n", name);
+
+		if (!alcIsExtensionPresent(instance.device, (ALCchar*)ALC_EXT_EFX_NAME)){
+			throw "cannot support sound effect";
+		}
+
+		alGenEffects = (LPALGENEFFECTS)alGetProcAddress("alGenEffects");
+		alDeleteEffects = (LPALDELETEEFFECTS )alGetProcAddress("alDeleteEffects");
+		alIsEffect = (LPALISEFFECT )alGetProcAddress("alIsEffect");
+		alEffecti = (LPALEFFECTI)alGetProcAddress("alEffecti");
+		alEffectiv = (LPALEFFECTIV)alGetProcAddress("alEffectiv");
+		alEffectf = (LPALEFFECTF)alGetProcAddress("alEffectf");
+		alEffectfv = (LPALEFFECTFV)alGetProcAddress("alEffectfv");
+		alGetEffecti = (LPALGETEFFECTI)alGetProcAddress("alGetEffecti");
+		alGetEffectiv = (LPALGETEFFECTIV)alGetProcAddress("alGetEffectiv");
+		alGetEffectf = (LPALGETEFFECTF)alGetProcAddress("alGetEffectf");
+		alGetEffectfv = (LPALGETEFFECTFV)alGetProcAddress("alGetEffectfv");
+		alGenFilters = (LPALGENFILTERS)alGetProcAddress("alGenFilters");
+		alDeleteFilters = (LPALDELETEFILTERS)alGetProcAddress("alDeleteFilters");
+		alIsFilter = (LPALISFILTER)alGetProcAddress("alIsFilter");
+		alFilteri = (LPALFILTERI)alGetProcAddress("alFilteri");
+		alFilteriv = (LPALFILTERIV)alGetProcAddress("alFilteriv");
+		alFilterf = (LPALFILTERF)alGetProcAddress("alFilterf");
+		alFilterfv = (LPALFILTERFV)alGetProcAddress("alFilterfv");
+		alGetFilteri = (LPALGETFILTERI )alGetProcAddress("alGetFilteri");
+		alGetFilteriv= (LPALGETFILTERIV )alGetProcAddress("alGetFilteriv");
+		alGetFilterf = (LPALGETFILTERF )alGetProcAddress("alGetFilterf");
+		alGetFilterfv= (LPALGETFILTERFV )alGetProcAddress("alGetFilterfv");
+		alGenAuxiliaryEffectSlots = (LPALGENAUXILIARYEFFECTSLOTS)alGetProcAddress("alGenAuxiliaryEffectSlots");
+		alDeleteAuxiliaryEffectSlots = (LPALDELETEAUXILIARYEFFECTSLOTS)alGetProcAddress("alDeleteAuxiliaryEffectSlots");
+		alIsAuxiliaryEffectSlot = (LPALISAUXILIARYEFFECTSLOT)alGetProcAddress("alIsAuxiliaryEffectSlot");
+		alAuxiliaryEffectSloti = (LPALAUXILIARYEFFECTSLOTI)alGetProcAddress("alAuxiliaryEffectSloti");
+		alAuxiliaryEffectSlotiv = (LPALAUXILIARYEFFECTSLOTIV)alGetProcAddress("alAuxiliaryEffectSlotiv");
+		alAuxiliaryEffectSlotf = (LPALAUXILIARYEFFECTSLOTF)alGetProcAddress("alAuxiliaryEffectSlotf");
+		alAuxiliaryEffectSlotfv = (LPALAUXILIARYEFFECTSLOTFV)alGetProcAddress("alAuxiliaryEffectSlotfv");
+		alGetAuxiliaryEffectSloti = (LPALGETAUXILIARYEFFECTSLOTI)alGetProcAddress("alGetAuxiliaryEffectSloti");
+		alGetAuxiliaryEffectSlotiv = (LPALGETAUXILIARYEFFECTSLOTIV)alGetProcAddress("alGetAuxiliaryEffectSlotiv");
+		alGetAuxiliaryEffectSlotf = (LPALGETAUXILIARYEFFECTSLOTF)alGetProcAddress("alGetAuxiliaryEffectSlotf");
+		alGetAuxiliaryEffectSlotfv = (LPALGETAUXILIARYEFFECTSLOTFV)alGetProcAddress("alGetAuxiliaryEffectSlotfv");
 	}
 
 }

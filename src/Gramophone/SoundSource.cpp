@@ -1,5 +1,6 @@
 #include "Gramophone/SoundSource.hpp"
 #include "OpenAl/EFX-Util.h"
+#include "OpenAl/Framework.h"
 
 #include <stdio.h>
 
@@ -11,7 +12,6 @@ namespace Gramophone{
 		alSource3f(source, AL_POSITION, position.x, position.y, position.z);
 		alSource3f(source, AL_VELOCITY, velocity.x, velocity.y, velocity.z);
 		alSourcei(source, AL_LOOPING, loop);
-
 	}
 
 	SoundSource::~SoundSource(){

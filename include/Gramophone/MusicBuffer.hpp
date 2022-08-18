@@ -6,6 +6,7 @@
 
 namespace Gramophone{
 	class MusicBuffer{
+		friend class EffectSlot;
 
 		static constexpr int BUFFER_SAMPLES = 8192;
 		static constexpr int NUM_BUFFERS = 4;

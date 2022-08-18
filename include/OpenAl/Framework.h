@@ -87,4 +87,4 @@ extern LPEAXGETBUFFERMODE eaxGetBufferMode;
 extern ALenum eXRAMSize, eXRAMFree;
 extern ALenum eXRAMAuto, eXRAMHardware, eXRAMAccessible;
 
-#endif _FRAMEWORK_H_
+#endif

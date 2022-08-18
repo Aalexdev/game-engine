@@ -60,4 +60,10 @@ namespace Gramophone{
 	void playSource(Source source, Sound sound);
 
 	// ============== listener
+
+	// ============= effects
+
+	void setSoundSourceEffects(Sound sound, bool reverb, bool lowpass);
+
+	void setMusicEffects(bool reverb, bool lowpass);
 }

@@ -2,6 +2,7 @@
 #include "Gramophone/SoundEffectLibrary.hpp"
 #include "Gramophone/SoundSourceLibrary.hpp"
 #include "Gramophone/MusicBuffer.hpp"
+#include "Gramophone/EffectSlot.hpp"
 
 #include "Gramophone/Gramophone.hpp"
 
@@ -15,6 +16,7 @@ namespace Gramophone{
 		SoundDevice device;
 		SoundEffectLibrary soundeffectLibrary;
 		SoundSourceLibrary soundeSourceLibrary;
+		EffectSlot effectSlot;
 		MusicBuffer* musicBuffer = nullptr;
 
 		~Core(){
@@ -106,6 +108,16 @@ namespace Gramophone{
 	void setMusicPosition(float x, float y, float z){
 		Core& instance = getInstance();
 		if (instance.musicBuffer) instance.musicBuffer->setPosition({x, y, z});
+	}
+
+	void setSoundSourceEffects(Sound sound, bool reverb, bool lowpass){
+		getInstance().effectSlot.setSourceEffect(getInstance().soundeSourceLibrary.get(sound), reverb, lowpass);
+	}
+
+	void setMusicEffects(bool reverb, bool lowpass){
+		if (getInstance().musicBuffer){
+			getInstance().effectSlot.setMusicEffect(getInstance().musicBuffer, reverb, lowpass);
+		}
 	}
 
 }

@@ -6,6 +6,7 @@
 
 namespace Gramophone{
 	class SoundSource{
+		friend class EffectSlot;
 		public:
 			SoundSource();
 
