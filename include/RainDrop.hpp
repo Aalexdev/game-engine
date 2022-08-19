@@ -55,6 +55,7 @@
 #endif
 
 namespace RainDrop{
+	using EntityID = uint32_t;
 
 	class RD_API Exception{
 		public:
@@ -70,7 +71,106 @@ namespace RainDrop{
 			const char* m_why;
 	};
 
+	// ==========================================================
+	// ==                        TYPES                         ==
+	// ==========================================================
+
+	// =============== ENUMS
+
+	// =============== STRUCTS
+	struct Color{
+		float r, g, b, a;
+	};
+
+	// =============== CLASSES
+
+	class Entity{
+		public:
+			Entity(const Entity &) = default;
+			Entity(EntityID id) : id{id}{}
+
+			EntityID getUID() const {return id;}
+
+			template<typename T>
+			void addComponent(T t={}){
+				entityAddComponent(id, &t, typeid(T).hash_code());
+			}
+
+			template<typename T>
+			void removeComponent(){
+				entityRemoveComponent(id, typeid(T).hash_code());
+			}
+
+			template<typename T>
+			bool hasComponent(){
+				return entityHasComponent(id, typeid(T).hash_code());
+			}
+
+		private:
+			EntityID id;
+
+	};
+
+	using Colour = Color;
+
+	/**
+	 * @brief initialize the rainDrop engine and all of it subsystems
+	 * 
+	 */
 	void RD_API initialize();
+	
+	/**
+	 * @brief shutdown the rainDrop engine, some of the subsystem will be automaticaly closed at the end of the program
+	 * 
+	 */
+	void RD_API shutdown();
+
+	// ==========================================================
+	// ==                       RENDER                         ==
+	// ==========================================================
+
+	void RD_API setClearColor(const Color &color);
+
+	// ==========================================================
+	// ==                         ECS                          ==
+	// ==========================================================
+
+	/**
+	 * @brief create a new entity into the ECS and return it index
+	 * @return Entity 
+	 */
+	Entity RD_API createEntity();
+	
+	/**
+	 * @brief destroy an entity from the ECS
+	 * @param entity the entity to destroy
+	 */
+	void RD_API destroyEntity(Entity entity);
+
+	/**
+	 * @brief add to the entity, the given component
+	 * 
+	 * @param entity the entity to add the component
+	 * @param component a pointer to the component data
+	 * @param typeID the id of the component
+	 */
+	void RD_API entityAddComponent(Entity entity, void* component, uint64_t typeID);
+
+	/**
+	 * @brief remove from the entity, the given component
+	 * 
+	 * @param entity the entity to remove from
+	 * @param typeID the id of the component
+	 */
+	void RD_API EntityRemoveComponent(Entity entity, uint64_t typeID);
+
+	/**
+	 * @brief get if the entity has the given component
+	 * 
+	 * @param entity the entity to check
+	 * @param typeID the id of the component
+	 */
+	bool RD_API entityHasComponent(Entity entity, uint64_t typeID);
 }
 
 #endif // _RAINDROP_HPP_
