@@ -4,7 +4,7 @@ VERSION = 0.1.0
 # compiler
 CXX = g++
 STD_VERSION = c++17
-LIBSFLAGS = -lmingw32 -lglfw3 -lSDL2main -lSDL2 -mwindows -Wl,--dynamicbase -Wl,--nxcompat -lm -ldinput8 -ldxguid -ldxerr8 -luser32 -lgdi32 -lwinmm -limm32 -lole32 -loleaut32 -lshell32 -lsetupapi -lversion -luuid -lvulkan-1 -lyaml-cpp -lglad -lImGui -lImGuiFileDialog -lImGuizmo -lbox2d
+LIBSFLAGS = -lmingw32 -lglfw3 -lSDL2main -lSDL2 -mwindows -Wl,--dynamicbase -Wl,--nxcompat -lm -ldinput8 -ldxguid -ldxerr8 -luser32 -lgdi32 -lwinmm -limm32 -lole32 -loleaut32 -lshell32 -lsetupapi -lversion -luuid -lvulkan-1 -lyaml-cpp
 CFLAGS =
 DEFINES = -DVERSION='"$(VERSION)"' -D ENGINE_BUILD_DLL -D ENGINE_ASSERTS -D ENGINE_PROFILE
 INCLUDE = include/

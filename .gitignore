@@ -1,7 +1,5 @@
-.vscode
-.obj
+.vscode/
+.obj/
+.raindrop_data/
+libs/
 out/
-./*.json
-*.lib
-*.a
-*.gch
