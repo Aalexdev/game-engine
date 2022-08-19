@@ -61,6 +61,7 @@ namespace Gramophone{
 			void erase(ID id){
 				if (ts[id] != reinterpret_cast<T*>(0x1)) delete ts[id];
 				ts[id] = nullptr;
+				holes++;
 			}
 
 			T* get(ID id){
