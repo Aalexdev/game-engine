@@ -157,6 +157,15 @@ static inline Renderer::Topology FoveaTopologyToRendererTopology(FoveaTopology t
 	return Renderer::Topology::Quad;
 }
 
+static inline VkPolygonMode FoveaPolygonModeToVkPolygonMode(FoveaPolygonMode mode){
+	switch (mode){
+		case FoveaPolygonMode_Fill: return VK_POLYGON_MODE_FILL;
+		case FoveaPolygonMode_Line: return VK_POLYGON_MODE_LINE;
+		case FoveaPolygonMode_Point: return VK_POLYGON_MODE_POINT;
+	}
+	return VK_POLYGON_MODE_FILL;
+}
+
 static inline RenderTarget::ClearColor FoveaColorToRenderTargetClearColor(FoveaColor color){
 	return {color.r, color.g, color.b, color.a};
 }
@@ -318,6 +327,12 @@ PipelineBuilder FoveaCreatePipelineBuilderFromShaderCreateInfo(FoveaShaderCreate
 		auto d = getInstance().descriptorSetLibrary.get(createInfo->descriptorSets[i]);
 		builder.pushSet(d);
 	}
+
+	builder->rasterizationInfo.polygonMode = FoveaPolygonModeToVkPolygonMode(createInfo->polygonMode);
+	builder->rasterizationInfo.lineWidth = createInfo->lineWidth;
+	builder->depthStencilInfo.depthTestEnable = createInfo->depthTest;
+	builder->colorBlendAttachment.blendEnable = createInfo->blending;
+
 	return builder;
 }
 

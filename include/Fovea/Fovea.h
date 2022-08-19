@@ -137,6 +137,12 @@ typedef struct FoveaShaderVertexAttribute{
 	uint32_t offset;
 } FoveaShaderVertexAttribute;
 
+typedef enum FoveaPolygonMode{
+	FoveaPolygonMode_Fill,
+	FoveaPolygonMode_Line,
+	FoveaPolygonMode_Point,
+} FoveaPolygonMode;
+
 typedef struct FoveaShaderCreateInfo{
 	FoveaSample sample;
 	FoveaShaderType type;
@@ -148,6 +154,11 @@ typedef struct FoveaShaderCreateInfo{
 	uint32_t vertexAttributsCount;
 	FoveaDescriptorSet* descriptorSets;
 	uint32_t descriptorSetCount;
+
+	FoveaPolygonMode polygonMode;
+	float lineWidth;
+	FoveaBool depthTest;
+	FoveaBool blending;
 
 	const char* vertexFilepath;
 	const char* fragmentFilepath;
