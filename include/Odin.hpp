@@ -5,8 +5,6 @@
 #include <cassert>
 #include <pthread.h>
 
-#include "horreum/Horreum.hpp"
-
 #ifndef NDEBUG
 	#include <cstring>
 #endif
@@ -29,7 +27,7 @@ class Odin{
 			public:
 				Data(){}
 				~Data(){
-					if (data) HRM_FREE(data);
+					if (data) free(data);
 				}
 
 				template<typename... Args>
@@ -48,12 +46,12 @@ class Odin{
 				void set(Args&&... args){
 					reset();
 					size = getArgsSize<Args...>();
-					data = HRM_MALLOC(size);
+					data = malloc(size);
 					setData(size, args...);
 				}
 
 				void reset(){
-					if (data) HRM_FREE(data);
+					if (data) free(data);
 					data = nullptr;
 					size = 0;
 				}
@@ -272,10 +270,10 @@ class Odin{
 			data.refCount = 0;
 			
 			#ifndef NDEBUG
-				data.assetType = static_cast<char*>(HRM_MALLOC(sizeof(char) * strlen(typeid(T).name())));
+				data.assetType = static_cast<char*>(malloc(sizeof(char) * strlen(typeid(T).name())));
 				strcpy(data.assetType, typeid(T).name());
 
-				data.name = static_cast<char*>(HRM_MALLOC(sizeof(char) * strlen(name)));
+				data.name = static_cast<char*>(malloc(sizeof(char) * strlen(name)));
 				strcpy(data.name, name);
 			#endif
 

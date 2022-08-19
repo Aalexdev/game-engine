@@ -39,7 +39,37 @@
 	#define RD_API
 #endif
 
+#ifndef _STDINT_H
+	typedef char int8_t;
+	typedef unsigned char uint8_t;
+	typedef signed char sint8_t;
+	typedef short int16_t;
+	typedef unsigned short uint16_t;
+	typedef signed short sint16_t;
+	typedef int int32_t;
+	typedef unsigned int uint32_t;
+	typedef signed int sint32_t;
+	typedef long long int64_t;
+	typedef unsigned long long uint64_t;
+	typedef signed long long sint64_t;
+#endif
+
 namespace RainDrop{
+
+	class RD_API Exception{
+		public:
+			Exception(const char *what, const char *where, const char *why);
+
+			const char* what() const;
+			const char* where() const;
+			const char* why() const;
+		
+		private:
+			const char* m_what;
+			const char* m_where;
+			const char* m_why;
+	};
+
 	void RD_API initialize();
 }
 

@@ -3,3 +3,6 @@
 .raindrop_data/
 libs/
 out/
+
+test.cpp
+test.exe
