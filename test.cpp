@@ -5,9 +5,7 @@
 int main(int argc, char** argv){
 
 	RainDrop::initialize();
-
-	_sleep(5000);
-
+	RainDrop::run();
 	RainDrop::shutdown();
 
 	return 0;

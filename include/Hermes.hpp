@@ -3,7 +3,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <list>
-#include "../horreum/StackAllocator.hpp"
+#include "horreum/StackAllocator.hpp"
 #include <cassert>
 
 

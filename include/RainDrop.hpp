@@ -82,36 +82,23 @@ namespace RainDrop{
 		float r, g, b, a;
 	};
 
-	// =============== CLASSES
-
-	class Entity{
-		public:
-			Entity(const Entity &) = default;
-			Entity(EntityID id) : id{id}{}
-
-			EntityID getUID() const {return id;}
-
-			template<typename T>
-			void addComponent(T t={}){
-				entityAddComponent(id, &t, typeid(T).hash_code());
-			}
-
-			template<typename T>
-			void removeComponent(){
-				entityRemoveComponent(id, typeid(T).hash_code());
-			}
-
-			template<typename T>
-			bool hasComponent(){
-				return entityHasComponent(id, typeid(T).hash_code());
-			}
-
-		private:
-			EntityID id;
-
+	template<typename T>
+	struct vec2{
+		T x, y;
 	};
 
-	using Colour = Color;
+	template<typename T>
+	struct vec3{
+		T x, y, z;
+	};
+
+	template<typename T>
+	struct vec4{
+		T x, y, z, w;
+	};
+
+	// =============== CLASSES
+	class Entity;
 
 	/**
 	 * @brief initialize the rainDrop engine and all of it subsystems
@@ -124,6 +111,61 @@ namespace RainDrop{
 	 * 
 	 */
 	void RD_API shutdown();
+
+	/**
+	 * @brief start the mainloop
+	 * 
+	 */
+	void RD_API run();
+
+	// ==========================================================
+	// ==                       WINDOW                         ==
+	// ==========================================================
+
+	/**
+	 * @brief set the size of the window in pixles
+	 * 
+	 * @param size a vector 2D that contain the size of the window
+	 */
+	void RD_API setWindowSize(const vec2<uint32_t> &size);
+
+	/**
+	 * @brief move the window to the required position
+	 * 
+	 * @param pos the position in pixels of the top left corner of the window, relative to the top left corner of the screen
+	 */
+	void RD_API setWindowPosition(const vec2<uint32_t> &pos);
+
+	/**
+	 * @brief set the title of the window
+	 * 
+	 * @param title the title of the window as a string (UTF-8 encoding)
+	 */
+	void RD_API setWindowTitle(const char *title);
+
+	/**
+	 * @brief set the window into fullscreen mod
+	 * 
+	 */
+	void RD_API setWindowFullscreen();
+
+	/**
+	 * @brief set the window into normal window mod 
+	 * 
+	 */
+	void RD_API unsetWindowFullscreen();
+	
+	/**
+	 * @brief make the window fullsceen and resize it to the screen size
+	 * 
+	 */
+	void RD_API setWindowDesktopFullscreen();
+
+	/**
+	 * @brief set if the window is resizable or not
+	 * @param resizable is the window resizable
+	 */
+	void RD_API setWindowResizable(bool resizable);
 
 	// ==========================================================
 	// ==                       RENDER                         ==
@@ -162,7 +204,7 @@ namespace RainDrop{
 	 * @param entity the entity to remove from
 	 * @param typeID the id of the component
 	 */
-	void RD_API EntityRemoveComponent(Entity entity, uint64_t typeID);
+	void RD_API entityRemoveComponent(Entity entity, uint64_t typeID);
 
 	/**
 	 * @brief get if the entity has the given component
@@ -171,6 +213,37 @@ namespace RainDrop{
 	 * @param typeID the id of the component
 	 */
 	bool RD_API entityHasComponent(Entity entity, uint64_t typeID);
+
+	// ==========================================================
+	// ==                TYPES WITH DEPENDENCES                ==
+	// ==========================================================
+
+	class Entity{
+		public:
+			Entity(const Entity &) = default;
+			Entity(EntityID id) : id{id}{}
+
+			EntityID getUID() const {return id;}
+
+			template<typename T>
+			void addComponent(T t={}){
+				entityAddComponent(id, &t, typeid(T).hash_code());
+			}
+
+			template<typename T>
+			void removeComponent(){
+				entityRemoveComponent(id, typeid(T).hash_code());
+			}
+
+			template<typename T>
+			bool hasComponent(){
+				return entityHasComponent(id, typeid(T).hash_code());
+			}
+
+		private:
+			EntityID id;
+
+	};
 }
 
 #endif // _RAINDROP_HPP_
