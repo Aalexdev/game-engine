@@ -3,6 +3,7 @@
 #include "Fovea.h"
 #include "Gramophone.hpp"
 #include "Hermes.hpp"
+#include "horreum/Horreum.hpp"
 #include "EventManager.hpp"
 #include "RainDrop.hpp"
 
@@ -63,6 +64,7 @@ namespace RainDrop{
 		}
 
 		FoveaInitialize(static_cast<void*>(instance.window));
+		Horreum::initialize();
 		Gramophone::initialize();
 		Odin::initialize();
 		Hermes::initialize(150, 1500);
@@ -70,7 +72,7 @@ namespace RainDrop{
 		initializeECS();
 		registerEvents();
 
-		Hermes::subscribe("on window closed", &OnWindowClosed);
+		Hermes::subscribe("window closed", &OnWindowClosed);
 
 		instance.launched = true;
 	}
@@ -84,7 +86,16 @@ namespace RainDrop{
 		while (instance.launched){
 
 			poolEvents();
+			// update
+
+			Hermes::update();
 			FoveaBeginFrame();
+
+			// render
+			
+			FoveaBeginSwapChainRenderPass();
+
+			FoveaEndSwapChainRenderPass();
 
 			FoveaEndFrame();
 		}
@@ -119,6 +130,47 @@ namespace RainDrop{
 
 	void RD_API setWindowResizable(bool resizable){
 		SDL_SetWindowResizable(getInstance().window, static_cast<SDL_bool>(resizable));
+	}
+
+	// events
+	EventID RD_API registerEvent(const char* name, uint32_t dataSize){
+		return Hermes::registerEvent(name, static_cast<uint16_t>(dataSize));
+	}
+
+	EventID RD_API getEventID(const char* name){
+		return Hermes::getEventIndex(name);
+	}
+
+	void RD_API subscribeEvent(const char* name, bool(*FNcallback)(void*)){
+		Hermes::subscribe(name, FNcallback);
+	}
+
+	void RD_API subscribeEvent(const char* name, void* instance, bool(*MTcallback)(void*, void*)){
+		Hermes::subscribe(name, instance, MTcallback);
+	}
+	
+	void RD_API subscribeEvent(EventID id, bool(*FNcallback)(void*)){
+		Hermes::subscribe(static_cast<Hermes::EventID>(id), FNcallback);
+	}
+
+	void RD_API subscribeEvent(EventID id, void* instance, bool(*MTcallback)(void*, void*)){
+		Hermes::subscribe(static_cast<Hermes::EventID>(id), instance, MTcallback);
+	}
+
+	void RD_API unsubscribeEvent(const char* name, bool(*FNcallback)(void*)){
+		Hermes::unsubscribe(name, FNcallback);
+	}
+
+	void RD_API unsubscribeEvent(const char* name, bool(*MTcallback)(void*, void*)){
+		Hermes::unsubscribe(name, MTcallback);
+	}
+	
+	void RD_API unsubscribeEvent(EventID id, bool(*FNcallback)(void*)){
+		Hermes::unsubscribe(static_cast<Hermes::EventID>(id), FNcallback);
+	}
+
+	void RD_API unsubscribeEvent(EventID id, bool(*MTcallback)(void*, void*)){
+		Hermes::unsubscribe(static_cast<Hermes::EventID>(id), MTcallback);
 	}
 
 	// ====================================== Render

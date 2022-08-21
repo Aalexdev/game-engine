@@ -85,9 +85,13 @@ class Hermes{
 
 		static void subscribe(const char *name, EventFn callback);
 		static void subscribe(const char *name, void* subscribedInstance, EventMt callback);
-	
 		static void subscribe(EventID id, EventFn callback);
 		static void subscribe(EventID id, void* subscribedInstance, EventMt callback);
+
+		static void unsubscribe(const char *name, EventFn callback);
+		static void unsubscribe(const char *name, EventMt callback);
+		static void unsubscribe(EventID id, EventFn callback);
+		static void unsubscribe(EventID id, EventMt callback);
 
 		// this function will call all callbacks of the triggered events and then reset the data buffer
 		static void update();
