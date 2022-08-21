@@ -230,6 +230,49 @@ namespace RainDrop{
 	// =============== CLASSES
 	class Entity;
 
+	// ==========================================================
+	// ==                         UTILS                        ==
+	// ==========================================================
+
+	/**
+	 * @brief transfert the data from the void pointer into the given parameters
+	 * 
+	 * @param ptr the pointer to retrive the data from
+	 * @param args the args where the data will be copied
+	 */
+	template<typename... Args>
+	void convertFromVoid(void* ptr, Args&... args){
+		__convertFromVoid(static_cast<char*>(ptr), args...);
+	};
+
+	// intern
+	template<typename T>
+	void __convertFromVoid(char* ptr, T& t){
+		t = *static_cast<T*>(static_cast<void*>(ptr));
+	}
+
+	// intern
+	template<typename T, typename... Args>
+	void __convertFromVoid(char *ptr, T& t, Args&... args){
+		t = *static_cast<T*>(static_cast<void*>(ptr));
+		ptr += sizeof(T);
+		__convertFromVoid(ptr, args...);
+	}
+
+	template<typename T>
+	void __convertToVoid(void* data, T& t){
+		memcpy(data, &t, sizeof(T));	
+	}
+
+	template<typename T, typename... Args>
+	void __convertToVoid(void* data, T& t, Args&... args){
+		memcpy(data, &t, sizeof(T));
+		char* cdata = static_cast<char*>(data);
+		cdata += sizeof(T);
+		data = static_cast<void*>(cdata);
+		__convertToVoid(data, args...);
+	}
+
 	/**
 	 * @brief initialize the rainDrop engine and all of it subsystems
 	 * 
@@ -301,16 +344,56 @@ namespace RainDrop{
 	// ==                       EVENTS                         ==
 	// ==========================================================
 
+	/**
+	 * @brief register the event into the engine's event handler
+	 * 
+	 * @param name the name of the event
+	 * @param dataSize the size of the data carried by the event
+	 * @return return the id of the event, if the event name is already used, it will return the id of the already existing event
+	 */
 	EventID RD_API registerEvent(const char* name, uint32_t dataSize = 0);
 
+	/**
+	 * @brief get the id of an event from it name
+	 * 
+	 * @param name the name of the event
+	 * @return return the id of the event, if the event name is taken
+	 * @throw throw an exception if the name is not taken by any event
+	 */
 	EventID RD_API getEventID(const char* name);
 
+	/**
+	 * @brief subscribe to an event by it's name
+	 * 
+	 * @param name the name of the event to subscribe to
+	 * @param FNcallback a pointer to the event callback (bool foo(void* data))
+	 */
 	void RD_API subscribeEvent(const char* name, bool(*FNcallback)(void*));
 
+	/**
+	 * @brief subscribe to an event by it's name
+	 * 
+	 * @param name the name of the event to subscribe to
+	 * @param instance the instance pointer of the callback methode
+	 * @param MTcallback a pointer to the event callback (static bool foo(void* instance, void* data))
+	 */
 	void RD_API subscribeEvent(const char* name, void* instance, bool(*MTcallback)(void*, void*));
 	
+	/**
+	 * @brief subscribe to an event by it's id
+	 * 
+	 * @param id the name of the event to subscribe to
+	 * @param FNcallback a pointer to the event callback (bool foo(void* data))
+	 */
 	void RD_API subscribeEvent(EventID id, bool(*FNcallback)(void*));
 
+	/**
+	 * @brief subscribe to an event by it's id
+	 * 
+	 * @param id the id of the event to subscribe to
+	 * @param instance the instance pointer of the callback methode
+	 * @param MTcallback a pointer to the event callback (static bool foo(void* instance, void* data))
+	 */
 	void RD_API subscribeEvent(EventID id, void* instance, bool(*MTcallback)(void*, void*));
 
 	void RD_API unsubscribeEvent(const char* name, bool(*FNcallback)(void*));
@@ -319,7 +402,34 @@ namespace RainDrop{
 	
 	void RD_API unsubscribeEvent(EventID id, bool(*FNcallback)(void*));
 
-	void RD_API unsubscribeEvent(EventID id, bool(*MTcallback)(void*, void*));
+	void RD_API unsubscribeEvent(EventID id, bool(*MTcallback)(void*, void*));	
+
+	uint32_t RD_API getEventDataSize(const char* name);
+
+	uint32_t RD_API getEventDataSize(EventID id);
+	
+	template<typename... Args>
+	void RD_API triggerEvent(const char* name, Args&... args){
+		triggerEvent(getEventID(name), args...);
+	}
+
+	// intern
+	void* __eventAllocStack(uint32_t size);
+
+
+	void RD_API triggerEventPtr(EventID id, void* data);
+
+	template<typename... Args>
+	void RD_API triggerEvent(EventID id, Args... args){
+		void* data = __eventAllocStack(getEventDataSize(id));
+		__convertToVoid(data, args...);
+		triggerEventPtr(id, data);
+	}
+
+	template<typename... Args>
+	void RD_API triggerEvent(const char* name, Args... args){
+		triggerEvent(getEventID(name), args...);
+	}
 
 	// ==========================================================
 	// ==                       RENDER                         ==

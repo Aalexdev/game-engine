@@ -142,11 +142,19 @@ namespace RainDrop{
 	}
 
 	void RD_API subscribeEvent(const char* name, bool(*FNcallback)(void*)){
-		Hermes::subscribe(name, FNcallback);
+		try{
+			Hermes::subscribe(name, FNcallback);
+		} catch (const char* err){
+			RD_TRHOW_EXCEPT("failed to subscribe to event", err);
+		}
 	}
 
 	void RD_API subscribeEvent(const char* name, void* instance, bool(*MTcallback)(void*, void*)){
-		Hermes::subscribe(name, instance, MTcallback);
+		try{
+			Hermes::subscribe(name, instance, MTcallback);
+		} catch (const char* err){
+			RD_TRHOW_EXCEPT("failed to subscribe to event", err);
+		}
 	}
 	
 	void RD_API subscribeEvent(EventID id, bool(*FNcallback)(void*)){
@@ -158,11 +166,19 @@ namespace RainDrop{
 	}
 
 	void RD_API unsubscribeEvent(const char* name, bool(*FNcallback)(void*)){
-		Hermes::unsubscribe(name, FNcallback);
+		try{
+			Hermes::unsubscribe(name, FNcallback);
+		} catch (const char* err){
+			RD_TRHOW_EXCEPT("failed to unsubscribe to event", err);
+		}
 	}
 
 	void RD_API unsubscribeEvent(const char* name, bool(*MTcallback)(void*, void*)){
-		Hermes::unsubscribe(name, MTcallback);
+		try{
+			Hermes::unsubscribe(name, MTcallback);
+		} catch (const char* err){
+			RD_TRHOW_EXCEPT("failed to unsubscribe to event", err);
+		}
 	}
 	
 	void RD_API unsubscribeEvent(EventID id, bool(*FNcallback)(void*)){
@@ -171,6 +187,22 @@ namespace RainDrop{
 
 	void RD_API unsubscribeEvent(EventID id, bool(*MTcallback)(void*, void*)){
 		Hermes::unsubscribe(static_cast<Hermes::EventID>(id), MTcallback);
+	}
+
+	uint32_t RD_API getEventDataSize(const char* name){
+		return getEventDataSize(getEventID(name));
+	}
+
+	uint32_t RD_API getEventDataSize(EventID id){
+		return static_cast<uint32_t>(Hermes::getEventDataSize(static_cast<Hermes::EventID>(id)));
+	}
+
+	void RD_API triggerEventPtr(EventID id, void* data){
+		Hermes::_triggerEvent(static_cast<Hermes::EventID>(id), data);
+	}
+
+	void* __eventAllocStack(uint32_t size){
+		return Hermes::allocStack(static_cast<size_t>(size));
 	}
 
 	// ====================================== Render

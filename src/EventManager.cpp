@@ -295,8 +295,8 @@ namespace RainDrop{
 		instance.mouseButtonUp = Hermes::registerEvent("mouse button up", Hermes::DataLayout::construct<MouseButton>());
 		instance.mouseScrolled = Hermes::registerEvent("mouse scroled", Hermes::DataLayout::construct<vec2<float>>());
 
-		instance.keyPressed = Hermes::registerEvent("key pressed", Hermes::DataLayout::construct<Key, bool, float>());
-		instance.keyReleased = Hermes::registerEvent("key released", Hermes::DataLayout::construct<Key, bool, float>());
+		instance.keyPressed = Hermes::registerEvent("key pressed", Hermes::DataLayout::construct<Key, bool>());
+		instance.keyReleased = Hermes::registerEvent("key released", Hermes::DataLayout::construct<Key, bool>());
 	}
 
 	void poolEvents(){
@@ -366,12 +366,12 @@ namespace RainDrop{
 				}
 
 				case SDL_KEYDOWN:{
-					Hermes::triggerEvent(instance.keyPressed, SDLToEngineKey(e.key.keysym.sym), static_cast<bool>(e.key.repeat), static_cast<float>(e.key.timestamp) / 1000.f);
+					Hermes::triggerEvent(instance.keyPressed, SDLToEngineKey(e.key.keysym.sym), static_cast<bool>(e.key.repeat));
 					break;
 				}
 
 				case SDL_KEYUP:{
-					Hermes::triggerEvent(instance.keyReleased, SDLToEngineKey(e.key.keysym.sym), static_cast<bool>(e.key.repeat), static_cast<float>(e.key.timestamp) / 1000.f);
+					Hermes::triggerEvent(instance.keyReleased, SDLToEngineKey(e.key.keysym.sym), static_cast<bool>(e.key.repeat));
 					break;
 				}
 

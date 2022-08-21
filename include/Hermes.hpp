@@ -72,6 +72,10 @@ class Hermes{
 			_triggerEvent(id, data);
 		}
 
+		static size_t getEventDataSize(EventID id){
+			return getInstance().events[id].dataSize;
+		}
+
 		static void triggerEvent(EventID id){
 			Hermes& instance = getInstance();
 			_triggerEvent(id, nullptr);
@@ -104,7 +108,12 @@ class Hermes{
 
 		// ! DEBUG
 		static void printEvents();
+
+		static void* allocStack(size_t size){
+			return getInstance().dataBuffer->push(size);
+		}
 	
+		static void _triggerEvent(EventID eventID, void* data);
 	private:
 
 		static Hermes& getInstance();
@@ -151,6 +160,7 @@ class Hermes{
 		}
 
 
+
 		template<typename... Args>
 		static void* _convert(size_t size, Args... args){
 			Hermes& instance = getInstance();
@@ -177,7 +187,6 @@ class Hermes{
 			return data;
 		}
 		
-		static void _triggerEvent(EventID eventID, void* data);
 		static bool callCallback(EventCallback &callback, void* data);
 
 		EventType* events;

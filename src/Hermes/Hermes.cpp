@@ -104,7 +104,7 @@ void Hermes::printEvents(){
 Hermes::EventID Hermes::getEventIndex(const char* name){
 	Hermes& instance = getInstance();
 	auto iterator = instance.eventMap.find(name);
-	HERMES_ASSERT(iterator != instance.eventMap.end() && "unknown event name");
+	if (iterator == instance.eventMap.end()) throw "non registered event";
 	return iterator->second;
 }
 
