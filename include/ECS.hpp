@@ -265,24 +265,25 @@ namespace ECS{
 
     class SystemManager{
         public:
-            template<typename T, typename... _Args> std::shared_ptr<T> RegisterSystem(_Args&&... __args) {
-                const char* typeName = typeid(T).name();
-
-                assert(mSystems.find(typeName) == mSystems.end() && "Registering system more than once.");
+			~SystemManager(){
+				for (auto &s : mSystems){
+					delete s.second;
+				}
+				mSystems.clear();
+			}
+			
+            void RegisterSystem(size_t typeID, System *system) {
+                assert(mSystems.find(typeID) == mSystems.end() && "Registering system more than once.");
 
                 // Create a pointer to the system and return it so it can be used externally
-                auto system = std::make_shared<T>(std::forward<_Args>(__args)...);
-                mSystems.insert({typeName, system});
-                return system;
+                mSystems.insert({typeID, system});
             }
 
-            template<typename T> void SetSignature(Signature signature){
-                const char* typeName = typeid(T).name();
-
-                assert(mSystems.find(typeName) != mSystems.end() && "System used before registered.");
+            void SetSignature(size_t typeID, Signature signature){
+                assert(mSystems.find(typeID) != mSystems.end() && "System used before registered.");
 
                 // Set the signature for this system
-                mSignatures.insert({typeName, signature});
+                mSignatures.insert({typeID, signature});
             }
 
             void EntityDestroyed(Entity entity){
@@ -319,10 +320,10 @@ namespace ECS{
 
         private:
             // Map from system type string pointer to a signature
-            std::unordered_map<const char*, Signature> mSignatures{};
+            std::unordered_map<size_t, Signature> mSignatures{};
 
             // Map from system type string pointer to a system pointer
-            std::unordered_map<const char*, std::shared_ptr<System>> mSystems{};
+            std::unordered_map<size_t, System*> mSystems{};
     };
 
     class Coordinator{
@@ -387,12 +388,12 @@ namespace ECS{
             }
 
             // System methods
-            template<typename T, typename... _Args> std::shared_ptr<T> RegisterSystem(_Args&&... __args){
-                return _systemManager->RegisterSystem<T>(std::forward<_Args>(__args)...);
+            void RegisterSystem(size_t typeID, System *system){
+                return _systemManager->RegisterSystem(typeID, system);
             }
 
-            template<typename T> void SetSystemSignature(Signature signature){
-                _systemManager->SetSignature<T>(signature);
+            void SetSystemSignature(size_t typeID, Signature signature){
+                _systemManager->SetSignature(typeID, signature);
             }
 
         private:

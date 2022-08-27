@@ -7,7 +7,6 @@ namespace RainDrop{
 	struct Core{
 		SDL_Window* window = nullptr;
 		ECS::Coordinator scene;
-		bool launched = false;
 	};
 
 	Core& getInstance();

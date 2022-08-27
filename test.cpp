@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "include/RainDrop.hpp"
+#include "include/glm/glm.hpp"
 
 bool test(void *ptr){
 	RainDrop::Key k;
@@ -20,13 +21,16 @@ bool test(void *ptr){
 	return false;
 }
 
+struct Vertex{
+	glm::vec3 pos;
+	glm::vec3 color;
+};
 
 int main(int argc, char** argv){
 
 	RainDrop::initialize();
-	RainDrop::subscribeEvent("key pressed", &test);
+	// RainDrop::subscribeEvent("key pressed", &test);
 
-	RainDrop::run();
 	RainDrop::shutdown();
 
 	return 0;

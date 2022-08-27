@@ -30,6 +30,13 @@ class Odin{
 					if (data) free(data);
 				}
 
+				Data(const Data &data){
+					this->data = malloc(data.size);
+					assert(this->data && "MALLOC ERROR");
+					memcpy(this->data, data.data, data.size);
+					size = data.size;
+				}
+
 				template<typename... Args>
 				Data(Args&&... args){
 					set(args...);
@@ -164,7 +171,6 @@ class Odin{
 				bool operator==(const Reference<T> &other) {return it == other.it;}
 				bool operator!=(const Reference<T> &other) {return it != other.it;}
 				
-			private:
 				void set(IT it){
 					this->it = it;
 					it->second.refCount++;
@@ -196,6 +202,10 @@ class Odin{
 			instance.typeToFactoryMap[factory->getTypeHash()] = factory;
 		}
 
+		static void registerFactoryPtr(Factory* factory){
+			getInstance().typeToFactoryMap[factory->getTypeHash()] = factory;
+		}
+
 		/**
 		 * @brief return a reference to the requested asset, load the asset if it was not loaded before
 		 * 
@@ -222,6 +232,26 @@ class Odin{
 			
 			pthread_mutex_unlock(&instance.lock);
 			return ref;
+		}
+
+		static void* getAssetPtr(const char* name, size_t typeID, Data &data, uint16_t*& count, void(**removeAsset)(const char*)){
+			Odin& instance = getInstance();
+	
+			pthread_mutex_lock(&instance.lock);
+			auto it = instance.nameToAssetMap.find(name);
+			bool assetDontExist = it == instance.nameToAssetMap.end();
+
+			if (assetDontExist){
+				it = loadAssetPtr(name, data, typeID);
+				count = &it->second.refCount;
+				*removeAsset = &Odin::removeAssetFromName;
+				pthread_mutex_unlock(&instance.lock);
+				return it->second.assetPtr;
+			}
+
+			it->second.refCount++;
+			pthread_mutex_unlock(&instance.lock);
+			return it->second.assetPtr;
 		}
 		
 		template<typename T, typename... Args>
@@ -269,13 +299,8 @@ class Odin{
 			data.hashCode = typeid(T).hash_code();
 			data.refCount = 0;
 			
-			#ifndef NDEBUG
-				data.assetType = static_cast<char*>(malloc(sizeof(char) * strlen(typeid(T).name())));
-				strcpy(data.assetType, typeid(T).name());
-
-				data.name = static_cast<char*>(malloc(sizeof(char) * strlen(name)));
-				strcpy(data.name, name);
-			#endif
+			data.name = static_cast<char*>(malloc(sizeof(char) * strlen(name)));
+			strcpy(data.name, name);
 
 			auto it = instance.nameToAssetMap.find(name);
 			bool assetExist = it != instance.nameToAssetMap.end();
@@ -292,7 +317,46 @@ class Odin{
 			return ref;
 		}
 
+		static std::unordered_map<std::string, Odin::AssetData>::iterator loadAssetPtr(const char *name, Data &data, size_t typeID){
+			Odin &instance = getInstance();
+			Factory* factory = getTypeFactory(typeID);
+
+			void* asset = factory->create(data);
+			assert(asset != nullptr && "cannot use a nullptr as an asset");
+
+			AssetData d;
+			d.assetPtr = asset;
+			d.hashCode = typeID;
+			d.refCount = 0;
+			d.name = static_cast<char*>(malloc(sizeof(char) * strlen(name)));
+			strcpy(d.name, name);
+
+			auto it = instance.nameToAssetMap.find(name);
+			bool assetExist = it != instance.nameToAssetMap.end();
+
+			// if the asset name is already used, we delete the previous asset
+			if (assetExist){
+				removeAsset(it);
+			}
+
+			instance.nameToAssetMap.insert({name, d});
+			it = instance.nameToAssetMap.find(name);
+
+			return it;
+		}
+
 		static void removeAsset(std::unordered_map<std::string, AssetData>::iterator it);
+
+		static void removeAssetFromName(const char *name){
+			Odin& instance = getInstance();
+			auto it = instance.nameToAssetMap.find(name);
+			if (it == instance.nameToAssetMap.end()){
+				throw "cannot remove non existant asset";
+			}
+
+			removeAsset(it);
+		}
+
 		static void deleteAssetData(AssetData &asset);
 
 		pthread_mutex_t lock;

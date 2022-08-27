@@ -297,7 +297,7 @@ FoveaDescriptorSet FoveaReserveDescriptorSet(void);
 
 void FoveaLoadReservedDescriptorSet(FoveaDescriptorSet descriptorSet, FoveaDescriptorSetCreateInfo* createInfo);
 
-// ========================= descriptor set =========================
+// ========================= texture =========================
 
 FoveaTextureCreateInfo FoveaDefaultTextureCreateInfo(void);
 
