@@ -331,4 +331,20 @@ namespace Fovea{
 	void Renderer::flushGeneralUsageData(uint32_t offset, uint32_t count){
 		generalUsageIndexBuffer.flush(generalUsageAlignement * count, offset);
 	}
+
+	uint32_t Renderer::getSceneVertexSize(){
+		return sceneVertexSize;
+	}
+
+	uint32_t Renderer::getGeneralUsageVertexSize(){
+		return generalUsageVertexSize;
+	}
+
+	void* Renderer::getSceneBuffer(){
+		return sceneVertexBuffer.getMappedMemory();
+	}
+
+	void* Renderer::getGeneralUsageBuffer(){
+		return generalUsageVertexBuffer.getMappedMemory();
+	}
 }

@@ -58,6 +58,10 @@ namespace Fovea{
 
 			void setSceneVertexSize(uint32_t size, size_t minOffsetAlignement);
 
+			uint32_t getSceneVertexSize();
+
+			void* getSceneBuffer();
+
 			void renderScene(VkCommandBuffer commandBuffer);
 
 			void setSceneData(uint32_t offset, uint32_t count, void* data);
@@ -65,6 +69,10 @@ namespace Fovea{
 			void flushSceneData(uint32_t offset, uint32_t count);
 
 			void setGeneralUsageVertexSize(uint32_t size, uint32_t minOffsetAlignement);
+
+			uint32_t getGeneralUsageVertexSize();
+
+			void* getGeneralUsageBuffer();
 
 			void setGeneralUsageData(void* v, uint32_t vertexCount);
 

@@ -229,6 +229,10 @@ void FoveaSetScene(void *v, uint32_t vertexCount);
 
 void FoveaSetSceneVertexSize(uint32_t size);
 
+uint32_t FoveaGetSceneVertexSize();
+
+void* getSceneBuffer();
+
 void FoveaRenderScene(void);
 
 void FoveaSetSceneData(uint32_t offset, uint32_t count, void* data);
@@ -236,6 +240,10 @@ void FoveaSetSceneData(uint32_t offset, uint32_t count, void* data);
 void FoveaFlushSceneData(uint32_t offset, uint32_t count);
 
 void FoveaSetGeneralUsageVertexSize(uint32_t size);
+
+uint32_t FoveaGetGeneraUsageVertexSize();
+
+void* getGeneralUsageBuffer();
 
 void FoveaSetGeneralUsage(void *v, uint32_t vertexCount);
 

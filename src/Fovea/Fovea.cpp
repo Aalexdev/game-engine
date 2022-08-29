@@ -264,6 +264,22 @@ void FoveaSetSceneVertexSize(uint32_t size){
 	getInstance().renderer.setSceneVertexSize(size, getInstance().physicalDevice.getProperties().limits.nonCoherentAtomSize);
 }
 
+uint32_t FoveaGetSceneVertexSize(){
+	return getInstance().renderer.getSceneVertexSize();
+}
+
+void* getSceneBuffer(){
+	return getInstance().renderer.getSceneBuffer();
+}
+
+uint32_t FoveaGetGeneraUsageVertexSize(){
+	return getInstance().renderer.getGeneralUsageVertexSize();
+}
+
+void* getGeneralUsageBuffer(){
+	return getInstance().renderer.getGeneralUsageBuffer();
+}
+
 void FoveaRenderScene(void){
 	getInstance().renderer.renderScene(frameCommandBuffer());
 }
