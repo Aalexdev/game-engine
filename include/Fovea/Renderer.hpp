@@ -83,6 +83,16 @@ namespace Fovea{
 			void setGeneralUsageData(uint32_t offset, uint32_t count, void* data);
 
 			void flushGeneralUsageData(uint32_t offset, uint32_t count);
+
+			void renderQuadScene(void *v0, void *v1, void *v2, void *v3);
+
+			void renderTrigoneScene(void *v0, void *v1, void *v2);
+
+			void renderGeneralUsageQuad(void *v0, void *v1, void *v2, void *v3);
+
+			void renderGeneralUsageTrigone(void *v0, void *v1, void *v2);
+
+			void renderGeneralUsageLine(void *v0, void *v1);
 			
 		private:
 			void createCommandBuffers();

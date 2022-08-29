@@ -231,7 +231,11 @@ void FoveaSetSceneVertexSize(uint32_t size);
 
 uint32_t FoveaGetSceneVertexSize();
 
-void* getSceneBuffer();
+void* FoveaGetSceneBuffer();
+
+void FoveaRenderQuadScene(void *v0, void *v1, void *v2, void *v3);
+
+void FoveaRenderTrigoneScene(void *v0, void *v1, void *v2);
 
 void FoveaRenderScene(void);
 
@@ -243,7 +247,13 @@ void FoveaSetGeneralUsageVertexSize(uint32_t size);
 
 uint32_t FoveaGetGeneraUsageVertexSize();
 
-void* getGeneralUsageBuffer();
+void* FoveaGetGeneralUsageBuffer();
+
+void FoveaRenderGeneralUsageQuad(void *v0, void *v1, void *v2, void *v3);
+
+void FoveaRenderGeneralUsageTrigone(void *v0, void *v1, void *v2);
+
+void FoveaRenderGeneralUsageLine(void *v0, void *v1);
 
 void FoveaSetGeneralUsage(void *v, uint32_t vertexCount);
 

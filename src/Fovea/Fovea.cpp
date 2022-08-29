@@ -672,3 +672,23 @@ void FoveaRenderGeneralUsageData(void){
 void FoveaSetGeneralUsageTopology(FoveaTopology topology){
 	getInstance().renderer.setGeneralUsageTopology(FoveaTopologyToRendererTopology(topology));
 }
+
+void FoveaRenderQuadScene(void *v0, void *v1, void *v2, void *v3){
+	getInstance().renderer.renderQuadScene(v0, v1, v2, v3);
+}
+
+void FoveaRenderTrigoneScene(void *v0, void *v1, void *v2){
+	getInstance().renderer.renderTrigoneScene(v0, v1, v2);
+}
+
+void FoveaRenderGeneralUsageQuad(void *v0, void *v1, void *v2, void *v3){
+	getInstance().renderer.renderGeneralUsageQuad(v0, v1, v2, v3);
+}
+
+void FoveaRenderGeneralUsageTrigone(void *v0, void *v1, void *v2){
+	getInstance().renderer.renderGeneralUsageTrigone(v0, v1, v2);
+}
+
+void FoveaRenderGeneralUsageLine(void *v0, void *v1){
+	getInstance().renderer.renderGeneralUsageLine(v0, v1);
+}

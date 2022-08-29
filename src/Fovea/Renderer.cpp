@@ -347,4 +347,87 @@ namespace Fovea{
 	void* Renderer::getGeneralUsageBuffer(){
 		return generalUsageVertexBuffer.getMappedMemory();
 	}
+
+	void Renderer::renderQuadScene(void *v0, void *v1, void *v2, void *v3){
+		char* ptr = static_cast<char*>(sceneVertexBuffer.getMappedMemory());
+		ptr += (sceneIndexUsed / 4) * sceneVertexSize;
+
+		memcpy(ptr, v0, sceneVertexSize);
+		ptr += sceneVertexSize;
+
+		memcpy(ptr, v1, sceneVertexSize);
+		ptr += sceneVertexSize;
+		
+		memcpy(ptr, v2, sceneVertexSize);
+		ptr += sceneVertexSize;
+		
+		memcpy(ptr, v3, sceneVertexSize);
+		ptr += sceneVertexSize;
+		
+		sceneIndexUsed += 4;
+	}
+
+	void Renderer::renderTrigoneScene(void *v0, void *v1, void *v2){
+		char* ptr = static_cast<char*>(sceneVertexBuffer.getMappedMemory());
+		ptr += (sceneIndexUsed / 4) * sceneVertexSize;
+
+		memcpy(ptr, v0, sceneVertexSize);
+		ptr += sceneVertexSize;
+
+		memcpy(ptr, v1, sceneVertexSize);
+		ptr += sceneVertexSize;
+		
+		memcpy(ptr, v2, sceneVertexSize);
+		ptr += sceneVertexSize;
+		
+		sceneIndexUsed += 3;
+	}
+
+	void Renderer::renderGeneralUsageQuad(void *v0, void *v1, void *v2, void *v3){
+		char* ptr = static_cast<char*>(generalUsageVertexBuffer.getMappedMemory());
+		ptr += (sceneIndexUsed / 4) * sceneVertexSize;
+
+		memcpy(ptr, v0, sceneVertexSize);
+		ptr += sceneVertexSize;
+
+		memcpy(ptr, v1, sceneVertexSize);
+		ptr += sceneVertexSize;
+		
+		memcpy(ptr, v2, sceneVertexSize);
+		ptr += sceneVertexSize;
+		
+		memcpy(ptr, v3, sceneVertexSize);
+		ptr += sceneVertexSize;
+		
+		sceneIndexUsed += 4;
+	}
+
+	void Renderer::renderGeneralUsageTrigone(void *v0, void *v1, void* v2){
+		char* ptr = static_cast<char*>(generalUsageVertexBuffer.getMappedMemory());
+		ptr += (sceneIndexUsed / 4) * sceneVertexSize;
+
+		memcpy(ptr, v0, sceneVertexSize);
+		ptr += sceneVertexSize;
+
+		memcpy(ptr, v1, sceneVertexSize);
+		ptr += sceneVertexSize;
+		
+		memcpy(ptr, v2, sceneVertexSize);
+		ptr += sceneVertexSize;
+	
+		sceneIndexUsed += 3;
+	}
+
+	void Renderer::renderGeneralUsageLine(void *v0, void *v1){
+		char* ptr = static_cast<char*>(generalUsageVertexBuffer.getMappedMemory());
+		ptr += (sceneIndexUsed / 4) * sceneVertexSize;
+
+		memcpy(ptr, v0, sceneVertexSize);
+		ptr += sceneVertexSize;
+
+		memcpy(ptr, v1, sceneVertexSize);
+		ptr += sceneVertexSize;
+		
+		sceneIndexUsed += 2;
+	}
 }
