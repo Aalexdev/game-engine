@@ -169,9 +169,35 @@ namespace RainDrop{
 		Hermes::_triggerEvent(static_cast<Hermes::EventID>(id), data);
 	}
 
-	void* __eventAllocStack(uint32_t size){
+	void* RD_API __eventAllocStack(uint32_t size){
 		return Hermes::allocStack(static_cast<size_t>(size));
 	}
+
+	bool RD_API isKeyDown(Key key){
+		return getInstance().keyPressed[static_cast<int>(key)];
+	}
+
+	bool RD_API isKeyUp(Key key){
+		return !getInstance().keyPressed[static_cast<int>(key)];
+	}
+
+	vec2<float> RD_API getMousePosition(){
+		return getInstance().mousePos;
+	}
+
+	bool RD_API isMouseButtonDown(MouseButton button){
+		return getInstance().buttonPressed[static_cast<int>(button)];
+	}
+
+	bool RD_API isMouseButtonUp(MouseButton button){
+		return !getInstance().buttonPressed[static_cast<int>(button)];
+	}
+
+	void RD_API updateEvents(){
+		poolEvents();
+		Hermes::update();
+	}
+
 
 	// ====================================== Render
 
@@ -201,6 +227,23 @@ namespace RainDrop{
 
 	void RD_API setSceneData(uint32_t offset, uint32_t count, void* data){
 		FoveaSetSceneData(offset, count, data);
+	}
+
+	void RD_API beginScene(){
+		auto& instance = getInstance();
+		instance.vertexOffset = 0;
+		instance.currentRenderBuffer = RenderBuffer::Scene;
+	}
+
+	void RD_API endScene(){
+		auto& instance = getInstance();
+		instance.vertexOffset = 0;
+		instance.currentRenderBuffer = RenderBuffer::None;
+	}
+
+	void RD_API renderQuad(void* v0, void* v1, void* v2, void* v3){
+		auto& instance = getInstance();
+		instance.vertexOffset = 0;
 	}
 
 	void RD_API flushSceneData(uint32_t offset, uint32_t count){
@@ -269,19 +312,27 @@ namespace RainDrop{
 		getInstance().scene.RegisterComponent(typeID, typeSize);
 	}
 
+	void RD_API registerECSSystemPtr(size_t typeID, ECSSystem* system){
+		getInstance().scene.RegisterSystem(typeID, reinterpret_cast<ECS::System*>(system));
+	}
+
 	void RD_API setECSSystemSignature(size_t typeID, ECSSignature& signature){
 		getInstance().scene.SetSystemSignature(typeID, signature);
 	}
 
-	// ============================= SHADER
+	uint32_t RD_API getComponentID(uint64_t typeID){
+		return getInstance().scene.GetComponentType(typeID);
+	}
 
-	Shader RD_API createShader(ShaderCreateInfo &info){
+	// ============================= SHADERID
+
+	ShaderID RD_API createShader(ShaderCreateInfo &info){
 		FoveaShaderCreateInfo createInfo;
 
 		createInfo.sample = static_cast<FoveaSample>(info.sample);
 		createInfo.type = FoveaShaderType_Graphic;
 		createInfo.pushConstantSize = info.pushConstantSize;
-		createInfo.target = static_cast<FoveaRenderTarget>(info.renderTarget);
+		createInfo.target = static_cast<FoveaRenderTarget>(info.renderTargetID);
 		createInfo.base = static_cast<FoveaShader>(info.base);
 		createInfo.vertexInputSize = info.vertexInputSize;
 		createInfo.vertexAttributes = reinterpret_cast<FoveaShaderVertexAttribute*>(info.vertexAttributes);
@@ -296,31 +347,31 @@ namespace RainDrop{
 		createInfo.fragmentFilepath = info.fragmentFilepath.empty() ? nullptr : info.fragmentFilepath.c_str();
 		createInfo.geometryFilepath = info.geometryFilepath.empty() ? nullptr : info.geometryFilepath.c_str();
 
-		Shader shader;
+		ShaderID shaderid;
 		try{
-			shader = static_cast<Shader>(FoveaCreateShader(&createInfo));
+			shaderid = static_cast<ShaderID>(FoveaCreateShader(&createInfo));
 		} catch (const std::runtime_error &err){
-			RD_TRHOW_EXCEPT("failed to create a shader", err.what());
+			RD_TRHOW_EXCEPT("failed to create a shaderid", err.what());
 		}
 
-		return shader;
+		return shaderid;
 	}
 
-	void RD_API destroyShader(Shader shader){
-		FoveaDestroyShader(static_cast<FoveaShader>(shader));
+	void RD_API destroyShader(ShaderID shaderid){
+		FoveaDestroyShader(static_cast<FoveaShader>(shaderid));
 	}
 
-	void RD_API useShader(Shader shader, uint32_t *descriptorSetIndices){
-		FoveaUseShader(static_cast<FoveaShader>(shader), descriptorSetIndices);
+	void RD_API useShader(ShaderID shaderid, uint32_t *descriptorSetIndices){
+		FoveaUseShader(static_cast<FoveaShader>(shaderid), descriptorSetIndices);
 	}
 
-	void RD_API setShaderPushConstant(Shader shader, void* pushConstant){
-		FoveaSetShaderPushConstant(static_cast<FoveaShader>(shader), pushConstant);
+	void RD_API setShaderPushConstant(ShaderID shaderid, void* pushConstant){
+		FoveaSetShaderPushConstant(static_cast<FoveaShader>(shaderid), pushConstant);
 	}
 
 	// ==================================== RENDER TARGET
 
-	RenderTarget RD_API createRenderTarget(RenderTargetCreateInfo &info){
+	RenderTargetID RD_API createRenderTarget(RenderTargetCreateInfo &info){
 		FoveaRenderTargetCreateInfo createInfo;
 
 		createInfo.size = *reinterpret_cast<FoveaUIVec2*>(&info.size);
@@ -331,43 +382,43 @@ namespace RainDrop{
 		createInfo.stencilClearValue = info.stencilClearValue;
 		createInfo.colorAttachments = reinterpret_cast<FoveaRenderTargetAttachment*>(info.colorAttachments);
 
-		RenderTarget target;
+		RenderTargetID target;
 		try{
-			target = static_cast<RenderTarget>(FoveaCreateRenderTarget(&createInfo));
+			target = static_cast<RenderTargetID>(FoveaCreateRenderTarget(&createInfo));
 		} catch (const std::runtime_error& err){
 			RD_TRHOW_EXCEPT("failed to create render target", err.what());
 		}
 		return target;
 	}
 
-	void RD_API destroyRenderTarget(RenderTarget renderTarget){
-		FoveaDestroyRenderTarget(static_cast<FoveaRenderTarget>(renderTarget));
+	void RD_API destroyRenderTarget(RenderTargetID renderTargetID){
+		FoveaDestroyRenderTarget(static_cast<FoveaRenderTarget>(renderTargetID));
 	}
 
-	void RD_API beginRenderTarget(RenderTarget renderTarget){
-		FoveaBeginRenderTarget(static_cast<FoveaRenderTarget>(renderTarget));
+	void RD_API beginRenderTarget(RenderTargetID renderTargetID){
+		FoveaBeginRenderTarget(static_cast<FoveaRenderTarget>(renderTargetID));
 	}
 
-	void RD_API endRenderTarget(RenderTarget renderTarget){
-		FoveaEndRenderTarget(static_cast<FoveaRenderTarget>(renderTarget));
+	void RD_API endRenderTarget(RenderTargetID renderTargetID){
+		FoveaEndRenderTarget(static_cast<FoveaRenderTarget>(renderTargetID));
 	}
 
-	void RD_API resizeRenderTarget(RenderTarget renderTarget, vec2<uint32_t> size){
-		FoveaResizeRenderTarget(static_cast<FoveaRenderTarget>(renderTarget), *reinterpret_cast<FoveaUIVec2*>(&size));
+	void RD_API resizeRenderTarget(RenderTargetID renderTargetID, vec2<uint32_t> size){
+		FoveaResizeRenderTarget(static_cast<FoveaRenderTarget>(renderTargetID), *reinterpret_cast<FoveaUIVec2*>(&size));
 	}
 
 	// =================================== DESCRIPTOR SET
 
-	DescriptorSet RD_API createDescriptorSet(DescriptorSetCreateInfo& info){
+	DescriptorSetID RD_API createDescriptorSet(DescriptorSetCreateInfo& info){
 		FoveaDescriptorSetCreateInfo createInfo;
 
 		createInfo.descriptors = reinterpret_cast<FoveaDescriptorInfo*>(info.descriptors);
 		createInfo.descriptorCount = info.descriptorCount;
 		createInfo.setCount = info.setCount;
 
-		DescriptorSet set;
+		DescriptorSetID set;
 		try{
-			set = static_cast<DescriptorSet>(FoveaCreateDescriptorSet(&createInfo));
+			set = static_cast<DescriptorSetID>(FoveaCreateDescriptorSet(&createInfo));
 		} catch (const std::runtime_error& err){
 			RD_TRHOW_EXCEPT("failed to create a descriptor set", err.what());
 		}
@@ -375,19 +426,19 @@ namespace RainDrop{
 		return set;
 	}
 
-	void RD_API destroyDescriptorSet(DescriptorSet set){
+	void RD_API destroyDescriptorSet(DescriptorSetID set){
 		FoveaDestroyDescriptorSet(static_cast<FoveaDescriptorSet>(set));
 	}
 
-	void RD_API writeToDescriptorSetBuffer(DescriptorSet set, uint32_t setIndex, uint32_t binding, void* data){
+	void RD_API writeToDescriptorSetBuffer(DescriptorSetID set, uint32_t setIndex, uint32_t binding, void* data){
 		FoveaWriteToDescriptorSetBuffer(static_cast<FoveaDescriptorSet>(set), setIndex, binding, data);
 	}
 
-	void RD_API setDescriptorSetTexture(DescriptorSet set, uint32_t setIndex, uint32_t binding, uint32_t textureIndex, Texture texture){
-		FoveaSetDescriptorSetTexture(static_cast<FoveaDescriptorSet>(set), static_cast<FoveaTexture>(texture), setIndex, binding, textureIndex);
+	void RD_API setDescriptorSetTexture(DescriptorSetID set, uint32_t setIndex, uint32_t binding, uint32_t textureIndex, TextureID textureid){
+		FoveaSetDescriptorSetTexture(static_cast<FoveaDescriptorSet>(set), static_cast<FoveaTexture>(textureid), setIndex, binding, textureIndex);
 	}
 
-	// =================================== TEXTURE
+	// =================================== TEXTUREID
 
 	void RD_API convertTextureCreateInfo(TextureCreateInfo& info, void* ptr){
 		FoveaTextureCreateInfo* createInfo = static_cast<FoveaTextureCreateInfo*>(ptr);
@@ -402,19 +453,19 @@ namespace RainDrop{
 		createInfo->samples = static_cast<FoveaSample>(info.samples);
 	}
 	
-	Texture RD_API createTextureFromRenderTarget(RenderTarget renderTarget, uint32_t attachment, TextureCreateInfo& info){
+	TextureID RD_API createTextureFromRenderTarget(RenderTargetID renderTargetID, uint32_t attachment, TextureCreateInfo& info){
 		FoveaTextureCreateInfo createInfo;
 		convertTextureCreateInfo(info, &createInfo);
-		return static_cast<Texture>(FoveaCreateTextureFromRenderTarget(static_cast<FoveaRenderTarget>(renderTarget), attachment, &createInfo));
+		return static_cast<TextureID>(FoveaCreateTextureFromRenderTarget(static_cast<FoveaRenderTarget>(renderTargetID), attachment, &createInfo));
 	}
 
-	Texture RD_API createTextureFromPath(const char* path, TextureCreateInfo& info){
+	TextureID RD_API createTextureFromPath(const char* path, TextureCreateInfo& info){
 		FoveaTextureCreateInfo createInfo;
 		convertTextureCreateInfo(info, &createInfo);
-		return static_cast<Texture>(FoveaCreateTextureFromPath(path, &createInfo));
+		return static_cast<TextureID>(FoveaCreateTextureFromPath(path, &createInfo));
 	}
 
-	Texture* RD_API createTexturesFromPaths(const char* paths[], TextureCreateInfo* infos, uint32_t textureCount){
+	TextureID* RD_API createTexturesFromPaths(const char* paths[], TextureCreateInfo* infos, uint32_t textureCount){
 		FoveaTextureCreateInfo *createInfos = static_cast<FoveaTextureCreateInfo*>(malloc(sizeof(FoveaTextureCreateInfo) * textureCount));
 		if (createInfos == nullptr){
 			fprintf(stderr, "MALLOC ERROR");
@@ -425,17 +476,17 @@ namespace RainDrop{
 			convertTextureCreateInfo(infos[i], &createInfos[i]);
 		}
 
-		return reinterpret_cast<Texture*>(FoveaCreateTexturesFromPaths(paths, createInfos, textureCount));
+		return reinterpret_cast<TextureID*>(FoveaCreateTexturesFromPaths(paths, createInfos, textureCount));
 	}
 
-	Texture RD_API createTextureFromData(TextureFormat format, vec2<uint32_t> size, void* data, TextureCreateInfo& info){
+	TextureID RD_API createTextureFromData(TextureFormat format, vec2<uint32_t> size, void* data, TextureCreateInfo& info){
 		FoveaTextureCreateInfo createInfo;
 		convertTextureCreateInfo(info, &createInfo);
-		return static_cast<Texture>(FoveaCreateTextureFromData(static_cast<FoveaImageFormat>(format), *reinterpret_cast<FoveaUIVec2*>(&size), data, &createInfo));
+		return static_cast<TextureID>(FoveaCreateTextureFromData(static_cast<FoveaImageFormat>(format), *reinterpret_cast<FoveaUIVec2*>(&size), data, &createInfo));
 	}
 
-	void RD_API destroyTexture(Texture texture){
-		FoveaDestroyTexture(static_cast<FoveaTexture>(texture));
+	void RD_API destroyTexture(TextureID textureid){
+		FoveaDestroyTexture(static_cast<FoveaTexture>(textureid));
 	}
 
 	// ==========================================================
@@ -455,7 +506,7 @@ namespace RainDrop{
 	}
 
 	// ==========================================================
-	// ==                         SOUND                        ==
+	// ==                         SOUNDID                        ==
 	// ==========================================================
 
 	void RD_API loadMusic(const char* filepath){
@@ -482,44 +533,44 @@ namespace RainDrop{
 		Gramophone::setMusicPosition(position.x, position.y, position.z);
 	}
 
-	Sound RD_API loadSoundEffect(const char* filepath){
-		return static_cast<Sound>(Gramophone::loadSoundEffect(filepath));
+	SoundID RD_API loadSoundEffect(const char* filepath){
+		return static_cast<SoundID>(Gramophone::loadSoundEffect(filepath));
 	}
 
-	void RD_API destroySoundEffect(Sound sound){
-		Gramophone::destroySoundEffect(static_cast<Gramophone::Sound>(sound));
+	void RD_API destroySoundEffect(SoundID soundid){
+		Gramophone::destroySoundEffect(static_cast<Gramophone::Sound>(soundid));
 	}
 
-	SoundSource RD_API createSoundSource(){
-		return static_cast<SoundSource>(Gramophone::createSoundSource());
+	SoundSourceID RD_API createSoundSource(){
+		return static_cast<SoundSourceID>(Gramophone::createSoundSource());
 	}
 
-	void RD_API destroySoundSource(SoundSource source){
+	void RD_API destroySoundSource(SoundSourceID source){
 		Gramophone::destroySoundSource(static_cast<Gramophone::Source>(source));
 	}
 
-	void RD_API setSoundSourcePitch(SoundSource source, float pitch){
+	void RD_API setSoundSourcePitch(SoundSourceID source, float pitch){
 		Gramophone::setSourcePitch(static_cast<Gramophone::Source>(source), pitch);
 	}
 
-	void RD_API setSoundSourceGain(SoundSource source, float gain){
+	void RD_API setSoundSourceGain(SoundSourceID source, float gain){
 		Gramophone::setSourceGain(static_cast<Gramophone::Source>(source), gain);
 	}
 
-	void RD_API setSoundSourcePosition(SoundSource source, vec3<float> position){
+	void RD_API setSoundSourcePosition(SoundSourceID source, vec3<float> position){
 		Gramophone::setSourcePosition(static_cast<Gramophone::Source>(source), position.x, position.y, position.y);
 	}
 
-	void RD_API setSoundSourceVelocity(SoundSource source, vec3<float> velocity){
+	void RD_API setSoundSourceVelocity(SoundSourceID source, vec3<float> velocity){
 		Gramophone::setSourceVelocity(static_cast<Gramophone::Source>(source), velocity.x, velocity.y, velocity.z);
 	}
 
-	void RD_API setSoundSourceLoop(SoundSource source, bool loop){
+	void RD_API setSoundSourceLoop(SoundSourceID source, bool loop){
 		Gramophone::setSourceLoop(static_cast<Gramophone::Source>(source), loop);
 	}
 
-	void RD_API playSoundSource(SoundSource source, Sound sound){
-		Gramophone::playSource(static_cast<Gramophone::Source>(source), static_cast<Gramophone::Sound>(sound));
+	void RD_API playSoundSource(SoundSourceID source, SoundID soundid){
+		Gramophone::playSource(static_cast<Gramophone::Source>(source), static_cast<Gramophone::Sound>(soundid));
 	}
 
 	void RD_API setListenerPosition(vec3<float> position){
@@ -538,7 +589,7 @@ namespace RainDrop{
 		Gramophone::setListenerPitch(pitch);
 	}
 
-	void RD_API setSoundSourceEffects(SoundSource source, bool reverb, bool lowpass){
+	void RD_API setSoundSourceEffects(SoundSourceID source, bool reverb, bool lowpass){
 		Gramophone::setSoundSourceEffects(static_cast<Gramophone::Source>(source), reverb, lowpass);
 	}
 

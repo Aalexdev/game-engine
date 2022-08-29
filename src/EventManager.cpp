@@ -1,5 +1,6 @@
 #include "EventManager.hpp"
 #include "Hermes.hpp"
+#include "core.hpp"
 
 #include <SDL2/SDL.h>
 #include "RainDrop.hpp"
@@ -346,17 +347,20 @@ namespace RainDrop{
 				}
 				
 				case SDL_MOUSEBUTTONDOWN:{
+					getInstance().buttonPressed[static_cast<int>(SDLMouseButtonToRainDropMouseButton(e.button.button))] = true;
 					Hermes::triggerEvent(instance.mouseButtonDown, SDLMouseButtonToRainDropMouseButton(e.button.button));
 					break;
 				}
 
 				case SDL_MOUSEBUTTONUP:{
+					getInstance().buttonPressed[static_cast<int>(SDLMouseButtonToRainDropMouseButton(e.button.button))] = false;
 					Hermes::triggerEvent(instance.mouseButtonUp, SDLMouseButtonToRainDropMouseButton(e.button.button));
 					break;
 				}
 
 				case SDL_MOUSEMOTION:{
-					Hermes::triggerEvent(instance.mouseMoved, vec2<float>{static_cast<float>(e.motion.x), static_cast<float>(e.motion.y)});
+					getInstance().mousePos = vec2<float>{static_cast<float>(e.motion.x), static_cast<float>(e.motion.y)};
+					Hermes::triggerEvent(instance.mouseMoved, getInstance().mousePos);
 					break;
 				}
 
@@ -366,11 +370,13 @@ namespace RainDrop{
 				}
 
 				case SDL_KEYDOWN:{
+					getInstance().keyPressed[static_cast<int>(SDLToEngineKey(e.key.keysym.sym))] = true;
 					Hermes::triggerEvent(instance.keyPressed, SDLToEngineKey(e.key.keysym.sym), static_cast<bool>(e.key.repeat));
 					break;
 				}
 
 				case SDL_KEYUP:{
+					getInstance().keyPressed[static_cast<int>(SDLToEngineKey(e.key.keysym.sym))] = false;
 					Hermes::triggerEvent(instance.keyReleased, SDLToEngineKey(e.key.keysym.sym), static_cast<bool>(e.key.repeat));
 					break;
 				}

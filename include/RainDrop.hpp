@@ -55,12 +55,12 @@ namespace RainDrop{
 	using EntityID = uint32_t;
 	using EventID = uint16_t;
 	using ECSSignature = std::bitset<ECS_MAX_COMPONENT>; 
-	using Shader = uint64_t;
-	using RenderTarget = uint64_t;
-	using DescriptorSet = uint64_t;
-	using Texture = uint64_t;
-	using Sound = uint64_t;
-	using SoundSource = uint64_t;
+	using ShaderID = uint64_t;
+	using RenderTargetID = uint64_t;
+	using DescriptorSetID = uint64_t;
+	using TextureID = uint64_t;
+	using SoundID = uint64_t;
+	using SoundSourceID = uint64_t;
 
 	class RD_API Exception{
 		public:
@@ -90,6 +90,7 @@ namespace RainDrop{
 		Right,
 		X1,
 		X2,
+		MAX,
 	};
 
 	// keyboard keys
@@ -416,7 +417,7 @@ namespace RainDrop{
 	};
 
 	enum class DescriptorType{
-		Texture = 0,
+		TextureID = 0,
 		Buffer = 1,
 	};
 
@@ -638,11 +639,11 @@ namespace RainDrop{
 				this->sample = sample;
 			}
 
-			void setRenderTarget(RenderTarget renderTarget){
-				this->renderTarget = renderTarget;
+			void setRenderTarget(RenderTargetID renderTargetID){
+				this->renderTargetID = renderTargetID;
 			}
 
-			void setBaseShader(Shader base){
+			void setBaseShader(ShaderID base){
 				this->base = base;
 			}
 
@@ -651,7 +652,7 @@ namespace RainDrop{
 				vertexAttributeCount = attributeCount;
 			}
 
-			void setDescriptorSets(DescriptorSet* descriptors, uint32_t descriptorCount){
+			void setDescriptorSets(DescriptorSetID* descriptors, uint32_t descriptorCount){
 				descriptorSets = descriptors;
 				descriptorSetCount = descriptorCount;
 			}
@@ -684,14 +685,14 @@ namespace RainDrop{
 			uint32_t pushConstantSize = 0;
 
 			Sample sample = Sample::Sample_1;
-			RenderTarget renderTarget = -1;
-			Shader base = -1;
+			RenderTargetID renderTargetID = -1;
+			ShaderID base = -1;
 
 			uint32_t vertexInputSize = 0;
 			VertexAttribute* vertexAttributes = nullptr;
 			uint32_t vertexAttributeCount = 0;
 
-			DescriptorSet* descriptorSets = nullptr;
+			DescriptorSetID* descriptorSets = nullptr;
 			uint32_t descriptorSetCount = 0;
 
 			PolygoneMode polygoneMode;
@@ -699,7 +700,7 @@ namespace RainDrop{
 			bool depthTest = true;
 			float lineWidth = 1.f;
 
-			friend Shader RD_API createShader(ShaderCreateInfo &info);
+			friend ShaderID RD_API createShader(ShaderCreateInfo &info);
 	};
 
 	class RD_API RenderTargetCreateInfo{
@@ -739,7 +740,7 @@ namespace RainDrop{
 			uint32_t stencilClearValue;
 			vec2<uint32_t> size;
 
-			friend RenderTarget RD_API createRenderTarget(RenderTargetCreateInfo  &info);
+			friend RenderTargetID RD_API createRenderTarget(RenderTargetCreateInfo  &info);
 	};
 
 	class RD_API DescriptorSetCreateInfo{
@@ -751,7 +752,7 @@ namespace RainDrop{
 
 				uint32_t bufferSize;
 				uint32_t textureCount;
-				Texture* textures;
+				TextureID* textures;
 			};
 
 			void setDescriptors(DescriptorInfo* descriptors, uint32_t descriptorCount){
@@ -768,7 +769,7 @@ namespace RainDrop{
 			uint32_t descriptorCount = 0;
 			uint32_t setCount = 0;
 
-			friend DescriptorSet createDescriptorSet(DescriptorSetCreateInfo& info);
+			friend DescriptorSetID createDescriptorSet(DescriptorSetCreateInfo& info);
 	};
 
 	class RD_API TextureCreateInfo{
@@ -1019,7 +1020,7 @@ namespace RainDrop{
 	uint32_t RD_API getEventDataSize(EventID id);
 
 	// intern
-	void* __eventAllocStack(uint32_t size);
+	void* RD_API __eventAllocStack(uint32_t size);
 	
 	/**
 	 * @brief trigger an event and send the data as a void pointer
@@ -1052,6 +1053,51 @@ namespace RainDrop{
 	void RD_API triggerEvent(const char* name, Args... args){
 		triggerEvent(getEventID(name), args...);
 	}
+
+	void RD_API updateEvents();
+
+	/**
+	 * @brief check if the given key is pressed on the keyboard
+	 * 
+	 * @param key the key
+	 * @return true 
+	 * @return false 
+	 */
+	bool RD_API isKeyDown(Key key);
+
+	/**
+	 * @brief check if the given key is not pressed on the keyboard
+	 * 
+	 * @param key the key
+	 * @return true 
+	 * @return false 
+	 */
+	bool RD_API isKeyUp(Key key);
+
+	/**
+	 * @brief get the current position of the mouse, relative to the top left corner of the window
+	 * 	
+	 * @return vec2<float> 
+	 */
+	vec2<float> RD_API getMousePosition();
+
+	/**
+	 * @brief get if the button is currently pressed
+	 * 
+	 * @param button the button to check
+	 * @return true 
+	 * @return false 
+	 */
+	bool RD_API isMouseButtonDown(MouseButton button);
+
+	/**
+	 * @brief get if the button is not currently pressed
+	 * 
+	 * @param button the button to check
+	 * @return true 
+	 * @return false 
+	 */
+	bool RD_API isMouseButtonUp(MouseButton button);
 
 	// ==========================================================
 	// ==                       RENDER                         ==
@@ -1103,6 +1149,28 @@ namespace RainDrop{
 	 * @param data an array of vertex
 	 */
 	void RD_API setSceneData(uint32_t offset, uint32_t count, void* data);
+
+	/**
+	 * @brief from this call, until endScene() is called, all the render calls will be writen to the scene
+	 * 
+	 */
+	void RD_API beginScene();
+
+	/**
+	 * @brief stop the write pass to the scene
+	 * 
+	 */
+	void RD_API endScene();
+
+	/**
+	 * @brief copy the four vertices into the scene or the general usage buffer
+	 * 
+	 * @param v0 top left corner
+	 * @param v1 top right corner
+	 * @param v2 bottom left corner
+	 * @param v3 nottom right corner
+	 */
+	void RD_API renderQuad(void* v0, void* v1, void* v2, void* v3);
 
 	/**
 	 * @brief send a given chunk of scene vertex to the gpu
@@ -1171,34 +1239,34 @@ namespace RainDrop{
 	// ================================ SHADERS
 
 	/**
-	 * @brief create a shader from the infos
+	 * @brief create a shaderid from the infos
 	 * 
-	 * @param info the infos used to create the shader
-	 * @return Shader 
+	 * @param info the infos used to create the shaderid
+	 * @return ShaderID 
 	 */
-	Shader RD_API createShader(ShaderCreateInfo &info);
+	ShaderID RD_API createShader(ShaderCreateInfo &info);
 
 	/**
-	 * @brief destroy a shader
+	 * @brief destroy a shaderid
 	 * 
-	 * @param shader the shader to destroy
+	 * @param shaderid the shaderid to destroy
 	 */
-	void RD_API destroyShader(Shader shader);
+	void RD_API destroyShader(ShaderID shaderid);
 
 	/**
-	 * @brief use the shader for the next render call
+	 * @brief use the shaderid for the next render call
 	 * 
-	 * @param shader the shader to use
+	 * @param shaderid the shaderid to use
 	 */
-	void RD_API useShader(Shader shader, uint32_t *descriptorSetIndices);
+	void RD_API useShader(ShaderID shaderid, uint32_t *descriptorSetIndices);
 
 	/**
-	 * @brief set the push constant of the shader
+	 * @brief set the push constant of the shaderid
 	 * 
-	 * @param shader 
+	 * @param shaderid 
 	 * @param pushConstant the data of the push constant
 	 */
-	void RD_API setShaderPushConstant(Shader shader, void* pushConstant);
+	void RD_API setShaderPushConstant(ShaderID shaderid, void* pushConstant);
 
 
 	// ============================= RENDER TARGETS
@@ -1207,55 +1275,55 @@ namespace RainDrop{
 	 * @brief create a render target than can be used to draw content onto it
 	 * 
 	 * @param info the info needed to create the object
-	 * @return RenderTarget 
+	 * @return RenderTargetID 
 	 */
-	RenderTarget RD_API createRenderTarget(RenderTargetCreateInfo& info);
+	RenderTargetID RD_API createRenderTarget(RenderTargetCreateInfo& info);
 
 	/**
 	 * @brief destroy and free a render target from the memory
 	 * 
-	 * @param renderTarget the render target to destroy
+	 * @param renderTargetID the render target to destroy
 	 */
-	void RD_API destroyRenderTarget(RenderTarget renderTarget);
+	void RD_API destroyRenderTarget(RenderTargetID renderTargetID);
 
 	/**
 	 * @brief start to render onto a render target
 	 * 
-	 * @param renderTarget the render target to render onto
+	 * @param renderTargetID the render target to render onto
 	 */
-	void RD_API beginRenderTarget(RenderTarget renderTarget);
+	void RD_API beginRenderTarget(RenderTargetID renderTargetID);
 
 	/**
 	 * @brief stop the rendering to a render target
 	 * 
-	 * @param renderTarget the render target to stop
+	 * @param renderTargetID the render target to stop
 	 */
-	void RD_API endRenderTarget(RenderTarget renderTarget);
+	void RD_API endRenderTarget(RenderTargetID renderTargetID);
 
 	/**
 	 * @brief change the size of a render target
 	 * 
-	 * @param renderTarget the render target to resize
+	 * @param renderTargetID the render target to resize
 	 * @param size the size of the render target (in pixels)
 	 */
-	void RD_API resizeRenderTarget(RenderTarget renderTarget, vec2<uint32_t> size);
+	void RD_API resizeRenderTarget(RenderTargetID renderTargetID, vec2<uint32_t> size);
 
 	// ============================= DESCRIPTOR SET
 
 	/**
-	 * @brief create a descriptor set that can be used to send data to a shader
+	 * @brief create a descriptor set that can be used to send data to a shaderid
 	 * 
 	 * @param info the information needed for the descriptor set to be created
-	 * @return DescriptorSet 
+	 * @return DescriptorSetID 
 	 */
-	DescriptorSet RD_API createDescriptorSet(DescriptorSetCreateInfo& info);
+	DescriptorSetID RD_API createDescriptorSet(DescriptorSetCreateInfo& info);
 
 	/**
 	 * @brief destroy a descriptor set
 	 * 
 	 * @param set the descriptor set to destroy
 	 */
-	void RD_API destroyDescriptorSet(DescriptorSet set);
+	void RD_API destroyDescriptorSet(DescriptorSetID set);
 
 	/**
 	 * @brief write to a buffer into a descriptor set
@@ -1265,30 +1333,30 @@ namespace RainDrop{
 	 * @param binding the binding of the buffer
 	 * @param data the data to write
 	 */
-	void RD_API writeToDescriptorSetBuffer(DescriptorSet set, uint32_t setIndex, uint32_t binding, void* data);
+	void RD_API writeToDescriptorSetBuffer(DescriptorSetID set, uint32_t setIndex, uint32_t binding, void* data);
 
 	/**
-	 * @brief set the texture into a descriptor set
+	 * @brief set the textureid into a descriptor set
 	 * 
 	 * @param set the set to change
 	 * @param setIndex the index of the set in the descriptor set
-	 * @param binding the binding of the texture
-	 * @param textureIndex the index of the texture to write into, if the descriptor is a texture array
-	 * @param texture the texture to send
+	 * @param binding the binding of the textureid
+	 * @param textureIndex the index of the textureid to write into, if the descriptor is a textureid array
+	 * @param textureid the textureid to send
 	 */
-	void RD_API setDescriptorSetTexture(DescriptorSet set, uint32_t setIndex, uint32_t binding, uint32_t textureIndex, Texture texture);
+	void RD_API setDescriptorSetTexture(DescriptorSetID set, uint32_t setIndex, uint32_t binding, uint32_t textureIndex, TextureID textureid);
 
-	// ============================= TEXTURE
+	// ============================= TEXTUREID
 
-	Texture RD_API createTextureFromRenderTarget(RenderTarget renderTarget, uint32_t attachment, TextureCreateInfo& info);
+	TextureID RD_API createTextureFromRenderTarget(RenderTargetID renderTargetID, uint32_t attachment, TextureCreateInfo& info);
 
-	Texture RD_API createTextureFromPath(const char* path, TextureCreateInfo& info);
+	TextureID RD_API createTextureFromPath(const char* path, TextureCreateInfo& info);
 
-	Texture* RD_API createTexturesFromPaths(const char* paths[], TextureCreateInfo* infos, uint32_t textureCount);
+	TextureID* RD_API createTexturesFromPaths(const char* paths[], TextureCreateInfo* infos, uint32_t textureCount);
 
-	Texture RD_API createTextureFromData(TextureFormat format, vec2<uint32_t> size, void* data, TextureCreateInfo& info);
+	TextureID RD_API createTextureFromData(TextureFormat format, vec2<uint32_t> size, void* data, TextureCreateInfo& info);
 
-	void RD_API destroyTexture(Texture texture);
+	void RD_API destroyTexture(TextureID textureid);
 
 	// ==========================================================
 	// ==                         ECS                          ==
@@ -1401,6 +1469,13 @@ namespace RainDrop{
 		setECSSystemSignature(typeid(T).hash_code(), signature);
 	}
 
+	uint32_t RD_API getComponentID(uint64_t typeID);
+
+	template<typename T>
+	uint32_t RD_API getComponentID(){
+		return getComponentID(typeid(T).hash_code());
+	}
+
 	// ==========================================================
 	// ==                       ASSETS                         ==
 	// ==========================================================
@@ -1460,7 +1535,7 @@ namespace RainDrop{
 	void RD_API clearAssets();
 
 	// ==========================================================
-	// ==                         SOUND                        ==
+	// ==                         SOUNDID                        ==
 	// ==========================================================
 
 	/**
@@ -1495,86 +1570,86 @@ namespace RainDrop{
 	 */
 	void RD_API setMusicSourcePosition(vec3<float> position);
 
-	// =============================== sound effects
+	// =============================== soundid effects
 
 	/**
-	 * @brief load a sound effect from disk
+	 * @brief load a soundid effect from disk
 	 * 
-	 * @param filepath the path to the sound file
-	 * @return Sound 
+	 * @param filepath the path to the soundid file
+	 * @return SoundID 
 	 */
-	Sound RD_API loadSoundEffect(const char* filepath);
+	SoundID RD_API loadSoundEffect(const char* filepath);
 
 	/**
-	 * @brief destroy a sound effect
+	 * @brief destroy a soundid effect
 	 * 
-	 * @param sound the sound effect to destroy
+	 * @param soundid the soundid effect to destroy
 	 */
-	void RD_API destroySoundEffect(Sound sound);
+	void RD_API destroySoundEffect(SoundID soundid);
 
-	// ============================= sound sources
+	// ============================= soundid sources
 
 	/**
-	 * @brief create a sound source
+	 * @brief create a soundid source
 	 * 
-	 * @return SoundSource 
+	 * @return SoundSourceID 
 	 */
-	SoundSource RD_API createSoundSource();
+	SoundSourceID RD_API createSoundSource();
 
 	/**
-	 * @brief destroy a sound source
+	 * @brief destroy a soundid source
 	 * 
-	 * @param source the sound source to destroy
+	 * @param source the soundid source to destroy
 	 */
-	void RD_API destroySoundSource(SoundSource source);
+	void RD_API destroySoundSource(SoundSourceID source);
 
 	/**
-	 * @brief set the pitch of the sound that is coming out of this sound source
-	 * 
-	 * @param source the source to modifie
-	 * @param pitch the pitch of the sound
-	 */
-	void RD_API setSoundSourcePitch(SoundSource source, float pitch);
-
-	/**
-	 * @brief set the gain of the sound that is coming out the this sound source
+	 * @brief set the pitch of the soundid that is coming out of this soundid source
 	 * 
 	 * @param source the source to modifie
-	 * @param gain the gain of the sound
+	 * @param pitch the pitch of the soundid
 	 */
-	void RD_API setSoundSourceGain(SoundSource source, float gain);
+	void RD_API setSoundSourcePitch(SoundSourceID source, float pitch);
 
 	/**
-	 * @brief set the position in the world of the sound source
+	 * @brief set the gain of the soundid that is coming out the this soundid source
 	 * 
 	 * @param source the source to modifie
-	 * @param position the position of the sound
+	 * @param gain the gain of the soundid
 	 */
-	void RD_API setSoundSourcePosition(SoundSource source, vec3<float> position);
+	void RD_API setSoundSourceGain(SoundSourceID source, float gain);
 
 	/**
-	 * @brief set the velocity of the sound source
-	 * 
-	 * @param source the sound to modifie
-	 * @param velocity the velocity of the sound source
-	 */
-	void RD_API setSoundSourceVelocity(SoundSource source, vec3<float> velocity);
-
-	/**
-	 * @brief enable or not the sound source looping the sound
+	 * @brief set the position in the world of the soundid source
 	 * 
 	 * @param source the source to modifie
-	 * @param loop is the sound looping or not
+	 * @param position the position of the soundid
 	 */
-	void RD_API setSoundSourceLoop(SoundSource source, bool loop);
+	void RD_API setSoundSourcePosition(SoundSourceID source, vec3<float> position);
 
 	/**
-	 * @brief play the given sound at the sound source
+	 * @brief set the velocity of the soundid source
 	 * 
-	 * @param source the sound source to play from
-	 * @param sound the sound to play
+	 * @param source the soundid to modifie
+	 * @param velocity the velocity of the soundid source
 	 */
-	void RD_API playSoundSource(SoundSource source, Sound sound);
+	void RD_API setSoundSourceVelocity(SoundSourceID source, vec3<float> velocity);
+
+	/**
+	 * @brief enable or not the soundid source looping the soundid
+	 * 
+	 * @param source the source to modifie
+	 * @param loop is the soundid looping or not
+	 */
+	void RD_API setSoundSourceLoop(SoundSourceID source, bool loop);
+
+	/**
+	 * @brief play the given soundid at the soundid source
+	 * 
+	 * @param source the soundid source to play from
+	 * @param soundid the soundid to play
+	 */
+	void RD_API playSoundSource(SoundSourceID source, SoundID soundid);
 
 	// ========================== listener
 
@@ -1607,16 +1682,16 @@ namespace RainDrop{
 	 */
 	void RD_API setListenerPitch(float pitch);
 
-	// ========================== sound effects
+	// ========================== soundid effects
 
 	/**
-	 * @brief set the effect of a sound source
+	 * @brief set the effect of a soundid source
 	 * 
 	 * @param source the source to modifie
 	 * @param reverb enable the reverberation
 	 * @param lowpass enable the lowpass
 	 */
-	void RD_API setSoundSourceEffects(SoundSource source, bool reverb, bool lowpass);
+	void RD_API setSoundSourceEffects(SoundSourceID source, bool reverb, bool lowpass);
 
 	/**
 	 * @brief set the effects of the music
@@ -1669,6 +1744,130 @@ namespace RainDrop{
 			EntityID id; 
 	};
 
+	class RD_API Shader{
+		public:
+			Shader(const Shader &) = default;
+			Shader(ShaderID id) : id{id}{}
+
+			void use(uint32_t* descriptorSetIndices){
+				useShader(id, descriptorSetIndices);
+			}
+
+			void setPushConstant(void* data){
+				setShaderPushConstant(id, data);
+			}
+
+			template<typename T>
+			void setPushConstant(T &t){
+				setShaderPushConstant(id, &t);
+			}
+
+			operator ShaderID() const {return id;}
+
+		private:
+			ShaderID id;
+	};
+
+	class RD_API RenderTarget{
+		public:
+			RenderTarget(const RenderTarget &) = default;
+			RenderTarget(RenderTargetID id) : id{id}{}
+
+			void begin(){
+				beginRenderTarget(id);
+			}
+
+			void end(){
+				endRenderTarget(id);
+			}
+
+			void resize(vec2<uint32_t> size){
+				resizeRenderTarget(id, size);
+			}
+
+			operator RenderTargetID() const {return id;}
+		
+		private:
+			RenderTargetID id;
+	};
+
+	class RD_API DescriptorSet{
+		public:
+			DescriptorSet(const DescriptorSet &) = default;
+			DescriptorSet(DescriptorSetID id) : id{id}{}
+
+			void writeToBuffer(uint32_t setIndex, uint32_t binding, void* data){
+				writeToDescriptorSetBuffer(id, setIndex, binding, data);
+			}
+
+			template<typename T>
+			void writeToBuffer(T& data, uint32_t setIndex, uint32_t binding){
+				writeToDescriptorSetBuffer(id, setIndex, binding, &data);
+			}
+
+			void setTexture(uint32_t setIndex, uint32_t binding, uint32_t textureIndex, TextureID textureID){
+				setDescriptorSetTexture(id, setIndex, binding, textureIndex, textureID);
+			}
+
+			operator DescriptorSetID() const {return id;}
+
+		private:
+			DescriptorSetID id;
+	};
+
+	class RD_API Texture{
+		public:
+			Texture(const Texture &) = default;
+			Texture(TextureID id) : id{id}{}
+		
+			operator TextureID() const {return id;}
+		private:
+			TextureID id;
+	};
+
+	class RD_API Sound{
+		public:
+			Sound(const Sound &) = default;
+			Sound(SoundID id) : id{id}{}
+			
+			operator SoundID() const {return id;}
+
+		private:
+			SoundID id;
+	};
+
+	class RD_API SoundSource{
+		public:
+			SoundSource(const SoundSource &) = default;
+			SoundSource(SoundSourceID id) : id{id}{}
+
+			void setPitch(float pitch){
+				setSoundSourcePitch(id, pitch);
+			}
+
+			void setGain(float gain){
+				setSoundSourceGain(id, gain);
+			}
+
+			void setPosition(vec3<float> position){
+				setSoundSourcePosition(id, position);
+			}
+
+			void setVelocity(vec3<float> velocity){
+				setSoundSourceVelocity(id, velocity);
+			}
+
+			void setLoop(bool loop){
+				setSoundSourceLoop(id, loop);
+			}
+
+			void play(SoundID sound){
+				playSoundSource(id, sound);
+			}
+
+		private:
+			SoundSourceID id;
+	};
 
 	template<typename T>
 	using Ref = AssetReference<T>;
