@@ -90,25 +90,25 @@ namespace ECS{
              * @brief the packed array (no holes) of generic type T
              * set the maximal entity count
              */
-            std::array<void*, MAX_ENTITIES> _componentArray;
+            std::array<void*, MAX_ENTITIES> _componentArray = {};
 
             /**
              * @brief map entity id to array index
              */
-            std::unordered_map<Entity, std::size_t> _entityToIndexMap;
+            std::unordered_map<Entity, std::size_t> _entityToIndexMap = {};
 
             /**
              * @brief map array index to entity id
              * the invers of the _entotyToIndexMap
              */
-            std::unordered_map<std::size_t, Entity> _indexToEntityMap;
+            std::unordered_map<std::size_t, Entity> _indexToEntityMap = {};
 
             /**
              * @brief total size of entries in the array
              */
-            std::size_t _size;
+            std::size_t _size = 0;
 
-			size_t componentSize;
+			size_t componentSize = 0;
     };
 
     class ComponentManager{

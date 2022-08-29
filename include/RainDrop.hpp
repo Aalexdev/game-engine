@@ -1469,8 +1469,8 @@ namespace RainDrop{
 	template<typename T, typename... Args>
 	T* RD_API registerECSSystem(Args... args){
 		T* system = new T();
-		system->init(args...);
 		registerECSSystemPtr(typeid(T).hash_code(), system);
+		system->init(args...);
 		return system;
 	}
 
