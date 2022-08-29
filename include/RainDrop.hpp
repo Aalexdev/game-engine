@@ -1151,26 +1151,33 @@ namespace RainDrop{
 	void RD_API setSceneData(uint32_t offset, uint32_t count, void* data);
 
 	/**
-	 * @brief from this call, until endScene() is called, all the render calls will be writen to the scene
-	 * 
-	 */
-	void RD_API beginScene();
-
-	/**
-	 * @brief stop the write pass to the scene
-	 * 
-	 */
-	void RD_API endScene();
-
-	/**
-	 * @brief copy the four vertices into the scene or the general usage buffer
+	 * @brief copy the four vertices into the scene buffer
 	 * 
 	 * @param v0 top left corner
 	 * @param v1 top right corner
 	 * @param v2 bottom left corner
 	 * @param v3 nottom right corner
 	 */
-	void RD_API renderQuad(void* v0, void* v1, void* v2, void* v3);
+	void RD_API renderSceneQuad(void* v0, void* v1, void* v2, void* v3);
+
+	/**
+	 * @brief copy the three vertices into the scene buffer
+	 * 
+	 * @param v0
+	 * @param v1
+	 * @param v2
+	 */
+	void RD_API renderSceneTrigone(void* v0, void* v1, void* v2);
+
+	/**
+	 * @brief copy the four vertices into the general usage buffer
+	 * 
+	 * @param v0 top left corner
+	 * @param v1 top right corner
+	 * @param v2 bottom left corner
+	 * @param v3 nottom right corner
+	 */
+	void RD_API renderGeneralUsageQuad(void* v0, void* v1, void* v2, void* v3);
 
 	/**
 	 * @brief copy the three vertices into the scene or the general usage buffer
@@ -1179,15 +1186,15 @@ namespace RainDrop{
 	 * @param v1
 	 * @param v2
 	 */
-	void RD_API renderTrigone(void* v0, void* v1, void* v2);
+	void RD_API renderGeneralUsageTrigone(void* v0, void* v1, void* v2);
 
 	/**
-	 * @brief copy the two vertices into the scene or the general usage buffer
+	 * @brief copy the two vertices into the general usage buffer
 	 * 
 	 * @param v0 
 	 * @param v1 
 	 */
-	void RD_API renderLine(void* v0, void* v1);
+	void RD_API renderGeneralUsageLine(void* v0, void* v1);
 
 	/**
 	 * @brief send a given chunk of scene vertex to the gpu

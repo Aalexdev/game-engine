@@ -17,9 +17,6 @@ namespace RainDrop{
 		bool keyPressed[static_cast<int>(Key::K_MAX)];
 		bool buttonPressed[static_cast<int>(MouseButton::MAX)];
 		vec2<float> mousePos;
-		RenderBuffer currentRenderBuffer;
-		void* vertexPtr;
-		uint32_t vertexCount = 0;
 	};
 
 	Core& getInstance();

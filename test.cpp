@@ -91,15 +91,11 @@ int main(int argc, char** argv){
 		RainDrop::beginFrame();
 		RainDrop::beginSwapChainRenderPass();
 	
-
-		RainDrop::beginScene();
-		RainDrop::renderTrigone(&v0, &v1, &v2);
-		RainDrop::endScene();
+		RainDrop::renderSceneTrigone(&v0, &v1, &v2);
 		
 		shader.use(&frame);
 		shader.setPushConstant(push);
 		RainDrop::renderScene();
-
 
 		RainDrop::endSwapChainRenderPass();
 		RainDrop::endFrame();
