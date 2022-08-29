@@ -1173,6 +1173,23 @@ namespace RainDrop{
 	void RD_API renderQuad(void* v0, void* v1, void* v2, void* v3);
 
 	/**
+	 * @brief copy the three vertices into the scene or the general usage buffer
+	 * 
+	 * @param v0
+	 * @param v1
+	 * @param v2
+	 */
+	void RD_API renderTrigone(void* v0, void* v1, void* v2);
+
+	/**
+	 * @brief copy the two vertices into the scene or the general usage buffer
+	 * 
+	 * @param v0 
+	 * @param v1 
+	 */
+	void RD_API renderLine(void* v0, void* v1);
+
+	/**
 	 * @brief send a given chunk of scene vertex to the gpu
 	 * 
 	 * @param offset the offset before the chunk 
@@ -1746,8 +1763,10 @@ namespace RainDrop{
 
 	class RD_API Shader{
 		public:
+			Shader() = default;
 			Shader(const Shader &) = default;
 			Shader(ShaderID id) : id{id}{}
+			Shader& operator=(ShaderID id) {this->id = id; return *this;}
 
 			void use(uint32_t* descriptorSetIndices){
 				useShader(id, descriptorSetIndices);
@@ -1770,8 +1789,10 @@ namespace RainDrop{
 
 	class RD_API RenderTarget{
 		public:
+			RenderTarget() = default;
 			RenderTarget(const RenderTarget &) = default;
 			RenderTarget(RenderTargetID id) : id{id}{}
+			RenderTarget& operator=(RenderTargetID id) {this->id = id; return *this;}
 
 			void begin(){
 				beginRenderTarget(id);
@@ -1793,8 +1814,10 @@ namespace RainDrop{
 
 	class RD_API DescriptorSet{
 		public:
+			DescriptorSet() = default;
 			DescriptorSet(const DescriptorSet &) = default;
 			DescriptorSet(DescriptorSetID id) : id{id}{}
+			DescriptorSet& operator=(DescriptorSetID id) {this->id = id; return *this;}
 
 			void writeToBuffer(uint32_t setIndex, uint32_t binding, void* data){
 				writeToDescriptorSetBuffer(id, setIndex, binding, data);
@@ -1810,6 +1833,7 @@ namespace RainDrop{
 			}
 
 			operator DescriptorSetID() const {return id;}
+			DescriptorSetID* operator&() {return &id;}
 
 		private:
 			DescriptorSetID id;
@@ -1817,18 +1841,23 @@ namespace RainDrop{
 
 	class RD_API Texture{
 		public:
+			Texture() = default;
 			Texture(const Texture &) = default;
 			Texture(TextureID id) : id{id}{}
+			Texture& operator=(TextureID id) {this->id = id; return *this;}
 		
 			operator TextureID() const {return id;}
+			TextureID* operator&() {return &id;}
 		private:
 			TextureID id;
 	};
 
 	class RD_API Sound{
 		public:
+			Sound() = default;
 			Sound(const Sound &) = default;
 			Sound(SoundID id) : id{id}{}
+			Sound& operator=(SoundID id) {this->id = id; return *this;}
 			
 			operator SoundID() const {return id;}
 
@@ -1838,8 +1867,10 @@ namespace RainDrop{
 
 	class RD_API SoundSource{
 		public:
+			SoundSource() = default;
 			SoundSource(const SoundSource &) = default;
 			SoundSource(SoundSourceID id) : id{id}{}
+			SoundSource& operator=(SoundSourceID id) {this->id = id; return *this;}
 
 			void setPitch(float pitch){
 				setSoundSourcePitch(id, pitch);

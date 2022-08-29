@@ -18,7 +18,8 @@ namespace RainDrop{
 		bool buttonPressed[static_cast<int>(MouseButton::MAX)];
 		vec2<float> mousePos;
 		RenderBuffer currentRenderBuffer;
-		uint32_t vertexOffset = 0;
+		void* vertexPtr;
+		uint32_t vertexCount = 0;
 	};
 
 	Core& getInstance();

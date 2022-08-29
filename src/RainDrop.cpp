@@ -231,19 +231,59 @@ namespace RainDrop{
 
 	void RD_API beginScene(){
 		auto& instance = getInstance();
-		instance.vertexOffset = 0;
+		instance.vertexPtr = getSceneBuffer();
 		instance.currentRenderBuffer = RenderBuffer::Scene;
+		instance.vertexCount = 0;
 	}
 
 	void RD_API endScene(){
 		auto& instance = getInstance();
-		instance.vertexOffset = 0;
+		FoveaFlushSceneData(0, instance.vertexCount);
+		
+		instance.vertexPtr = nullptr;
 		instance.currentRenderBuffer = RenderBuffer::None;
 	}
 
 	void RD_API renderQuad(void* v0, void* v1, void* v2, void* v3){
 		auto& instance = getInstance();
-		instance.vertexOffset = 0;
+		uint32_t vertexSize = FoveaGetSceneVertexSize();
+		char* cptr = static_cast<char*>(instance.vertexPtr);
+
+		memcpy(instance.vertexPtr, v0, vertexSize);
+		cptr += vertexSize;
+		memcpy(instance.vertexPtr, v1, vertexSize);
+		cptr += vertexSize;
+		memcpy(instance.vertexPtr, v2, vertexSize);
+		cptr += vertexSize;
+		memcpy(instance.vertexPtr, v3, vertexSize);
+		cptr += vertexSize;
+		instance.vertexPtr = cptr;
+	}
+
+	void RD_API renderTrigone(void* v0, void* v1, void* v2){
+		auto& instance = getInstance();
+		uint32_t vertexSize = FoveaGetSceneVertexSize();
+		char* cptr = static_cast<char*>(instance.vertexPtr);
+
+		memcpy(instance.vertexPtr, v0, vertexSize);
+		cptr += vertexSize;
+		memcpy(instance.vertexPtr, v1, vertexSize);
+		cptr += vertexSize;
+		memcpy(instance.vertexPtr, v2, vertexSize);
+		cptr += vertexSize;
+		instance.vertexPtr = cptr;
+	}
+
+	void RD_API renderLine(void* v0, void* v1){
+		auto& instance = getInstance();
+		uint32_t vertexSize = FoveaGetSceneVertexSize();
+		char* cptr = static_cast<char*>(instance.vertexPtr);
+
+		memcpy(instance.vertexPtr, v0, vertexSize);
+		cptr += vertexSize;
+		memcpy(instance.vertexPtr, v1, vertexSize);
+		cptr += vertexSize;
+		instance.vertexPtr = cptr;
 	}
 
 	void RD_API flushSceneData(uint32_t offset, uint32_t count){
