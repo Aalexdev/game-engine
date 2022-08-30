@@ -370,24 +370,7 @@ namespace Fovea{
 		ptr += sceneVertexSize;
 
 		sceneVertexBufferUsedSize += 4 * sceneVertexSize;
-		sceneIndexUsed += 4;
-	}
-
-	void Renderer::renderTrigoneScene(void *v0, void *v1, void *v2){
-		char* ptr = static_cast<char*>(sceneVertexBuffer.getMappedMemory());
-		ptr += (sceneIndexUsed / 4) * sceneVertexSize;
-
-		memcpy(ptr, v0, sceneVertexSize);
-		ptr += sceneVertexSize;
-
-		memcpy(ptr, v1, sceneVertexSize);
-		ptr += sceneVertexSize;
-		
-		memcpy(ptr, v2, sceneVertexSize);
-		ptr += sceneVertexSize;
-		
-		sceneVertexBufferUsedSize += 3 * sceneVertexSize;
-		sceneIndexUsed += 3;
+		sceneIndexUsed += 6;
 	}
 
 	void Renderer::renderGeneralUsageQuad(void *v0, void *v1, void *v2, void *v3){
@@ -407,7 +390,7 @@ namespace Fovea{
 		ptr += generalUsageVertexSize;
 		
 		generalUsageVertexBufferUsedSize += 4 * generalUsageVertexSize;
-		generalUsageIndexUsed += 4;
+		generalUsageIndexUsed += 6;
 	}
 
 	void Renderer::renderGeneralUsageTrigone(void *v0, void *v1, void* v2){
@@ -424,7 +407,6 @@ namespace Fovea{
 		ptr += generalUsageVertexSize;
 	
 		generalUsageVertexBufferUsedSize += 3 * generalUsageVertexSize;
-		generalUsageIndexUsed += 3;
 	}
 
 	void Renderer::renderGeneralUsageLine(void *v0, void *v1){
@@ -438,6 +420,5 @@ namespace Fovea{
 		ptr += generalUsageVertexSize;
 		
 		generalUsageVertexBufferUsedSize += 2 * generalUsageVertexSize;
-		generalUsageIndexUsed += 2;
 	}
 }

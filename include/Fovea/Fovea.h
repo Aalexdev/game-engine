@@ -235,8 +235,6 @@ void* FoveaGetSceneBuffer();
 
 void FoveaRenderQuadScene(void *v0, void *v1, void *v2, void *v3);
 
-void FoveaRenderTrigoneScene(void *v0, void *v1, void *v2);
-
 void FoveaRenderScene(void);
 
 void FoveaSetSceneData(uint32_t offset, uint32_t count, void* data);
