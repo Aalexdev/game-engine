@@ -368,7 +368,8 @@ namespace Fovea{
 		
 		memcpy(ptr, v3, sceneVertexSize);
 		ptr += sceneVertexSize;
-		
+
+		sceneVertexBufferUsedSize += 4 * sceneVertexSize;
 		sceneIndexUsed += 4;
 	}
 
@@ -385,6 +386,7 @@ namespace Fovea{
 		memcpy(ptr, v2, sceneVertexSize);
 		ptr += sceneVertexSize;
 		
+		sceneVertexBufferUsedSize += 3 * sceneVertexSize;
 		sceneIndexUsed += 3;
 	}
 
@@ -404,6 +406,7 @@ namespace Fovea{
 		memcpy(ptr, v3, generalUsageVertexSize);
 		ptr += generalUsageVertexSize;
 		
+		generalUsageVertexBufferUsedSize += 4 * generalUsageVertexSize;
 		generalUsageIndexUsed += 4;
 	}
 
@@ -420,6 +423,7 @@ namespace Fovea{
 		memcpy(ptr, v2, generalUsageVertexSize);
 		ptr += generalUsageVertexSize;
 	
+		generalUsageVertexBufferUsedSize += 3 * generalUsageVertexSize;
 		generalUsageIndexUsed += 3;
 	}
 
@@ -433,6 +437,7 @@ namespace Fovea{
 		memcpy(ptr, v1, generalUsageVertexSize);
 		ptr += generalUsageVertexSize;
 		
+		generalUsageVertexBufferUsedSize += 2 * generalUsageVertexSize;
 		generalUsageIndexUsed += 2;
 	}
 }
