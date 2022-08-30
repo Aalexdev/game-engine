@@ -212,12 +212,12 @@ void PlayerSystem::render(){
 		v[2].textureID = 0;
 		v[2].uv = texture.uv2;
 
-		v[3].color = {1.f, 1.f, 1.f};
+		v[3].color = {1.f, 0.f, 0.f};
 		v[3].pos = glm::vec3{0.5, -0.5, 1.f} * transform;
 		v[3].textureID = 0;
 		v[3].uv = {texture.uv2.x, texture.uv1.y};
 
-		RainDrop::renderSceneQuad(&v[0], &v[1], &v[2], &v[1]);
+		RainDrop::renderSceneQuad(&v[0], &v[1], &v[2], &v[3]);
 	}
 }
 
@@ -290,7 +290,7 @@ void spawnPlayer(){
 
 	transform = glm::translate(glm::mat3(1.f), {static_cast<float>(x), 1500});
 	playerComponent.health = 150;
-	playerComponent.size = {10.f, 10.f};
+	playerComponent.size = {1000.f, 1000.f};
 
 	transform *= glm::scale(glm::mat3(1.f), playerComponent.size);
 
@@ -385,7 +385,7 @@ int main(int argc, char** argv){
 	auto currentTime = std::chrono::high_resolution_clock::now();
 
 	PushConstant pushConstant;
-	pushConstant.cameraTransform = glm::ortho(-100.f, 100.f, -100.f, 100.f, 0.0f, 1.0f);
+	pushConstant.cameraTransform = glm::mat4(1.f);//glm::ortho(0.f, 720.f, 1820.f, 0.f, 0.0f, 1.0f);
 	RainDrop::setSceneVertexSize(sizeof(DefaultShaderVertex));
 
 	spawnPlayer();
