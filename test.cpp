@@ -92,6 +92,7 @@ void EnemySystem::init(MissileSystem* missiles){
 void EnemySystem::update(float dt){
 	static RainDrop::EventID missileLaunched = RainDrop::getEventID("launch missile");
 	static RainDrop::EventID missileContact = RainDrop::getEventID("missile contact");
+	static RainDrop::EventID deleteEnemy = RainDrop::getEventID("delete enemy");
 
 	for (auto &id : entities){
 		RainDrop::Entity entity = id;
@@ -107,12 +108,17 @@ void EnemySystem::update(float dt){
 			RainDrop::triggerEvent(missileLaunched, ENEMY_TEAM, pos);
 		}
 
-
 		glm::vec4 box;
 		box.x = pos.x - enemy.size.x / 2.f;
 		box.y = pos.y - enemy.size.y / 2.f;
 		box.z = pos.x + enemy.size.x / 2.f;
 		box.w = pos.y + enemy.size.y / 2.f;
+
+		printf("%f\n", box.y);
+		if (box.y > 2000){
+			RainDrop::triggerEvent(deleteEnemy, id);
+			break;
+		}
 
 
 		// check collisions
@@ -134,7 +140,31 @@ void EnemySystem::render(){
 	for (auto &id : entities){
 		RainDrop::Entity entity = id;
 		auto& transform = entity.getComponent<Transform>().transform;
-		auto& texture = entity.getComponent<RainDrop::Texture>();
+		auto& texture = entity.getComponent<TextureComponent>();
+
+		DefaultShaderVertex v[4];
+
+		v[0].color = {1.f, 1.f, 1.f};
+		v[0].pos = transform * glm::vec3{-0.5, -0.5, 1.f};
+		v[0].textureID = 0;
+		v[0].uv = texture.uv1;
+
+		v[1].color = {1.f, 1.f, 1.f};
+		v[1].pos = transform * glm::vec3{-0.5, 0.5, 1.f};
+		v[1].textureID = 0;
+		v[1].uv = {texture.uv1.x, texture.uv2.y};
+
+		v[2].color = {1.f, 1.f, 1.f};
+		v[2].pos = transform * glm::vec3{0.5, 0.5, 1.f};
+		v[2].textureID = 0;
+		v[2].uv = texture.uv2;
+
+		v[3].color = {1.f, 0.f, 0.f};
+		v[3].pos = transform * glm::vec3{0.5, -0.5, 1.f};
+		v[3].textureID = 0;
+		v[3].uv = {texture.uv2.x, texture.uv1.y};
+
+		RainDrop::renderSceneQuad(&v[0], &v[1], &v[2], &v[3]);
 	}
 }
 
@@ -164,7 +194,9 @@ void PlayerSystem::update(float dt){
 		auto& transform = entity.getComponent<Transform>().transform;
 		auto& player = entity.getComponent<PlayerComponent>();
 
-		transform = glm::translate(glm::scale(glm::mat3(1.f), player.size), {mousePos.x / 100.f, mousePos.y / 100.f});
+		// printf("%f %f\n", mousePos.x, mousePos.y);
+
+		transform = glm::scale(glm::translate(glm::mat3(1.f), {mousePos.x, mousePos.y}), player.size);
 		glm::vec2 pos = glm::vec2(transform[2].x, transform[2].y);
 
 		glm::vec4 box;
@@ -198,22 +230,22 @@ void PlayerSystem::render(){
 		DefaultShaderVertex v[4];
 
 		v[0].color = {1.f, 1.f, 1.f};
-		v[0].pos = glm::vec3{-0.5, -0.5, 1.f} * transform;
+		v[0].pos = transform * glm::vec3{-0.5, -0.5, 1.f};
 		v[0].textureID = 0;
 		v[0].uv = texture.uv1;
 
 		v[1].color = {1.f, 1.f, 1.f};
-		v[1].pos = glm::vec3{-0.5, 0.5, 1.f} * transform;
+		v[1].pos = transform * glm::vec3{-0.5, 0.5, 1.f};
 		v[1].textureID = 0;
 		v[1].uv = {texture.uv1.x, texture.uv2.y};
 
 		v[2].color = {1.f, 1.f, 1.f};
-		v[2].pos = glm::vec3{0.5, 0.5, 1.f} * transform;
+		v[2].pos = transform * glm::vec3{0.5, 0.5, 1.f};
 		v[2].textureID = 0;
 		v[2].uv = texture.uv2;
 
 		v[3].color = {1.f, 0.f, 0.f};
-		v[3].pos = glm::vec3{0.5, -0.5, 1.f} * transform;
+		v[3].pos = transform * glm::vec3{0.5, -0.5, 1.f};
 		v[3].textureID = 0;
 		v[3].uv = {texture.uv2.x, texture.uv1.y};
 
@@ -260,23 +292,23 @@ bool onWindowClosed(void*){
 }
 
 void spawnEnemy(){
-	// int x = rand() % 720;
-	// RainDrop::Entity enemy = RainDrop::createEntity();
+	int x = rand() % 720;
+	RainDrop::Entity enemy = RainDrop::createEntity();
 
-	// auto& transform = enemy.addComponent<TransformComponent>().transform;
-	// auto& enemyComponent = enemy.addComponent<EnemyComponent>();
-	// auto& sound = enemy.addComponent<SoundComponent>();
-	// auto& texture = enemy.addComponent<TextureComponent>();
+	auto& transform = enemy.addComponent<Transform>().transform;
+	auto& enemyComponent = enemy.addComponent<EnemyComponent>();
+	auto& sound = enemy.addComponent<RainDrop::Sound>();
+	auto& texture = enemy.addComponent<TextureComponent>();
 
-	// transform = glm::translate(glm::mat3(1.f), {static_cast<float>(x), -150.f});
-	// enemyComponent.health = 150;
-	// enemyComponent.size = {100.f, 100.f};
+	transform = glm::translate(glm::mat3(1.f), {static_cast<float>(x), -150.f});
+	enemyComponent.health = 150;
+	enemyComponent.size = {100.f, 100.f};
 
-	// transform *= glm::scale(glm::mat3(1.f), enemyComponent.size);
+	transform *= glm::scale(glm::mat3(1.f), enemyComponent.size);
 
-	// texture.texture = 0;
-	// texture.uv1 = {22, 35};
-	// texture.uv2 = {145, 169};
+	texture.texture = 0;
+	texture.uv1 = {22, 35};
+	texture.uv2 = {145, 169};
 }
 
 void spawnPlayer(){
@@ -290,15 +322,13 @@ void spawnPlayer(){
 
 	transform = glm::translate(glm::mat3(1.f), {static_cast<float>(x), 1500});
 	playerComponent.health = 150;
-	playerComponent.size = {1000.f, 1000.f};
+	playerComponent.size = {100.f, 100.f};
 
 	transform *= glm::scale(glm::mat3(1.f), playerComponent.size);
 
 	texture.texture = 0;
 	texture.uv1 = {22, 35};
 	texture.uv2 = {145, 169};
-
-	printf("aaa\n");
 }
 
 struct PushConstant{
@@ -351,20 +381,40 @@ RainDrop::Shader loadDefaultShader(const std::filesystem::path &path, RainDrop::
 	return RainDrop::createShader(createInfo);
 }
 
+bool onWindowResized(void* ptr, void* data){
+	PushConstant* push = static_cast<PushConstant*>(ptr);
+	RainDrop::vec2<uint32_t>* size = static_cast<RainDrop::vec2<uint32_t>*>(data);
+	
+	push->cameraTransform = glm::ortho(0.f, static_cast<float>(size->x), 0.f, static_cast<float>(size->y), -1.0f, 1.0f);
+	return false;
+}
+
+bool onEntityDeleted(void* data){
+	RainDrop::EntityID* id = static_cast<RainDrop::EntityID*>(data);
+	RainDrop::destroyEntity(*id);
+	printf("aaaa %d\n", id);
+	return false;
+}
+
 int main(int argc, char** argv){
 	std::filesystem::path gamePath = std::string(argv[0]);
 	gamePath = gamePath.parent_path();
 
 	printf("%s\n", gamePath.string().c_str());
+	PushConstant pushConstant;
 
 	RainDrop::initialize();
 	RainDrop::setWindowSize(RainDrop::vec2<uint32_t>{720, 1820});
 	RainDrop::setWindowPosition(RainDrop::vec2<uint32_t>{500, 50});
+	RainDrop::setWindowResizable(true);
 
 	RainDrop::registerEvent("launch missile", sizeof(int) + sizeof(glm::vec2));
 	RainDrop::registerEvent("missile contact", sizeof(RainDrop::EntityID) * 2);
+	RainDrop::registerEvent("delete enemy", sizeof(RainDrop::EntityID));
 
 	RainDrop::subscribeEvent("window closed", &onWindowClosed);
+	RainDrop::subscribeEvent("window resized", &pushConstant, &onWindowResized);
+	RainDrop::subscribeEvent("delete enemy", onEntityDeleted);
 	
 	RainDrop::registerEntityComponent<Transform>();
 	RainDrop::registerEntityComponent<RainDrop::Sound>();
@@ -384,17 +434,23 @@ int main(int argc, char** argv){
 	launched = true;
 	auto currentTime = std::chrono::high_resolution_clock::now();
 
-	PushConstant pushConstant;
-	pushConstant.cameraTransform = glm::mat4(1.f);//glm::ortho(0.f, 720.f, 1820.f, 0.f, 0.0f, 1.0f);
+	pushConstant.cameraTransform = glm::ortho(0.f, 720.f, 0.f, 1820.f, -1.0f, 1.0f);
 	RainDrop::setSceneVertexSize(sizeof(DefaultShaderVertex));
 
 	spawnPlayer();
-	// spawnEnemy();
+
+	float t = 0;
 	
 	while (launched){
 		auto newTime = std::chrono::high_resolution_clock::now();
 		float dt = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
 		currentTime = std::chrono::high_resolution_clock::now();
+		t += dt;
+
+		if (t > 0.1){
+			spawnEnemy();
+			t = 0;
+		}
 
 		RainDrop::updateEvents();
 

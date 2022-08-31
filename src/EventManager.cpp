@@ -4,6 +4,7 @@
 
 #include <SDL2/SDL.h>
 #include "RainDrop.hpp"
+#include "Fovea.h"
 
 namespace RainDrop{
 	struct STDEvents{
@@ -320,6 +321,7 @@ namespace RainDrop{
 
 						case SDL_WINDOWEVENT_RESIZED:{
 							Hermes::triggerEvent(instance.windowResized, vec2<uint32_t>{static_cast<uint32_t>(e.window.data1), static_cast<uint32_t>(e.window.data2)});
+							FoveaOnWindowResized(static_cast<uint32_t>(e.window.data1), static_cast<uint32_t>(e.window.data2));
 							break;
 						}
 

@@ -1161,15 +1161,6 @@ namespace RainDrop{
 	void RD_API renderSceneQuad(void* v0, void* v1, void* v2, void* v3);
 
 	/**
-	 * @brief copy the three vertices into the scene buffer
-	 * 
-	 * @param v0
-	 * @param v1
-	 * @param v2
-	 */
-	void RD_API renderSceneTrigone(void* v0, void* v1, void* v2);
-
-	/**
 	 * @brief copy the four vertices into the general usage buffer
 	 * 
 	 * @param v0 top left corner

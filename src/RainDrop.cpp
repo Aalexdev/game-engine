@@ -233,10 +233,6 @@ namespace RainDrop{
 		FoveaRenderQuadScene(v0, v1, v2, v3);
 	}
 
-	void RD_API renderSceneTrigone(void* v0, void* v1, void* v2){
-		FoveaRenderTrigoneScene(v0, v1, v2);
-	}
-
 	void RD_API renderGeneralUsageQuad(void* v0, void* v1, void* v2, void* v3){
 		FoveaRenderGeneralUsageQuad(v0, v1, v2, v3);
 	}
@@ -509,7 +505,7 @@ namespace RainDrop{
 	}
 
 	// ==========================================================
-	// ==                         SOUNDID                        ==
+	// ==                         SOUND                        ==
 	// ==========================================================
 
 	void RD_API loadMusic(const char* filepath){

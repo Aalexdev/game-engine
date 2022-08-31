@@ -143,6 +143,7 @@ void Hermes::subscribe(EventID id, void* subscribedInstance, EventMt callback){
 	EventType& event = instance.events[id];
 	EventCallback cb;
 	cb.callback.method = callback;
+	cb.subscribedInstance = subscribedInstance;
 	cb.type = cb.Method;
 	event.callbacks->push_back(cb);
 }
